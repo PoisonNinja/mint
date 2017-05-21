@@ -227,7 +227,7 @@ export srctree objtree VPATH
 # then ARCH is assigned, getting whatever value it gets normally, and
 # SUBARCH is subsequently ignored.
 
-SUBARCH := $(shell uname -m | sed -e s/i.86/x86/ -e s/x86_64/x86/ \
+SUBARCH := $(shell uname -m | sed -e s/i.86/x86/ \
 				  -e s/sun4u/sparc64/ \
 				  -e s/arm.*/arm/ -e s/sa110/arm/ \
 				  -e s/s390x/s390/ -e s/parisc64/parisc/ \
@@ -263,9 +263,6 @@ SRCARCH 	:= $(ARCH)
 
 # Additional ARCH settings for x86
 ifeq ($(ARCH),i386)
-        SRCARCH := x86
-endif
-ifeq ($(ARCH),x86_64)
         SRCARCH := x86
 endif
 
