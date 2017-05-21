@@ -302,7 +302,6 @@ ifeq ($(config-targets),1)
 export KBUILD_DEFCONFIG KBUILD_KCONFIG
 
 config: scripts_basic outputmakefile FORCE
-	@echo $(CC)
 	$(Q)mkdir -p include/config
 	$(Q)$(MAKE) $(build)=scripts/kconfig $@
 
