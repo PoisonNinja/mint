@@ -349,7 +349,7 @@ objs-y		:=
 # This goes last so we can override generic functions marked with __attribute__
 # ((weak)) or only functions that are only declared with architecture-specfic
 # implementations. Example: memset and friends
-objs-y		+=
+objs-y		+= arch/$(ARCH)
 libs-y		:=
 
 mint-dirs	:= $(objs-y) $(libs-y)
@@ -365,18 +365,7 @@ quiet_cmd_mint = $(CC) $(KBUILD_CFLAGS) -o $@ $(mint-libs) $(mint-objs) $(KBUILD
 mint.kernel: $(mint-all)
 	$(call if_changed,mint)
 
-ARCH_INCLUDE_FILES := $(shell find arch/include/$(ARCH) -type f)
-ARCH_INCLUDE_DIRS := $(shell find arch/include/$(ARCH) -type d)
-
-include/arch: $(ARCH_INCLUDE_FILES) $(ARCH_INCLUDE_DIRS)
-	@echo
-	@echo "Installing headers..."
-	@echo
-	@mkdir -p include/arch
-	@rsync -aq --update arch/include/$(ARCH)/ include/arch
-	@touch include/arch
-
-prepare: include/arch include/generated/utsrelease.h include/config/auto.conf include/config/kernel.release include/generated/version.h FORCE
+prepare: include/generated/utsrelease.h include/config/auto.conf include/config/kernel.release include/generated/version.h FORCE
 
 install: ../hdd/boot/mint.kernel
 
