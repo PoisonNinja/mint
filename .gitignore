@@ -52,7 +52,12 @@ Module.symvers
 Mkfile.old
 dkms.conf
 
-# Generated include files
-include/config
-include/generated
-arch/*/include/generated
+# Generated directories
+include/arch
+include/config.h
+include/config/
+include/generated/
+
+# Generated files
+.config
+.config.old

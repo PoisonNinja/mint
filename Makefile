@@ -1,8 +1,8 @@
 VERSION = 0
 PATCHLEVEL = 0
-SUBLEVEL = 3
-EXTRAVERSION = -rc2
-NAME = Red
+SUBLEVEL = 1
+EXTRAVERSION = -rc1
+NAME = Hello World
 
 # *DOCUMENTATION*
 # To see a list of typical targets execute "make help"
@@ -168,7 +168,9 @@ $(srctree)/scripts/Kbuild.include: ;
 include $(srctree)/scripts/Kbuild.include
 
 # Make variables (CC, etc...)
-include platform.mk
+CC			= $(CROSS_COMPILE)cc
+LD			= $(CROSS_COMPILE)ld
+AS			= nasm
 STRIP		= $(CROSS_COMPILE)strip
 OBJCOPY		= $(CROSS_COMPILE)objcopy
 OBJDUMP		= $(CROSS_COMPILE)objdump
@@ -191,7 +193,7 @@ KBUILD_CFLAGS   := -ffreestanding -fno-builtin -Iinclude -Iarch/include -Wall -W
 KBUILD_AFLAGS_KERNEL :=
 KBUILD_CFLAGS_KERNEL :=
 KBUILD_AFLAGS   := -felf64
-KBUILD_LDFLAGS  := -lgcc -nostdlib -Tarch/$(ARCH)/strawberry.lds
+KBUILD_LDFLAGS  := -lgcc -nostdlib -Tarch/$(ARCH)/mint.lds
 
 # Read KERNELRELEASE from include/config/kernel.release (if it exists)
 KERNELRELEASE = $(shell cat include/config/kernel.release 2> /dev/null)
@@ -327,27 +329,27 @@ include arch/$(ARCH)/Makefile
 # command line.
 # This allow a user to issue only 'make' to build a kernel including modules
 # Defaults to vmlinux, but the arch makefile usually adds further targets
-all: prepare strawberry.kernel
+all: prepare mint.kernel
 
-objs-y		:= cpu block drivers fs kernel lib mm tests
+objs-y		:=
 # This goes last so we can override generic functions marked with __attribute__
 # ((weak)) or only functions that are only declared with architecture-specfic
 # implementations. Example: memset and friends
-objs-y		+= arch/$(ARCH)
+objs-y		+=
 libs-y		:=
 
-strawberry-dirs	:= $(objs-y) $(libs-y)
-strawberry-objs	:= $(patsubst %,%/built-in.o, $(objs-y))
-strawberry-libs	:= $(patsubst %,%/lib.a, $(libs-y))
-strawberry-all	:= $(strawberry-objs) $(strawberry-libs)
+mint-dirs	:= $(objs-y) $(libs-y)
+mint-objs	:= $(patsubst %,%/built-in.o, $(objs-y))
+mint-libs	:= $(patsubst %,%/lib.a, $(libs-y))
+mint-all	:= $(mint-objs) $(mint-libs)
 
 # Do modpost on a prelinked vmlinux. The finally linked vmlinux has
 # relevant sections renamed as per the linker script.
-quiet_cmd_strawberry = $(CC) $(KBUILD_CFLAGS) -o $@ $(strawberry-libs) $(strawberry-objs) $(KBUILD_LDFLAGS)
-      cmd_strawberry = $(CC) $(KBUILD_CFLAGS) -o $@ $(strawberry-libs) $(strawberry-objs) $(KBUILD_LDFLAGS)
+quiet_cmd_mint = $(CC) $(KBUILD_CFLAGS) -o $@ $(mint-libs) $(mint-objs) $(KBUILD_LDFLAGS)
+      cmd_mint = $(CC) $(KBUILD_CFLAGS) -o $@ $(mint-libs) $(mint-objs) $(KBUILD_LDFLAGS)
 
-strawberry.kernel: $(strawberry-all)
-	$(call if_changed,strawberry)
+mint.kernel: $(mint-all)
+	$(call if_changed,mint)
 
 ARCH_INCLUDE_FILES := $(shell find arch/include/$(ARCH) -type f)
 ARCH_INCLUDE_DIRS := $(shell find arch/include/$(ARCH) -type d)
@@ -362,14 +364,14 @@ include/arch: $(ARCH_INCLUDE_FILES) $(ARCH_INCLUDE_DIRS)
 
 prepare: include/arch include/generated/utsrelease.h include/config/auto.conf include/config/kernel.release include/generated/version.h FORCE
 
-install: ../hdd/boot/strawberry.kernel
+install: ../hdd/boot/mint.kernel
 
-../hdd/boot/strawberry.kernel: strawberry.kernel
-	install -c strawberry.kernel ../hdd/boot/
+../hdd/boot/mint.kernel: mint.kernel
+	install -c mint.kernel ../hdd/boot/
 
 # The actual objects are generated when descending,
 # make sure no implicit rule kicks in
-$(sort $(strawberry-all)): $(strawberry-dirs) ;
+$(sort $(mint-all)): $(mint-dirs) ;
 
 # Handle descending into subdirectories listed in $(vmlinux-dirs)
 # Preset locale variables to speed up the build process. Limit locale
@@ -379,8 +381,8 @@ $(sort $(strawberry-all)): $(strawberry-dirs) ;
 
 #PHONY += $(vmlinux-dirs)
 #$(vmlinux-dirs): prepare scripts
-PHONY += $(strawberry-dirs)
-$(strawberry-dirs): scripts_basic
+PHONY += $(mint-dirs)
+$(mint-dirs): scripts_basic
 	$(Q)$(MAKE) $(build)=$@
 
 
@@ -432,7 +434,7 @@ include/generated/version.h: FORCE
 
 # Directories & files removed with 'make clean'
 CLEAN_DIRS  += include/arch
-CLEAN_FILES +=	strawberry.kernel
+CLEAN_FILES +=	mint.kernel
 
 # Directories & files removed with 'make mrproper'
 MRPROPER_DIRS  += include/config include/generated
@@ -442,7 +444,7 @@ MRPROPER_FILES += .config .config.old tags TAGS cscope* GPATH GTAGS GRTAGS GSYMS
 #
 clean: rm-dirs  := $(CLEAN_DIRS)
 clean: rm-files := $(CLEAN_FILES)
-clean-dirs      := $(addprefix _clean_, $(strawberry-dirs))
+clean-dirs      := $(addprefix _clean_, $(mint-dirs))
 
 PHONY += $(clean-dirs) clean archclean
 $(clean-dirs):
@@ -509,7 +511,7 @@ help:
 	@echo  ''
 	@echo  'Other generic targets:'
 	@echo  '  all		  - Build all targets marked with [*]'
-	@echo  '* strawberry	  	  - Build the application'
+	@echo  '* mint	  	  - Build the application'
 	@echo  '  dir/            - Build all files in dir and below'
 	@echo  '  dir/file.[oisS] - Build specified target only'
 	@echo  '  dir/file.lst    - Build specified mixed source/assembly target only'
