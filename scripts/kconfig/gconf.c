@@ -10,7 +10,6 @@
 #  include <config.h>
 #endif
 
-#include <stdlib.h>
 #include "lkc.h"
 #include "images.c"
 
@@ -23,6 +22,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <time.h>
+#include <stdlib.h>
 
 //#define DEBUG
 
@@ -169,6 +169,14 @@ void init_main_window(const gchar * glade_file)
 	style = gtk_widget_get_style(main_wnd);
 	widget = glade_xml_get_widget(xml, "toolbar1");
 
+#if 0	/* Use stock Gtk icons instead */
+	replace_button_icon(xml, main_wnd->window, style,
+			    "button1", (gchar **) xpm_back);
+	replace_button_icon(xml, main_wnd->window, style,
+			    "button2", (gchar **) xpm_load);
+	replace_button_icon(xml, main_wnd->window, style,
+			    "button3", (gchar **) xpm_save);
+#endif
 	replace_button_icon(xml, main_wnd->window, style,
 			    "button4", (gchar **) xpm_single_view);
 	replace_button_icon(xml, main_wnd->window, style,
@@ -176,6 +184,22 @@ void init_main_window(const gchar * glade_file)
 	replace_button_icon(xml, main_wnd->window, style,
 			    "button6", (gchar **) xpm_tree_view);
 
+#if 0
+	switch (view_mode) {
+	case SINGLE_VIEW:
+		widget = glade_xml_get_widget(xml, "button4");
+		g_signal_emit_by_name(widget, "clicked");
+		break;
+	case SPLIT_VIEW:
+		widget = glade_xml_get_widget(xml, "button5");
+		g_signal_emit_by_name(widget, "clicked");
+		break;
+	case FULL_VIEW:
+		widget = glade_xml_get_widget(xml, "button6");
+		g_signal_emit_by_name(widget, "clicked");
+		break;
+	}
+#endif
 	txtbuf = gtk_text_view_get_buffer(GTK_TEXT_VIEW(text_w));
 	tag1 = gtk_text_buffer_create_tag(txtbuf, "mytag1",
 					  "foreground", "red",
@@ -261,6 +285,8 @@ void init_left_tree(void)
 static void renderer_edited(GtkCellRendererText * cell,
 			    const gchar * path_string,
 			    const gchar * new_text, gpointer user_data);
+static void renderer_toggled(GtkCellRendererToggle * cellrenderertoggle,
+			     gchar * arg1, gpointer user_data);
 
 void init_right_tree(void)
 {
@@ -294,6 +320,8 @@ void init_right_tree(void)
 					    "inconsistent", COL_BTNINC,
 					    "visible", COL_BTNVIS,
 					    "radio", COL_BTNRAD, NULL);
+	/*g_signal_connect(G_OBJECT(renderer), "toggled",
+	   G_CALLBACK(renderer_toggled), NULL); */
 	renderer = gtk_cell_renderer_text_new();
 	gtk_tree_view_column_pack_start(GTK_TREE_VIEW_COLUMN(column),
 					renderer, FALSE);
@@ -659,7 +687,7 @@ void on_introduction1_activate(GtkMenuItem * menuitem, gpointer user_data)
 	dialog = gtk_message_dialog_new(GTK_WINDOW(main_wnd),
 					GTK_DIALOG_DESTROY_WITH_PARENT,
 					GTK_MESSAGE_INFO,
-					GTK_BUTTONS_CLOSE, "%s", intro_text);
+					GTK_BUTTONS_CLOSE, intro_text);
 	g_signal_connect_swapped(GTK_OBJECT(dialog), "response",
 				 G_CALLBACK(gtk_widget_destroy),
 				 GTK_OBJECT(dialog));
@@ -677,7 +705,7 @@ void on_about1_activate(GtkMenuItem * menuitem, gpointer user_data)
 	dialog = gtk_message_dialog_new(GTK_WINDOW(main_wnd),
 					GTK_DIALOG_DESTROY_WITH_PARENT,
 					GTK_MESSAGE_INFO,
-					GTK_BUTTONS_CLOSE, "%s", about_text);
+					GTK_BUTTONS_CLOSE, about_text);
 	g_signal_connect_swapped(GTK_OBJECT(dialog), "response",
 				 G_CALLBACK(gtk_widget_destroy),
 				 GTK_OBJECT(dialog));
@@ -696,7 +724,7 @@ void on_license1_activate(GtkMenuItem * menuitem, gpointer user_data)
 	dialog = gtk_message_dialog_new(GTK_WINDOW(main_wnd),
 					GTK_DIALOG_DESTROY_WITH_PARENT,
 					GTK_MESSAGE_INFO,
-					GTK_BUTTONS_CLOSE, "%s", license_text);
+					GTK_BUTTONS_CLOSE, license_text);
 	g_signal_connect_swapped(GTK_OBJECT(dialog), "response",
 				 G_CALLBACK(gtk_widget_destroy),
 				 GTK_OBJECT(dialog));
@@ -806,7 +834,7 @@ static void renderer_edited(GtkCellRendererText * cell,
 static void change_sym_value(struct menu *menu, gint col)
 {
 	struct symbol *sym = menu->sym;
-	tristate newval;
+	tristate oldval, newval;
 
 	if (!sym)
 		return;
@@ -823,6 +851,7 @@ static void change_sym_value(struct menu *menu, gint col)
 	switch (sym_get_type(sym)) {
 	case S_BOOLEAN:
 	case S_TRISTATE:
+		oldval = sym_get_tristate_value(sym);
 		if (!sym_tristate_within_range(sym, newval))
 			newval = yes;
 		sym_set_tristate_value(sym, newval);
@@ -857,6 +886,35 @@ static void toggle_sym_value(struct menu *menu)
 	}
 	else if (view_mode == SINGLE_VIEW)
 		display_tree_part();	//fixme: keep exp/coll
+}
+
+static void renderer_toggled(GtkCellRendererToggle * cell,
+			     gchar * path_string, gpointer user_data)
+{
+	GtkTreePath *path, *sel_path = NULL;
+	GtkTreeIter iter, sel_iter;
+	GtkTreeSelection *sel;
+	struct menu *menu;
+
+	path = gtk_tree_path_new_from_string(path_string);
+	if (!gtk_tree_model_get_iter(model2, &iter, path))
+		return;
+
+	sel = gtk_tree_view_get_selection(GTK_TREE_VIEW(tree2_w));
+	if (gtk_tree_selection_get_selected(sel, NULL, &sel_iter))
+		sel_path = gtk_tree_model_get_path(model2, &sel_iter);
+	if (!sel_path)
+		goto out1;
+	if (gtk_tree_path_compare(path, sel_path))
+		goto out2;
+
+	gtk_tree_model_get(model2, &iter, COL_MENU, &menu, -1);
+	toggle_sym_value(menu);
+
+      out2:
+	gtk_tree_path_free(sel_path);
+      out1:
+	gtk_tree_path_free(path);
 }
 
 static gint column2index(GtkTreeViewColumn * column)
@@ -914,7 +972,7 @@ on_treeview2_button_press_event(GtkWidget * widget,
 			current = menu;
 			display_tree_part();
 			gtk_widget_set_sensitive(back_btn, TRUE);
-		} else if (col == COL_OPTION) {
+		} else if ((col == COL_OPTION)) {
 			toggle_sym_value(menu);
 			gtk_tree_view_expand_row(view, path, TRUE);
 		}
@@ -1114,7 +1172,6 @@ static gchar **fill_row(struct menu *menu)
 			row[COL_BTNVIS] = GINT_TO_POINTER(TRUE);
 		if (sym_is_choice(sym))
 			break;
-		/* fall through */
 	case S_TRISTATE:
 		val = sym_get_tristate_value(sym);
 		switch (val) {
@@ -1253,6 +1310,7 @@ static void update_tree(struct menu *src, GtkTreeIter * dst)
 	gboolean valid;
 	GtkTreeIter *sibling;
 	struct symbol *sym;
+	struct property *prop;
 	struct menu *menu1, *menu2;
 
 	if (src == &rootmenu)
@@ -1261,6 +1319,7 @@ static void update_tree(struct menu *src, GtkTreeIter * dst)
 	valid = gtk_tree_model_iter_children(model2, child2, dst);
 	for (child1 = src->list; child1; child1 = child1->next) {
 
+		prop = child1->prompt;
 		sym = child1->sym;
 
 	      reparse:
@@ -1380,7 +1439,7 @@ static void display_tree(struct menu *menu)
 		    && (tree == tree2))
 			continue;
 /*
-		if (((menu != &rootmenu) && !(menu->flags & MENU_ROOT))
+                if (((menu != &rootmenu) && !(menu->flags & MENU_ROOT))
 		    || (view_mode == FULL_VIEW)
 		    || (view_mode == SPLIT_VIEW))*/
 
@@ -1447,6 +1506,10 @@ int main(int ac, char *av[])
 	char *env;
 	gchar *glade_file;
 
+#ifndef LKC_DIRECT_LINK
+	kconfig_load();
+#endif
+
 	bindtextdomain(PACKAGE, LOCALEDIR);
 	bind_textdomain_codeset(PACKAGE, "UTF-8");
 	textdomain(PACKAGE);
@@ -1474,12 +1537,9 @@ int main(int ac, char *av[])
 		case 'a':
 			//showAll = 1;
 			break;
-		case 's':
-			conf_set_message_callback(NULL);
-			break;
 		case 'h':
 		case '?':
-			printf("%s [-s] <config>\n", av[0]);
+			printf("%s <config>\n", av[0]);
 			exit(0);
 		}
 		name = av[2];

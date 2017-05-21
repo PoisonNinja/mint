@@ -11,6 +11,7 @@
 #include <string.h>
 #include <stdbool.h>
 
+#define LKC_DIRECT_LINK
 #include "lkc.h"
 
 #define printd(mask, fmt...) if (cdebug & (mask)) printf(fmt)
@@ -24,14 +25,18 @@ extern int zconflex(void);
 static void zconfprint(const char *err, ...);
 static void zconf_error(const char *err, ...);
 static void zconferror(const char *err);
-static bool zconf_endtoken(const struct kconf_id *id, int starttoken, int endtoken);
+static bool zconf_endtoken(struct kconf_id *id, int starttoken, int endtoken);
 
 struct symbol *symbol_hash[SYMBOL_HASHSIZE];
 
 static struct menu *current_menu, *current_entry;
 
+#define YYDEBUG 0
+#if YYDEBUG
+#define YYERROR_VERBOSE
+#endif
 %}
-%expect 32
+%expect 30
 
 %union
 {
@@ -40,7 +45,7 @@ static struct menu *current_menu, *current_entry;
 	struct symbol *symbol;
 	struct expr *expr;
 	struct menu *menu;
-	const struct kconf_id *id;
+	struct kconf_id *id;
 }
 
 %token <id>T_MAINMENU
@@ -62,7 +67,6 @@ static struct menu *current_menu, *current_entry;
 %token <id>T_TYPE
 %token <id>T_DEFAULT
 %token <id>T_SELECT
-%token <id>T_IMPLY
 %token <id>T_RANGE
 %token <id>T_VISIBLE
 %token <id>T_OPTION
@@ -70,10 +74,6 @@ static struct menu *current_menu, *current_entry;
 %token <string> T_WORD
 %token <string> T_WORD_QUOTE
 %token T_UNEQUAL
-%token T_LESS
-%token T_LESS_EQUAL
-%token T_GREATER
-%token T_GREATER_EQUAL
 %token T_CLOSE_PAREN
 %token T_OPEN_PAREN
 %token T_EOL
@@ -81,7 +81,6 @@ static struct menu *current_menu, *current_entry;
 %left T_OR
 %left T_AND
 %left T_EQUAL T_UNEQUAL
-%left T_LESS T_LESS_EQUAL T_GREATER T_GREATER_EQUAL
 %nonassoc T_NOT
 
 %type <string> prompt
@@ -125,7 +124,7 @@ stmt_list:
 ;
 
 option_name:
-	T_DEPENDS | T_PROMPT | T_TYPE | T_SELECT | T_IMPLY | T_OPTIONAL | T_RANGE | T_DEFAULT | T_VISIBLE
+	T_DEPENDS | T_PROMPT | T_TYPE | T_SELECT | T_OPTIONAL | T_RANGE | T_DEFAULT | T_VISIBLE
 ;
 
 common_stmt:
@@ -217,12 +216,6 @@ config_option: T_SELECT T_WORD if_expr T_EOL
 	printd(DEBUG_PARSE, "%s:%d:select\n", zconf_curname(), zconf_lineno());
 };
 
-config_option: T_IMPLY T_WORD if_expr T_EOL
-{
-	menu_add_symbol(P_IMPLY, sym_lookup($2, 0), $3);
-	printd(DEBUG_PARSE, "%s:%d:imply\n", zconf_curname(), zconf_lineno());
-};
-
 config_option: T_RANGE symbol symbol if_expr T_EOL
 {
 	menu_add_expr(P_RANGE, expr_alloc_comp(E_RANGE,$2, $3), $4);
@@ -236,7 +229,7 @@ symbol_option_list:
 	  /* empty */
 	| symbol_option_list T_WORD symbol_option_arg
 {
-	const struct kconf_id *id = kconf_id_lookup($2, strlen($2));
+	struct kconf_id *id = kconf_id_lookup($2, strlen($2));
 	if (id && id->flags & TF_OPTION)
 		menu_add_option(id->token, $3);
 	else
@@ -479,10 +472,6 @@ if_expr:  /* empty */			{ $$ = NULL; }
 ;
 
 expr:	  symbol				{ $$ = expr_alloc_symbol($1); }
-	| symbol T_LESS symbol			{ $$ = expr_alloc_comp(E_LTH, $1, $3); }
-	| symbol T_LESS_EQUAL symbol		{ $$ = expr_alloc_comp(E_LEQ, $1, $3); }
-	| symbol T_GREATER symbol		{ $$ = expr_alloc_comp(E_GTH, $1, $3); }
-	| symbol T_GREATER_EQUAL symbol		{ $$ = expr_alloc_comp(E_GEQ, $1, $3); }
 	| symbol T_EQUAL symbol			{ $$ = expr_alloc_comp(E_EQUAL, $1, $3); }
 	| symbol T_UNEQUAL symbol		{ $$ = expr_alloc_comp(E_UNEQUAL, $1, $3); }
 	| T_OPEN_PAREN expr T_CLOSE_PAREN	{ $$ = $2; }
@@ -509,15 +498,24 @@ void conf_parse(const char *name)
 
 	sym_init();
 	_menu_init();
-	rootmenu.prompt = menu_add_prompt(P_MENU, "Linux Kernel Configuration", NULL);
+	modules_sym = sym_lookup(NULL, 0);
+	modules_sym->type = S_BOOLEAN;
+	modules_sym->flags |= SYMBOL_AUTO;
+	rootmenu.prompt = menu_add_prompt(P_MENU, "Strawberry Kernel Configuration", NULL);
 
+#if YYDEBUG
 	if (getenv("ZCONF_DEBUG"))
 		zconfdebug = 1;
+#endif
 	zconfparse();
 	if (zconfnerrs)
 		exit(1);
-	if (!modules_sym)
-		modules_sym = sym_find( "n" );
+	if (!modules_sym->prop) {
+		struct property *prop;
+
+		prop = prop_alloc(P_DEFAULT, modules_sym);
+		prop->expr = expr_alloc_symbol(sym_lookup("MODULES", 0));
+	}
 
 	rootmenu.prompt->text = _(rootmenu.prompt->text);
 	rootmenu.prompt->text = sym_expand_string_value(rootmenu.prompt->text);
@@ -526,7 +524,7 @@ void conf_parse(const char *name)
 	for_all_symbols(i, sym) {
 		if (sym_check_deps(sym))
 			zconfnerrs++;
-	}
+        }
 	if (zconfnerrs)
 		exit(1);
 	sym_set_change_count(1);
@@ -547,7 +545,7 @@ static const char *zconf_tokenname(int token)
 	return "<token>";
 }
 
-static bool zconf_endtoken(const struct kconf_id *id, int starttoken, int endtoken)
+static bool zconf_endtoken(struct kconf_id *id, int starttoken, int endtoken)
 {
 	if (id->token != endtoken) {
 		zconf_error("unexpected '%s' within %s block",
@@ -592,7 +590,9 @@ static void zconf_error(const char *err, ...)
 
 static void zconferror(const char *err)
 {
+#if YYDEBUG
 	fprintf(stderr, "%s:%d: %s\n", zconf_curname(), zconf_lineno() + 1, err);
+#endif
 }
 
 static void print_quoted_string(FILE *out, const char *str)
@@ -671,11 +671,6 @@ static void print_symbol(FILE *out, struct menu *menu)
 			expr_fprint(prop->expr, out);
 			fputc('\n', out);
 			break;
-		case P_IMPLY:
-			fputs( "  imply ", out);
-			expr_fprint(prop->expr, out);
-			fputc('\n', out);
-			break;
 		case P_RANGE:
 			fputs( "  range ", out);
 			expr_fprint(prop->expr, out);
@@ -746,7 +741,7 @@ void zconfdump(FILE *out)
 	}
 }
 
-#include "zconf.lex.c"
+#include "lex.zconf.c"
 #include "util.c"
 #include "confdata.c"
 #include "expr.c"
