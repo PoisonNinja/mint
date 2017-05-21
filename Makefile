@@ -206,7 +206,7 @@ KBUILD_CPPFLAGS := -D__KERNEL__
 KBUILD_CFLAGS   := -ffreestanding -fno-builtin -Iinclude -Iarch/include -Wall -Wextra -std=gnu11 -O2
 KBUILD_AFLAGS_KERNEL :=
 KBUILD_CFLAGS_KERNEL :=
-KBUILD_AFLAGS   := -felf64
+KBUILD_AFLAGS   :=
 KBUILD_LDFLAGS  := -lgcc -nostdlib -Tarch/$(ARCH)/mint.lds
 
 # Read KERNELRELEASE from include/config/kernel.release (if it exists)
