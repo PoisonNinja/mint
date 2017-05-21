@@ -168,7 +168,6 @@ $(srctree)/scripts/Kbuild.include: ;
 include $(srctree)/scripts/Kbuild.include
 
 # Make variables (CC, etc...)
-include platform.mk
 STRIP		= $(CROSS_COMPILE)strip
 OBJCOPY		= $(CROSS_COMPILE)objcopy
 OBJDUMP		= $(CROSS_COMPILE)objdump
@@ -321,8 +320,6 @@ else
 include/config/auto.conf: ;
 endif # $(dot-config)
 
-include arch/$(ARCH)/Makefile
-
 # The all: target is the default when no target is given on the
 # command line.
 # This allow a user to issue only 'make' to build a kernel including modules
@@ -333,7 +330,7 @@ objs-y		:=
 # This goes last so we can override generic functions marked with __attribute__
 # ((weak)) or only functions that are only declared with architecture-specfic
 # implementations. Example: memset and friends
-objs-y		+= arch/$(ARCH)
+objs-y		+=
 libs-y		:=
 
 mint-dirs	:= $(objs-y) $(libs-y)
