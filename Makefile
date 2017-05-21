@@ -106,6 +106,20 @@ VPATH		:= $(srctree)
 
 export srctree objtree VPATH
 
+SUBARCH := $(shell uname -m | sed -e s/i.86/x86/ \
+				  -e s/sun4u/sparc64/ \
+				  -e s/arm.*/arm/ -e s/sa110/arm/ \
+				  -e s/s390x/s390/ -e s/parisc64/parisc/ \
+				  -e s/ppc.*/powerpc/ -e s/mips.*/mips/ \
+				  -e s/sh[234].*/sh/ -e s/aarch64.*/arm64/ )
+
+ARCH		?= $(SUBARCH)
+CROSS_COMPILE	?= $(ARCH)-elf-
+
+# Architecture as present in compile.h
+UTS_MACHINE 	:= $(ARCH)
+SRCARCH 	:= $(ARCH)
+
 KCONFIG_CONFIG	?= .config
 export KCONFIG_CONFIG
 
@@ -168,7 +182,7 @@ $(srctree)/scripts/Kbuild.include: ;
 include $(srctree)/scripts/Kbuild.include
 
 # Make variables (CC, etc...)
-CC			= $(CROSS_COMPILE)cc
+CC			= $(CROSS_COMPILE)gcc
 LD			= $(CROSS_COMPILE)ld
 AS			= nasm
 STRIP		= $(CROSS_COMPILE)strip
@@ -288,6 +302,7 @@ ifeq ($(config-targets),1)
 export KBUILD_DEFCONFIG KBUILD_KCONFIG
 
 config: scripts_basic outputmakefile FORCE
+	@echo $(CC)
 	$(Q)mkdir -p include/config
 	$(Q)$(MAKE) $(build)=scripts/kconfig $@
 
