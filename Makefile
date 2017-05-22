@@ -345,7 +345,7 @@ include arch/$(ARCH)/Makefile
 # Defaults to vmlinux, but the arch makefile usually adds further targets
 all: prepare mint.kernel
 
-objs-y		:= lib
+objs-y		:= kernel lib
 # This goes last so we can override generic functions marked with __attribute__
 # ((weak)) or only functions that are only declared with architecture-specfic
 # implementations. Example: memset and friends

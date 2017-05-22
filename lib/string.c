@@ -147,6 +147,6 @@ char *strstr(const char *haystack, const char *needle)
     size_t n = strlen(needle);
     while (*haystack)
         if (!memcmp(haystack++, needle, n))
-            return haystack - 1;
+            return (char *)haystack - 1;
     return 0;
 }
