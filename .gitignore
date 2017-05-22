@@ -53,11 +53,12 @@ Mkfile.old
 dkms.conf
 
 # Generated directories
-include/config.h
+include/arch
 include/config/
 include/generated/
 
 # Generated files
+include/config.h
 .config
 .config.old
 .version

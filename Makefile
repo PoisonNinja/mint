@@ -365,7 +365,18 @@ quiet_cmd_mint = $(CC) $(KBUILD_CFLAGS) -o $@ $(mint-libs) $(mint-objs) $(KBUILD
 mint.kernel: $(mint-all)
 	$(call if_changed,mint)
 
-prepare: include/generated/utsrelease.h include/config/auto.conf include/config/kernel.release include/generated/version.h FORCE
+ARCH_INCLUDE_FILES := $(shell find arch/include/$(ARCH) -type f)
+ARCH_INCLUDE_DIRS := $(shell find arch/include/$(ARCH) -type d)
+
+include/arch: $(ARCH_INCLUDE_FILES) $(ARCH_INCLUDE_DIRS)
+	@echo
+	@echo "Installing headers..."
+	@echo
+	@mkdir -p include/arch
+	@rsync -aq --update arch/include/$(ARCH)/ include/arch
+	@touch include/arch
+
+prepare: include/arch include/generated/utsrelease.h include/config/auto.conf include/config/kernel.release include/generated/version.h FORCE
 
 install: ../hdd/boot/mint.kernel
 
