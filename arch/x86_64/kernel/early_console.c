@@ -47,8 +47,8 @@ static void x86_64_console_vga_write_string(int color, const char *string,
                    2 * VGA_WIDTH);
             y = VGA_HEIGHT - 1;
         }
-        x86_64_console_vga_update_cursor(x, y);
     }
+    x86_64_console_vga_update_cursor(x, y);
 }
 
 static int x86_64_console_vga_write(const char *message, size_t size)
