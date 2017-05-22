@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2017 Jason Lu (PoisonNinja)
+ * Copyright (C) 2017 Jason Lu (PoisonNinja) and contributors
  *
- * This file is part of Mint. Mint is free software: you can
+ * This file is part of Strawberry. Strawberry is free software: you can
  * redistribute it and/or modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation, version 2.
  *
@@ -14,16 +14,26 @@
  * this program; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-#include <arch/boot/multiboot.h>
-#include <boot/bootinfo.h>
-#include <kernel.h>
+
+#pragma once
+
 #include <types.h>
 
-extern int x86_64_init_console(void);
-extern void kmain(struct mint_bootinfo *);
+#define MEMORY_TYPE_AVAILABLE 0x1
+#define MEMORY_TYPE_RESERVED 0x2
+#define MEMORY_TYPE_ACPI 0x3
+#define MEMORY_TYPE_BAD 0x5
 
-void x86_64_init(uint32_t magic, struct multiboot_info *mboot)
-{
-    x86_64_init_console();
-    kmain(NULL);
-}
+struct mint_memory_region {
+    uint64_t lower;
+    uint64_t upper;
+    uint64_t type;
+    struct mint_memory_region* next;
+};
+
+struct mint_bootinfo {
+    char* cmdline;
+    uint64_t total_mem;
+    uint8_t num_memregions;
+    struct mint_memory_region* memregions;
+};
