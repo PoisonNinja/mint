@@ -32,24 +32,24 @@ int vsprintf(char *s, const char *format, va_list arg)
 {
     const char *pos = format;
     while (*pos != '\0') {
-        char int_conv[100];
+        char buffer[65];
         if (*pos == '%') {
             pos++;
             switch (*pos) {
                 case 'd':
-                    ui2a(va_arg(arg, int), int_conv, 10, 0);
-                    s = merge_strings(s, int_conv);
+                    ui2a(va_arg(arg, int), buffer, 10, 0);
+                    s = merge_strings(s, buffer);
                     break;
                 case 's':
                     s = merge_strings(s, va_arg(arg, char *));
                     break;
                 case 'x':
-                    ui2a(va_arg(arg, int), int_conv, 16, 0);
-                    s = merge_strings(s, int_conv);
+                    ui2a(va_arg(arg, int), buffer, 16, 0);
+                    s = merge_strings(s, buffer);
                     break;
                 case 'X':
-                    ui2a(va_arg(arg, int), int_conv, 16, 1);
-                    s = merge_strings(s, int_conv);
+                    ui2a(va_arg(arg, int), buffer, 16, 1);
+                    s = merge_strings(s, buffer);
                     break;
             }
         } else {
