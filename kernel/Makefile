@@ -1,1 +1,1 @@
-obj-y := printk.o
+obj-y := console.o printk.o
