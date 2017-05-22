@@ -143,7 +143,7 @@ char *strncpy(char *dest, const char *src, size_t n)
 size_t strlen(const char *str)
 {
     size_t n = 0;
-    while (*str != '\0')
+    while (*str++ != '\0')
         n++;
     return n;
 }
