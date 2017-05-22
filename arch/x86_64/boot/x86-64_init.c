@@ -18,10 +18,19 @@
 #include <arch/boot/multiboot.h>
 #include <boot/bootinfo.h>
 #include <kernel.h>
+#include <string.h>
 #include <types.h>
 
 extern int x86_64_init_console(void);
 extern void kmain(struct mint_bootinfo *);
+
+extern uint64_t __start_bss;
+extern uint64_t __stop_bss;
+
+void zero_bss(void)
+{
+    memset(&__start_bss, 0, &__stop_bss - &__start_bss);
+}
 
 void x86_64_init(uint32_t magic, struct multiboot_info *mboot)
 {
