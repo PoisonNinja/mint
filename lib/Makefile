@@ -1,1 +1,1 @@
-obj-y := printf.o stdlib.o string.o
+obj-y := printf.o string.o
