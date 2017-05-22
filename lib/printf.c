@@ -22,6 +22,8 @@ struct parameters {
     uint8_t base;
     uint8_t uppercase;
     bool is_negative;
+    int padding;
+    int padding_char;
 };
 
 struct printf_data {
@@ -218,6 +220,9 @@ static void printf_format(struct printf_data *data, const char *format,
                         ull2a(va_arg(arg, unsigned long long), &params);
                     puts(data, params.buffer);
                     break;
+                case '%':
+                    data->putcf(data, '%');
+                    break;
             }
             pos++;
         } else {
@@ -241,6 +246,26 @@ int sprintf(char *s, const char *format, ...)
     int ret;
     va_start(args, format);
     ret = vsprintf(s, format, args);
+    va_end(args);
+
+    return ret;
+}
+
+int vsnprintf(char *s, size_t size, const char *format, va_list arg)
+{
+    struct printf_data data = {
+        .buffer = s, .max = size, .putcf = snprintf_putcf,
+    };
+    printf_format(&data, format, arg);
+    return data.used;
+}
+
+int snprintf(char *s, size_t size, const char *format, ...)
+{
+    va_list args;
+    int ret;
+    va_start(args, format);
+    ret = vsnprintf(s, size, format, args);
     va_end(args);
 
     return ret;
