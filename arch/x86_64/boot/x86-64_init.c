@@ -14,11 +14,16 @@
  * this program; if not, write to the Free Software Foundation, Inc., 51
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
+#include <arch/boot/multiboot.h>
+#include <kernel.h>
 #include <types.h>
-#include <x86_64/boot/multiboot.h>
+
+extern int x86_64_init_console(void);
 
 void x86_64_init(uint32_t magic, struct multiboot_info *mboot)
 {
+    x86_64_init_console();
+    printk(INFO, "Hello world!\n");
     for (;;)
         ;
 }
