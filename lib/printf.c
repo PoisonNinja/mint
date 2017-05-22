@@ -23,7 +23,7 @@ struct parameters {
     uint8_t uppercase;
     bool is_negative;
     int padding;
-    int padding_char;
+    int zero;
 };
 
 struct printf_data {
@@ -44,8 +44,21 @@ static void sprintf_putcf(struct printf_data *data, char c)
     data->buffer[data->used++] = c;
 }
 
-static void puts(struct printf_data *data, char *message)
+static void puts(struct parameters *params, struct printf_data *data,
+                 char *message)
 {
+    char *tmp = message;
+    int n = params->padding;
+    while (*tmp++ && n)
+        n--;
+    if (!params->zero) {
+        while (n--)
+            data->putcf(data, ' ');
+    }
+    if (params->zero) {
+        while (n--)
+            data->putcf(data, '0');
+    }
     while (*message) {
         data->putcf(data, *message++);
     }
@@ -144,6 +157,18 @@ static void i2a(int num, struct parameters *p)
     ui2a(num, p);
 }
 
+static int a2u(char *src)
+{
+    unsigned int num = 0;
+    int digit;
+    while ((digit = *src++ - '0') >= 0) {
+        if (digit > 10)
+            break;
+        num = num * 10 + digit;
+    }
+    return num;
+}
+
 static void printf_format(struct printf_data *data, const char *format,
                           va_list arg)
 {
@@ -156,6 +181,19 @@ static void printf_format(struct printf_data *data, const char *format,
         if (*pos == '%') {
             uint8_t lng = 0;
             pos++;
+            if (*pos == '0') {
+                params.zero = 1;
+                pos++;
+            }
+            if (*pos >= '0' && *pos <= '9') {
+                int i = 0;
+                char padding[5];
+                while (*pos >= '0' && *pos <= '9') {
+                    padding[i] = *pos;
+                    pos++, i++;
+                }
+                params.padding = a2u(padding);
+            }
             if (*pos == 'l') {
                 lng++;
                 pos++;
@@ -177,7 +215,7 @@ static void printf_format(struct printf_data *data, const char *format,
                         l2a(va_arg(arg, unsigned long), &params);
                     else if (lng == 2)
                         ll2a(va_arg(arg, unsigned long long), &params);
-                    puts(data, params.buffer);
+                    puts(&params, data, params.buffer);
                     break;
                 case 'u':
                     params.base = 10;
@@ -187,18 +225,18 @@ static void printf_format(struct printf_data *data, const char *format,
                         ul2a(va_arg(arg, unsigned long), &params);
                     else if (lng == 2)
                         ull2a(va_arg(arg, unsigned long long), &params);
-                    puts(data, params.buffer);
+                    puts(&params, data, params.buffer);
                     break;
                 case 'o':
                     params.base = 8;
                     ui2a(va_arg(arg, unsigned int), &params);
-                    puts(data, params.buffer);
+                    puts(&params, data, params.buffer);
                     break;
                 case 's':
-                    puts(data, va_arg(arg, char *));
+                    puts(&params, data, va_arg(arg, char *));
                     break;
                 case 'p':
-                    puts(data, "0x");
+                    puts(&params, data, "0x");
 #if __SIZEOF_POINTER__ <= __SIZEOF_INT__
                     lng = 0;
 #elif __SIZEOF_POINTER__ <= __SIZEOF_LONG__
@@ -218,7 +256,7 @@ static void printf_format(struct printf_data *data, const char *format,
                         ul2a(va_arg(arg, unsigned long), &params);
                     else if (lng == 2)
                         ull2a(va_arg(arg, unsigned long long), &params);
-                    puts(data, params.buffer);
+                    puts(&params, data, params.buffer);
                     break;
                 case '%':
                     data->putcf(data, '%');
