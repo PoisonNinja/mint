@@ -27,4 +27,5 @@ struct console {
 };
 
 extern void console_register(struct console *console);
+extern void console_unregister(struct console *console);
 extern void console_write(const char *message, size_t length);

@@ -25,6 +25,11 @@ void console_register(struct console *console)
     list_add(&console->list, &console_list);
 }
 
+void console_unregister(struct console *console)
+{
+    list_del(&console->list);
+}
+
 void console_write(const char *message, size_t length)
 {
     struct console *current;
