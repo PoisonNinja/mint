@@ -9,9 +9,9 @@
 
 static int x = 0;
 static int y = 0;
-static volatile uint16_t *video = (volatile uint16_t *)0xB8000;
+static volatile uint16_t *video = (volatile uint16_t *)VGA_BUFFER;
 
-static void x86_64_console_vga_update_cursor(int row, int col)
+static void x86_64_console_vga_update_cursor(int col, int row)
 {
     unsigned short position = (row * VGA_WIDTH) + col;
 
