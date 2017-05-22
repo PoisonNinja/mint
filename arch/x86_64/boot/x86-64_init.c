@@ -23,7 +23,9 @@ extern int x86_64_init_console(void);
 void x86_64_init(uint32_t magic, struct multiboot_info *mboot)
 {
     x86_64_init_console();
-    printk(INFO, "Hello world!\n");
+    for (int i = 0; i < 26; i++) {
+        printk(INFO, "Hello world: %d!\n", i);
+    }
     for (;;)
         ;
 }
