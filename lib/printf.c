@@ -146,6 +146,7 @@ static void printf_format(struct printf_data *data, const char *format,
                           va_list arg)
 {
     struct parameters params;
+    // uint64_t plus one for null terminator
     char buffer[65];
     params.buffer = buffer;
     const char *pos = format;
@@ -166,13 +167,44 @@ static void printf_format(struct printf_data *data, const char *format,
                     data->putcf(data, (char)va_arg(arg, int));
                     break;
                 case 'd':
+                case 'i':
                     params.base = 10;
-                    i2a(va_arg(arg, int), &params);
+                    if (lng == 0)
+                        i2a(va_arg(arg, unsigned int), &params);
+                    else if (lng == 1)
+                        l2a(va_arg(arg, unsigned long), &params);
+                    else if (lng == 2)
+                        ll2a(va_arg(arg, unsigned long long), &params);
+                    puts(data, params.buffer);
+                    break;
+                case 'u':
+                    params.base = 10;
+                    if (lng == 0)
+                        ui2a(va_arg(arg, unsigned int), &params);
+                    else if (lng == 1)
+                        ul2a(va_arg(arg, unsigned long), &params);
+                    else if (lng == 2)
+                        ull2a(va_arg(arg, unsigned long long), &params);
+                    puts(data, params.buffer);
+                    break;
+                case 'o':
+                    params.base = 8;
+                    ui2a(va_arg(arg, unsigned int), &params);
                     puts(data, params.buffer);
                     break;
                 case 's':
                     puts(data, va_arg(arg, char *));
                     break;
+                case 'p':
+                    puts(data, "0x");
+#if __SIZEOF_POINTER__ <= __SIZEOF_INT__
+                    lng = 0;
+#elif __SIZEOF_POINTER__ <= __SIZEOF_LONG__
+                    lng = 1;
+#elif __SIZEOF_POINTER__ <= __SIZEOF_LONG_LONG__
+                    lng = 2;
+#endif
+                    __attribute__((fallthrough));
                 case 'X':
                     params.uppercase = 1;
                     __attribute__((fallthrough));
