@@ -174,8 +174,8 @@ static void printf_format(struct printf_data *data, const char *format,
                           va_list arg)
 {
     struct parameters params;
-    // uint64_t plus one for null terminator
-    char buffer[65];
+    // 22 chars for max value of long long in octal + 1 for null
+    char buffer[23];
     params.buffer = buffer;
     const char *pos = format;
     while (*pos != '\0') {

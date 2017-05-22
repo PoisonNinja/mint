@@ -26,6 +26,5 @@ extern void kmain(struct mint_bootinfo *);
 void x86_64_init(uint32_t magic, struct multiboot_info *mboot)
 {
     x86_64_init_console();
-    printk(INFO, "%05d\n", 3);
     kmain(NULL);
 }
