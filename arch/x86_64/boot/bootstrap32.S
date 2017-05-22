@@ -6,6 +6,10 @@ MULTIBOOT_CHECKSUM          equ -(MULTIBOOT_HEADER_MAGIC + MULTIBOOT_HEADER_FLAG
 
 bits 32
 section .bootstrap
+align 4
+dd MULTIBOOT_HEADER_MAGIC
+dd MULTIBOOT_HEADER_FLAGS
+dd MULTIBOOT_CHECKSUM
 
 NO_CPUID_STRING: db "No CPUID support!", 0
 NO_LONG_MODE: db "No long mode support! Use a 32-bit build!", 0
