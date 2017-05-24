@@ -1,6 +1,0 @@
-config DEBUG
-    bool "Enable debugging features of the kernel"
-    default n
-    help
-        Enables debugging features in the kernel, such as more verbose logging
-        and testing code.
