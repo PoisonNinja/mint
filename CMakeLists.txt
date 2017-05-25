@@ -11,6 +11,13 @@ set(ARCH_PATH "${CMAKE_SOURCE_DIR}/arch/${ARCH}")
 if(NOT EXISTS ${ARCH_PATH})
     message(FATAL_ERROR "Unable to locate architecture directory. Perhaps your ARCH is wrong?")
 endif()
+message(STATUS "Architecture folder: " ${ARCH_PATH})
+
+set(ARCH_INCLUDE_PATH "${CMAKE_SOURCE_DIR}/arch/include/${ARCH}")
+if(NOT EXISTS ${ARCH_INCLUDE_PATH})
+    message(FATAL_ERROR "Unable to locate architecture include directory. Perhaps your ARCH is wrong?")
+endif()
+message(STATUS "Architecture include folder: " ${ARCH_INCLUDE_PATH})
 
 if(NOT DEFINED ${CMAKE_TOOLCHAIN_FILE})
     set(CMAKE_TOOLCHAIN_FILE ${ARCH_PATH}/toolchain.cmake)
@@ -61,9 +68,21 @@ if(NOT DEFINED SYSROOT)
 endif()
 message(STATUS "Sysroot: " ${SYSROOT})
 
+add_custom_target(
+   arch-headers
+   COMMAND rsync
+      -aq
+      --update
+      "${ARCH_INCLUDE_PATH}/"
+      "${PROJECT_SOURCE_DIR}/include/arch/"
+   COMMENT "Installing architecture-specific headers"
+)
+
 add_executable(mint.kernel "")
 add_subdirectory(${ARCH_PATH})
 add_subdirectory(kernel)
 add_subdirectory(lib)
+
+add_dependencies(mint.kernel arch-headers)
 
 install(TARGETS mint.kernel RUNTIME DESTINATION "${SYSROOT}/boot")
