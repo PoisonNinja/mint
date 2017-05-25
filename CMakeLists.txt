@@ -56,7 +56,14 @@ set(INCLUDE_DIRS "${INCLUDE_DIRS} ${CMAKE_SOURCE_DIR}/include/")
 include_directories(${INCLUDE_DIRS})
 message(STATUS "Include directories: " ${INCLUDE_DIRS})
 
+if(NOT DEFINED SYSROOT)
+    set(SYSROOT "${CMAKE_SOURCE_DIR}/../hdd")
+endif()
+message(STATUS "Sysroot: " ${SYSROOT})
+
 add_executable(mint.kernel "")
 add_subdirectory(${ARCH_PATH})
 add_subdirectory(kernel)
 add_subdirectory(lib)
+
+install(TARGETS mint.kernel RUNTIME DESTINATION "${SYSROOT}/boot")
