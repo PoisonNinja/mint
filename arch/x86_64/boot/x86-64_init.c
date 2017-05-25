@@ -24,6 +24,8 @@
 extern int x86_64_init_console(void);
 extern void kmain(struct mint_bootinfo *);
 
+extern void gdt_init(void);
+
 extern uint64_t __start_bss;
 extern uint64_t __stop_bss;
 
@@ -35,5 +37,6 @@ void zero_bss(void)
 void x86_64_init(uint32_t magic, struct multiboot_info *mboot)
 {
     x86_64_init_console();
+    gdt_init();
     kmain(NULL);
 }

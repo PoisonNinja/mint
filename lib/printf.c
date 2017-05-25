@@ -174,6 +174,7 @@ static void printf_format(struct printf_data *data, const char *format,
                           va_list arg)
 {
     struct parameters params;
+    memset(&params, 0, sizeof(struct parameters));
     // 22 chars for max value of long long in octal + 1 for null
     char buffer[23];
     params.buffer = buffer;
