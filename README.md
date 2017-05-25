@@ -9,16 +9,16 @@ Mint uses the [CMake](https://cmake.org/) build generator tool. Thus, you can ac
 
 In tree builds are not supported to prevent cluttering the tree up with object files, and attempting to do so will cause an error.
 
-To start, create a folder named anything you like, although I personally call it `build`. Enter the directory, and run `cmake ../`. The default options assume that you followed the exact instructions from Pepper, your directory layout matches the default, and the architecture is `x86_64`. For customization options, see the table below.
+To start, create a folder named anything you like, although I personally call it `build`. Enter the directory, and run `cmake ../`. The default options assume that you followed the exact instructions from Pepper, your directory layout matches the default, and the architecture is `x86_64`. For customization options, see the table below. Pass them in when running `cmake` as `-DOPTION=VALUE`.
 
-|Flag                |Description               | Values |
-|--------------------|--------------------------|--------|
-|ARCH                |Architecture to build for | x86_64 |
-|CMAKE_TOOLCHAIN_FILE|Path to toolchain spec    | <path> |
-|TOOLCHAIN_PREFIX    |Path to toolchain         | <path> |
-|PLATFORM_FILE       |Path to platform spec     | <path> |
-|CMAKE_C_FLAGS       |Additional CFLAGS         | <text> |
-|SYSROOT             |Path to Pepper sysroot    | <path> |
+|Flag                |Description               | Values   |
+|--------------------|--------------------------|----------|
+|ARCH                |Architecture to build for | `x86_64` |
+|CMAKE_TOOLCHAIN_FILE|Path to toolchain spec    | `<path>` |
+|TOOLCHAIN_PREFIX    |Path to toolchain         | `<path>` |
+|PLATFORM_FILE       |Path to platform spec     | `<path>` |
+|CMAKE_C_FLAGS       |Additional CFLAGS         | `<text>` |
+|SYSROOT             |Path to Pepper sysroot    | `<path>` |
 
 If you want to use a different build system, such as Ninja, run `cmake -G <generator> ..`. Replace generator with the name of the build system. The full list of generators can be found by running `cmake --help`. I test Mint using Make. Other build systems are not guaranteed to work. The rest of the instructions will assume that you use Make, although it should be incredibly easy to use a different system.
 
