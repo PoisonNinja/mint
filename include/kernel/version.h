@@ -1,7 +1,0 @@
-#define MINT_VERSION_MAJOR 0
-#define MINT_VERSION_MINOR 0
-#define MINT_VERSION_PATCH 1
-#define MINT_CODENAME "Hello World"
-
-#define MINT_COMPILER_VERSION __VERSION__
-#define MINT_COMPILE_TIME __DATE__ " " __TIME__

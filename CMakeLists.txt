@@ -1,5 +1,11 @@
 cmake_minimum_required(VERSION 3.1)
 
+set(MINT_VERSION_MAJOR "0")
+set(MINT_VERSION_MINOR "0")
+set(MINT_VERSION_PATCH "1")
+set(MINT_VERSION_SUFFIX "-rc1")
+set(MINT_VERSION "${MINT_VERSION_MAJOR}.${MINT_VERSION_MINOR}.${MINT_VERSION_PATCH}${MINT_VERSION_SUFFIX}")
+
 if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
     message(FATAL_ERROR "In-source builds are not allowed.")
 endif("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
@@ -74,8 +80,18 @@ add_custom_target(
       -aq
       --update
       "${ARCH_INCLUDE_PATH}/"
-      "${PROJECT_SOURCE_DIR}/include/arch/"
+      "${CMAKE_SOURCE_DIR}/include/arch/"
    COMMENT "Installing architecture-specific headers"
+)
+
+add_custom_target(
+    version-headers
+    COMMAND ${CMAKE_SOURCE_DIR}/tools/mkversion_h
+        ${CMAKE_SOURCE_DIR}/include/kernel/version.h
+        ${MINT_VERSION}
+        ${ARCH}
+        ${CMAKE_C_COMPILER}
+    COMMENT "Generating version header"
 )
 
 add_executable(mint.kernel "")
@@ -84,6 +100,6 @@ add_subdirectory(cpu)
 add_subdirectory(kernel)
 add_subdirectory(lib)
 
-add_dependencies(mint.kernel arch-headers)
+add_dependencies(mint.kernel arch-headers version-headers)
 
 install(TARGETS mint.kernel RUNTIME DESTINATION "${SYSROOT}/boot")

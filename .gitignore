@@ -47,6 +47,10 @@
 include/arch/
 build/
 
+# Generated version files
+.version
+include/kernel/version.h
+
 # CMake
 CMakeCache.txt
 CMakeFiles
