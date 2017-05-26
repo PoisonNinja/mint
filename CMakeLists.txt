@@ -80,6 +80,7 @@ add_custom_target(
 
 add_executable(mint.kernel "")
 add_subdirectory(${ARCH_PATH})
+add_subdirectory(cpu)
 add_subdirectory(kernel)
 add_subdirectory(lib)
 

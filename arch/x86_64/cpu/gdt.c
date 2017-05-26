@@ -9,8 +9,8 @@ static struct gdt_descriptor gdt_ptr;
 
 extern void gdt_flush(uint64_t);
 
-void gdt_set_entry(struct gdt_entry* entry, uint32_t base, uint32_t limit,
-                   uint8_t access, uint8_t flags)
+static void gdt_set_entry(struct gdt_entry* entry, uint32_t base,
+                          uint32_t limit, uint8_t access, uint8_t flags)
 {
     entry->limit_low = limit & 0xFFFF;
     entry->base_low = base & 0xFFFF;
