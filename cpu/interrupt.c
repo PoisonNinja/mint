@@ -3,5 +3,5 @@
 
 void interrupt_dispatch(struct registers* regs)
 {
-    printk(INFO, "Recevied interrupt\n");
+    printk(INFO, "Received interrupt\n");
 }
