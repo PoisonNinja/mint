@@ -108,3 +108,8 @@ common_interrupt_stub:
 
     POPA
     add rsp, 16
+
+global idt_load
+idt_load:
+    lidt [rdi]
+    ret

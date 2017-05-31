@@ -69,6 +69,8 @@ static void idt_set_entry(struct idt_entry* entry, uint64_t offset,
     entry->zero_two = 0;
 }
 
+extern int idt_load(uint64_t);
+
 void idt_init(void)
 {
     memset(&idt_entries, 0, sizeof(struct idt_entry) * NUM_ENTRIES);
@@ -123,7 +125,7 @@ void idt_init(void)
     idt_set_entry(&idt_entries[47], (uint64_t)isr47, 0x08, 0x8E);
     idt_ptr.limit = sizeof(struct idt_entry) * 256 - 1;
     idt_ptr.offset = (uint64_t)&idt_entries;
-    __asm__ __volatile__("lidt (%0)" ::"r"(&idt_ptr) : "memory");
+    idt_load((uint64_t)&idt_ptr);
 }
 
 extern void interrupt_dispatch(struct registers*);

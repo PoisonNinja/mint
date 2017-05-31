@@ -7,7 +7,7 @@
 static struct gdt_entry gdt_entries[NUM_ENTRIES];
 static struct gdt_descriptor gdt_ptr;
 
-extern void gdt_flush(uint64_t);
+extern void gdt_load(uint64_t);
 
 static void gdt_set_entry(struct gdt_entry* entry, uint32_t base,
                           uint32_t limit, uint8_t access, uint8_t flags)
@@ -30,5 +30,5 @@ void gdt_init(void)
     gdt_set_entry(&gdt_entries[2], 0, 0xFFFFF, 0x92, 0x0A);
     gdt_ptr.limit = sizeof(struct gdt_entry) * NUM_ENTRIES - 1;
     gdt_ptr.offset = (uint64_t)gdt_entries;
-    gdt_flush((uint64_t)&gdt_ptr);
+    gdt_load((uint64_t)&gdt_ptr);
 }

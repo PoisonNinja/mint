@@ -1,5 +1,5 @@
-global gdt_flush
-gdt_flush:
+global gdt_load
+gdt_load:
     lgdt [rdi]
     mov ax, 0x10      ; 0x10 is the offset in the GDT to our data segment
     mov ds, ax        ; Load all data segment selectors
