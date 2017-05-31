@@ -62,7 +62,7 @@ include(${PLATFORM_FILE})
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -ffreestanding -fno-builtin -Iinclude -std=gnu11")
 message(STATUS "CFLAGS: " ${CMAKE_C_FLAGS})
 
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lgcc -nostdlib")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -nostdlib")
 message(STATUS "LDFLAGS: " ${CMAKE_EXE_LINKER_FLAGS})
 
 set(INCLUDE_DIRS "${INCLUDE_DIRS} ${CMAKE_SOURCE_DIR}/include/")
