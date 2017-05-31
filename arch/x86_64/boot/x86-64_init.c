@@ -38,6 +38,8 @@ void zero_bss(void)
 void x86_64_init(uint32_t magic, struct multiboot_info *mboot)
 {
     x86_64_init_console();
+    if (magic != MULTIBOOT_BOOTLOADER_MAGIC)
+        printk(INFO, "WTF magic mismatch!\n");
     gdt_init();
     idt_init();
     kmain(NULL);

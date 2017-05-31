@@ -246,10 +246,8 @@ static void printf_format(struct printf_data *data, const char *format,
 #elif __SIZEOF_POINTER__ <= __SIZEOF_LONG_LONG__
                     lng = 2;
 #endif
-                    __attribute__((fallthrough));
                 case 'X':
                     params.uppercase = 1;
-                    __attribute__((fallthrough));
                 case 'x':
                     params.base = 16;
                     if (lng == 0)

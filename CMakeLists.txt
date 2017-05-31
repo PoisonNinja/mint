@@ -103,6 +103,7 @@ set(CMAKE_C_LINK_EXECUTABLE "${CMAKE_C_LINKER} <CMAKE_C_LINK_FLAGS> <LINK_FLAGS>
 add_executable(mint.kernel "")
 add_subdirectory(${ARCH_PATH})
 add_subdirectory(cpu)
+add_subdirectory(drivers)
 add_subdirectory(kernel)
 add_subdirectory(lib)
 

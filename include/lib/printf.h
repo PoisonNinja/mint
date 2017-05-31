@@ -20,5 +20,7 @@
 #include <stdarg.h>
 #include <types.h>
 
+extern int vsnprintf(char* s, size_t size, const char* format, va_list arg);
+extern int snprintf(char* s, size_t size, const char* format, ...);
 extern int vsprintf(char* s, const char* format, va_list arg);
 extern int sprintf(char* s, const char* format, ...);

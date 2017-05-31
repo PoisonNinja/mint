@@ -35,3 +35,5 @@ enum {
 };
 #define printk(level, ...) _printk(level, __VA_ARGS__)
 int _printk(int level, const char *format, ...);
+
+void __attribute__((noreturn)) panic(const char *format, ...);
