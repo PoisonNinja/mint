@@ -39,7 +39,10 @@ void x86_64_init(uint32_t magic, struct multiboot_info *mboot)
 {
     x86_64_init_console();
     if (magic != MULTIBOOT_BOOTLOADER_MAGIC)
-        printk(INFO, "WTF magic mismatch!\n");
+        panic("Bad multiboot magic! Expected 0x%X, but got 0x%X\n",
+              MULTIBOOT_BOOTLOADER_MAGIC, magic);
+    printk(INFO, "x86_64-init: Multiboot information structure at 0x%llX\n",
+           mboot);
     gdt_init();
     idt_init();
     kmain(NULL);

@@ -36,4 +36,6 @@ enum {
 #define printk(level, ...) _printk(level, __VA_ARGS__)
 int _printk(int level, const char *format, ...);
 
-void __attribute__((noreturn)) panic(const char *format, ...);
+#define panic(...) _panic(__FILE__, __LINE__, __VA_ARGS__)
+void __attribute__((noreturn))
+_panic(const char *file, int line, const char *format, ...);
