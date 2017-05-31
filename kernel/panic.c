@@ -1,6 +1,7 @@
 #include <cpu/interrupt.h>
 #include <kernel/console.h>
 #include <lib/printf.h>
+#include <string.h>
 
 #define PANIC_BUFFER_SIZE 1024
 
