@@ -23,6 +23,7 @@
 int _printk(int level, const char* format, ...)
 {
     char buffer[1024];
+    memset(buffer, 0, 1024);
     va_list args;
     int r;
     va_start(args, format);
