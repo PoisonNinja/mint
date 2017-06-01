@@ -17,6 +17,7 @@
 
 #include <arch/boot/multiboot.h>
 #include <boot/bootinfo.h>
+#include <cpu/interrupt.h>
 #include <kernel.h>
 #include <string.h>
 #include <types.h>
@@ -31,6 +32,7 @@ static struct mint_bootinfo bootinfo;
 
 void x86_64_init(uint32_t magic, struct multiboot_info *mboot)
 {
+    interrupt_disable();
     x86_64_init_console();
     if (magic != MULTIBOOT_BOOTLOADER_MAGIC)
         panic("Bad multiboot magic! Expected 0x%X, but got 0x%X\n",

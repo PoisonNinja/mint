@@ -1,5 +1,6 @@
 #include <boot/bootinfo.h>
 #include <kernel.h>
+#include <kernel/stacktrace.h>
 #include <kernel/version.h>
 
 static char mint_banner[] =
@@ -10,6 +11,7 @@ void kmain(struct mint_bootinfo* bootinfo)
 {
     printk(INFO, "%s\n", mint_banner);
     printk(INFO, "%llu KiB of memory available\n", bootinfo->total_mem);
+    stacktrace();
     for (;;)
         ;
 }

@@ -1,5 +1,6 @@
 #include <cpu/interrupt.h>
 #include <kernel/console.h>
+#include <kernel/stacktrace.h>
 #include <lib/printf.h>
 #include <string.h>
 
@@ -18,6 +19,7 @@ _panic(const char *file, int line, const char *format, ...)
     r = vsnprintf(buffer, PANIC_BUFFER_SIZE, format, args);
     va_end(args);
     console_write(buffer, r);
+    stacktrace();
     for (;;)
         ;
 }
