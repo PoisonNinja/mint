@@ -39,14 +39,22 @@
   isr%1:
     push qword 0
     push qword %1
-    jmp common_interrupt_stub
+    jmp isr_stub
 %endmacro
 
 %macro ISR_ERROR_CODE 1
   [GLOBAL isr%1]
   isr%1:
     push qword %1
-    jmp common_interrupt_stub
+    jmp isr_stub
+%endmacro
+
+%macro IRQ 2
+  [GLOBAL irq%1]
+  irq%1:
+    push qword 0
+    push qword %2
+    jmp irq_stub
 %endmacro
 
 ISR_NOERROR_CODE 0
@@ -82,25 +90,36 @@ ISR_NOERROR_CODE 29 ; Reserved
 ISR_ERROR_CODE 30
 ISR_NOERROR_CODE 31
 ; IRQs
-ISR_NOERROR_CODE 32
-ISR_NOERROR_CODE 33
-ISR_NOERROR_CODE 34
-ISR_NOERROR_CODE 35
-ISR_NOERROR_CODE 36
-ISR_NOERROR_CODE 37
-ISR_NOERROR_CODE 38
-ISR_NOERROR_CODE 39
-ISR_NOERROR_CODE 40
-ISR_NOERROR_CODE 41
-ISR_NOERROR_CODE 42
-ISR_NOERROR_CODE 43
-ISR_NOERROR_CODE 44
-ISR_NOERROR_CODE 45
-ISR_NOERROR_CODE 46
-ISR_NOERROR_CODE 47
+IRQ 0, 32
+IRQ 1, 33
+IRQ 2, 34
+IRQ 3, 35
+IRQ 4, 36
+IRQ 5, 37
+IRQ 6, 38
+IRQ 7, 39
+IRQ 8, 40
+IRQ 9, 41
+IRQ 10, 42
+IRQ 11, 43
+IRQ 12, 44
+IRQ 13, 45
+IRQ 14, 46
+IRQ 15, 47
+
+extern x86_64_exception_handler
+isr_stub:
+    PUSHA
+
+    mov rdi, rsp                        ; Push the registers
+    call x86_64_exception_handler
+
+    POPA
+    add rsp, 16
+    iretq
 
 extern x86_64_interrupt_handler
-common_interrupt_stub:
+irq_stub:
     PUSHA
 
     mov rdi, rsp                        ; Push the registers
@@ -108,6 +127,7 @@ common_interrupt_stub:
 
     POPA
     add rsp, 16
+    iretq
 
 global idt_load
 idt_load:

@@ -13,6 +13,7 @@ void kmain(struct mint_bootinfo* bootinfo)
     printk(INFO, "%s\n", mint_banner);
     printk(INFO, "%llu KiB of memory available\n", bootinfo->total_mem);
     stacktrace();
+    __asm__("int $0");
     interrupt_enable();
     for (;;)
         ;

@@ -40,22 +40,22 @@ extern void isr28(void);
 extern void isr29(void);
 extern void isr30(void);
 extern void isr31(void);
-extern void isr32(void);
-extern void isr33(void);
-extern void isr34(void);
-extern void isr35(void);
-extern void isr36(void);
-extern void isr37(void);
-extern void isr38(void);
-extern void isr39(void);
-extern void isr40(void);
-extern void isr41(void);
-extern void isr42(void);
-extern void isr43(void);
-extern void isr44(void);
-extern void isr45(void);
-extern void isr46(void);
-extern void isr47(void);
+extern void irq0(void);
+extern void irq1(void);
+extern void irq2(void);
+extern void irq3(void);
+extern void irq4(void);
+extern void irq5(void);
+extern void irq6(void);
+extern void irq7(void);
+extern void irq8(void);
+extern void irq9(void);
+extern void irq10(void);
+extern void irq11(void);
+extern void irq12(void);
+extern void irq13(void);
+extern void irq14(void);
+extern void irq15(void);
 
 static void idt_set_entry(struct idt_entry* entry, uint64_t offset,
                           uint16_t selector, uint8_t attributes)
@@ -107,29 +107,23 @@ void idt_init(void)
     idt_set_entry(&idt_entries[29], (uint64_t)isr29, 0x08, 0x8E);
     idt_set_entry(&idt_entries[30], (uint64_t)isr30, 0x08, 0x8E);
     idt_set_entry(&idt_entries[31], (uint64_t)isr31, 0x08, 0x8E);
-    idt_set_entry(&idt_entries[32], (uint64_t)isr32, 0x08, 0x8E);
-    idt_set_entry(&idt_entries[33], (uint64_t)isr33, 0x08, 0x8E);
-    idt_set_entry(&idt_entries[34], (uint64_t)isr34, 0x08, 0x8E);
-    idt_set_entry(&idt_entries[35], (uint64_t)isr35, 0x08, 0x8E);
-    idt_set_entry(&idt_entries[36], (uint64_t)isr36, 0x08, 0x8E);
-    idt_set_entry(&idt_entries[37], (uint64_t)isr37, 0x08, 0x8E);
-    idt_set_entry(&idt_entries[38], (uint64_t)isr38, 0x08, 0x8E);
-    idt_set_entry(&idt_entries[39], (uint64_t)isr39, 0x08, 0x8E);
-    idt_set_entry(&idt_entries[40], (uint64_t)isr40, 0x08, 0x8E);
-    idt_set_entry(&idt_entries[41], (uint64_t)isr41, 0x08, 0x8E);
-    idt_set_entry(&idt_entries[42], (uint64_t)isr42, 0x08, 0x8E);
-    idt_set_entry(&idt_entries[43], (uint64_t)isr43, 0x08, 0x8E);
-    idt_set_entry(&idt_entries[44], (uint64_t)isr44, 0x08, 0x8E);
-    idt_set_entry(&idt_entries[45], (uint64_t)isr45, 0x08, 0x8E);
-    idt_set_entry(&idt_entries[46], (uint64_t)isr46, 0x08, 0x8E);
-    idt_set_entry(&idt_entries[47], (uint64_t)isr47, 0x08, 0x8E);
+    idt_set_entry(&idt_entries[32], (uint64_t)irq0, 0x08, 0x8E);
+    idt_set_entry(&idt_entries[33], (uint64_t)irq1, 0x08, 0x8E);
+    idt_set_entry(&idt_entries[34], (uint64_t)irq2, 0x08, 0x8E);
+    idt_set_entry(&idt_entries[35], (uint64_t)irq3, 0x08, 0x8E);
+    idt_set_entry(&idt_entries[36], (uint64_t)irq4, 0x08, 0x8E);
+    idt_set_entry(&idt_entries[37], (uint64_t)irq5, 0x08, 0x8E);
+    idt_set_entry(&idt_entries[38], (uint64_t)irq6, 0x08, 0x8E);
+    idt_set_entry(&idt_entries[39], (uint64_t)irq7, 0x08, 0x8E);
+    idt_set_entry(&idt_entries[40], (uint64_t)irq8, 0x08, 0x8E);
+    idt_set_entry(&idt_entries[41], (uint64_t)irq9, 0x08, 0x8E);
+    idt_set_entry(&idt_entries[42], (uint64_t)irq10, 0x08, 0x8E);
+    idt_set_entry(&idt_entries[43], (uint64_t)irq11, 0x08, 0x8E);
+    idt_set_entry(&idt_entries[44], (uint64_t)irq12, 0x08, 0x8E);
+    idt_set_entry(&idt_entries[45], (uint64_t)irq13, 0x08, 0x8E);
+    idt_set_entry(&idt_entries[46], (uint64_t)irq14, 0x08, 0x8E);
+    idt_set_entry(&idt_entries[47], (uint64_t)irq15, 0x08, 0x8E);
     idt_ptr.limit = sizeof(struct idt_entry) * 256 - 1;
     idt_ptr.offset = (uint64_t)&idt_entries;
     idt_load((uint64_t)&idt_ptr);
-}
-
-extern void interrupt_dispatch(struct registers*);
-void x86_64_interrupt_handler(struct registers* regs)
-{
-    interrupt_dispatch(regs);
 }

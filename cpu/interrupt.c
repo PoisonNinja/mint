@@ -19,6 +19,13 @@ void interrupt_enable(void)
         arch_interrupt_enable();
 }
 
+extern char* arch_exception_translate(int);
+void exception_dispatch(struct registers* regs)
+{
+    printk(INFO, "Exception %d: %s\n", regs->int_no,
+           arch_exception_translate(regs->int_no));
+}
+
 void interrupt_dispatch(struct registers* regs)
 {
     printk(INFO, "Received interrupt %d\n", regs->int_no);
