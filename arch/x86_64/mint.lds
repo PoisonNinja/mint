@@ -31,10 +31,10 @@ SECTIONS
 
     .bss ALIGN(0x1000) : AT(ADDR(.bss) - 0xFFFFFFFF80000000)
     {
-        __start_bss = .;
+        __bss_start = .;
         *(.bss)
         *(COMMON)
-        __stop_bss = .;
+        __bss_end = .;
     }
 
     .initcall ALIGN(0x1000) : AT(ADDR(.initcall) - 0xFFFFFFFF80000000)

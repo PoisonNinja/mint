@@ -18,7 +18,9 @@
 #include <arch/boot/multiboot.h>
 #include <boot/bootinfo.h>
 #include <cpu/interrupt.h>
+#include <drivers/irqchip/irqchip.h>
 #include <kernel.h>
+#include <kernel/init.h>
 #include <string.h>
 #include <types.h>
 
@@ -30,9 +32,18 @@ extern void idt_init(void);
 
 static struct mint_bootinfo bootinfo;
 
+extern uint64_t __bss_start;
+extern uint64_t __bss_end;
+
+void zero_bss(void)
+{
+    memset(&__bss_start, 0, &__bss_end - &__bss_start);
+}
+
 void x86_64_init(uint32_t magic, struct multiboot_info *mboot)
 {
     interrupt_disable();
+    zero_bss();
     x86_64_init_console();
     if (magic != MULTIBOOT_BOOTLOADER_MAGIC)
         panic("Bad multiboot magic! Expected 0x%X, but got 0x%X\n",
@@ -55,5 +66,7 @@ void x86_64_init(uint32_t magic, struct multiboot_info *mboot)
         bootinfo.num_memregions++;
         mmap += (tmp->size + sizeof(tmp->size));
     }
+    do_initcall(EARLY_INIT);
+    interrupt_controller_set(IC_INTEL_8259);
     kmain(&bootinfo);
 }
