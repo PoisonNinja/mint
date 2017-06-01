@@ -27,13 +27,7 @@ extern void kmain(struct mint_bootinfo *);
 extern void gdt_init(void);
 extern void idt_init(void);
 
-extern uint64_t __start_bss;
-extern uint64_t __stop_bss;
-
-void zero_bss(void)
-{
-    memset(&__start_bss, 0, &__stop_bss - &__start_bss);
-}
+static struct mint_bootinfo bootinfo;
 
 void x86_64_init(uint32_t magic, struct multiboot_info *mboot)
 {
@@ -45,5 +39,19 @@ void x86_64_init(uint32_t magic, struct multiboot_info *mboot)
            mboot);
     gdt_init();
     idt_init();
-    kmain(NULL);
+    uint32_t mmap = mboot->mmap_addr;
+    while (mmap < mboot->mmap_addr + mboot->mmap_length) {
+        multiboot_memory_map_t *tmp = (multiboot_memory_map_t *)(uint64_t)mmap;
+        if (tmp->type == 1) {
+            /*
+             * We manually calculate total_mem because upper_mem from
+             * multiboot only goes up to the first memory hole at around
+             * 3GB. This could be a QEMU bug though...
+             */
+            bootinfo.total_mem += tmp->len;
+        }
+        bootinfo.num_memregions++;
+        mmap += (tmp->size + sizeof(tmp->size));
+    }
+    kmain(&bootinfo);
 }

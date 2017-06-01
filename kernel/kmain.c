@@ -9,6 +9,7 @@ static char mint_banner[] =
 void kmain(struct mint_bootinfo* bootinfo)
 {
     printk(INFO, "%s\n", mint_banner);
+    printk(INFO, "%llu KiB of memory available\n", bootinfo->total_mem);
     for (;;)
         ;
 }

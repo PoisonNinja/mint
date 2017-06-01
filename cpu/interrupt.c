@@ -21,5 +21,5 @@ void interrupt_enable(void)
 
 void interrupt_dispatch(struct registers* regs)
 {
-    printk(INFO, "Received interrupt\n");
+    printk(INFO, "Received interrupt %d\n", regs->int_no);
 }
