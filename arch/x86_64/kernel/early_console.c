@@ -30,6 +30,7 @@ static void x86_64_console_vga_write_string(const char *string, size_t length)
         if (*string == '\n') {
             x = 0;
             y++;
+            string++;
         } else if (*string == '\e') {
             string += 3;
             length -= 3;
