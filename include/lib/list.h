@@ -90,3 +90,5 @@ static inline void list_del(struct list_head *entry)
 #define list_for_each_entry(pos, head, member)               \
     for (pos = list_first_entry(head, typeof(*pos), member); \
          &pos->member != (head); pos = list_next_entry(pos, member))
+
+#define list_is_empty(head) ((head)->next == (head)->prev)

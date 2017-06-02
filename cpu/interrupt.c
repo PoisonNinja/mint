@@ -1,11 +1,17 @@
 #include <arch/cpu/registers.h>
+#include <cpu/interrupt.h>
+#include <drivers/irqchip/irqchip.h>
 #include <kernel.h>
+#include <lib/list.h>
 #include <stdatomic.h>
 
 extern void arch_interrupt_disable(void);
 extern void arch_interrupt_enable(void);
 
 _Atomic int interrupt_depth = 0;
+
+struct exception_handler* exception_handlers[EXCEPTIONS_MAX];
+struct interrupt_handler* interrupt_handlers[INTERRUPTS_MAX];
 
 void interrupt_disable(void)
 {
@@ -19,14 +25,53 @@ void interrupt_enable(void)
         arch_interrupt_enable();
 }
 
+void exception_handler_register(int exception_number,
+                                struct exception_handler* handler)
+{
+    if (!exception_handlers[exception_number])
+        exception_handlers[exception_number] = handler;
+    else {
+        list_add(&handler->list, &exception_handlers[exception_number]->list);
+    }
+}
+
+void interrupt_handler_register(int interrupt_number,
+                                struct interrupt_handler* handler)
+{
+    if (!interrupt_handlers[interrupt_number])
+        interrupt_handlers[interrupt_number] = handler;
+    else {
+        list_add(&handler->list, &interrupt_handlers[interrupt_number]->list);
+    }
+}
+
 extern char* arch_exception_translate(int);
 void exception_dispatch(struct registers* regs)
 {
-    printk(INFO, "Exception %d: %s\n", regs->int_no,
-           arch_exception_translate(regs->int_no));
+    if (exception_handlers[regs->int_no]) {
+        struct exception_handler* handler = NULL;
+        list_for_each_entry(handler, &exception_handlers[regs->int_no]->list,
+                            list)
+        {
+            if (handler->handler)
+                handler->handler(regs, handler->dev_id);
+        }
+    } else {
+        printk(INFO, "Unhandled exception %d: %s\n", regs->int_no,
+               arch_exception_translate(regs->int_no));
+    }
 }
 
 void interrupt_dispatch(struct registers* regs)
 {
-    printk(INFO, "Received interrupt %d\n", regs->int_no);
+    if (interrupt_handlers[regs->int_no]) {
+        struct interrupt_handler* handler = NULL;
+        list_for_each_entry(handler, &interrupt_handlers[regs->int_no]->list,
+                            list)
+        {
+            if (handler->handler)
+                handler->handler(regs, handler->dev_id);
+        }
+    }
+    interrupt_controller_ack(regs->int_no);
 }
