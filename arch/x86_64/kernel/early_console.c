@@ -10,6 +10,7 @@
 static int x = 0;
 static int y = 0;
 static volatile uint16_t *video = (volatile uint16_t *)VGA_BUFFER;
+static int color = 15;
 
 static void x86_64_console_vga_update_cursor(int col, int row)
 {
@@ -23,13 +24,34 @@ static void x86_64_console_vga_update_cursor(int col, int row)
     outb(0x3D5, (unsigned char)((position >> 8) & 0xFF));
 }
 
-static void x86_64_console_vga_write_string(int color, const char *string,
-                                            size_t length)
+static void x86_64_console_vga_write_string(const char *string, size_t length)
 {
     while (length--) {
         if (*string == '\n') {
             x = 0;
             y++;
+        } else if (*string == '\e') {
+            string += 3;
+            length -= 3;
+            switch (*string) {
+                case '1':
+                    color = 12;  // Light Red
+                    break;
+                case '2':
+                    color = 10;  // Light Green
+                    break;
+                case '3':
+                    color = 14;  // Yellow
+                    break;
+                case '6':
+                    color = 11;  // Light Blue
+                    break;
+                case '9':
+                    color = 15;  // Reset to white
+                    break;
+            }
+            string += 2;
+            length -= 2;
         } else {
             size_t index = y * VGA_WIDTH + x++;
             video[index] = *string++ | (color << 8);
@@ -53,7 +75,7 @@ static void x86_64_console_vga_write_string(int color, const char *string,
 
 static int x86_64_console_vga_write(const char *message, size_t size)
 {
-    x86_64_console_vga_write_string(15, message, size);
+    x86_64_console_vga_write_string(message, size);
     return size;
 }
 
