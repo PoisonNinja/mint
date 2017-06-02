@@ -20,10 +20,18 @@
 #include <lib/printf.h>
 #include <string.h>
 
+static char* colors[] = {
+    "\e[36m",  // Blue for debug
+    "\e[32m",  // Green for info
+    "\e[33m",  // Yellow for warning
+    "\e[31m",  // Red for error
+};
+
 int _printk(int level, const char* format, ...)
 {
     char buffer[1024];
     memset(buffer, 0, 1024);
+    console_write(colors[level], 6);
     va_list args;
     int r;
     va_start(args, format);
