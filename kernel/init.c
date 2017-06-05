@@ -36,7 +36,7 @@ static uint64_t *initcall_levels[8] = {
 
 void do_initcall(int level)
 {
-    printk(INFO, "Initializing initcalls for level %d\n", level);
+    printk(INFO, "Calling initcalls for level %d\n", level);
     for (uint64_t *i = initcall_levels[level - 1]; i < initcall_levels[level];
          i++) {
         initcall_t fn = *(initcall_t *)i;
