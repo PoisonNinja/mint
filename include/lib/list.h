@@ -81,6 +81,8 @@ static inline void list_del(struct list_head *entry)
 
 #define list_last_entry(ptr, type, member) list_entry((ptr)->prev, type, member)
 
+#define list_only_one(ptr) ((ptr)->next == (ptr))
+
 #define list_next_entry(pos, member) \
     list_entry((pos)->member.next, typeof(*(pos)), member)
 
