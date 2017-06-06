@@ -3,6 +3,7 @@
 #define EXCEPTIONS_MAX 64
 #define INTERRUPTS_MAX 256
 
+#include <arch/cpu/registers.h>
 #include <lib/list.h>
 
 struct registers;

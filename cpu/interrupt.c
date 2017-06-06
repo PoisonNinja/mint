@@ -28,9 +28,10 @@ void interrupt_enable(void)
 void exception_handler_register(int exception_number,
                                 struct exception_handler* handler)
 {
-    if (!exception_handlers[exception_number])
+    if (!exception_handlers[exception_number]) {
+        INIT_LIST_HEAD(&handler->list);
         exception_handlers[exception_number] = handler;
-    else {
+    } else {
         list_add(&handler->list, &exception_handlers[exception_number]->list);
     }
 }
@@ -38,9 +39,10 @@ void exception_handler_register(int exception_number,
 void interrupt_handler_register(int interrupt_number,
                                 struct interrupt_handler* handler)
 {
-    if (!interrupt_handlers[interrupt_number])
+    if (!interrupt_handlers[interrupt_number]) {
+        INIT_LIST_HEAD(&handler->list);
         interrupt_handlers[interrupt_number] = handler;
-    else {
+    } else {
         list_add(&handler->list, &interrupt_handlers[interrupt_number]->list);
     }
 }
@@ -49,12 +51,18 @@ extern char* arch_exception_translate(int);
 void exception_dispatch(struct registers* regs)
 {
     if (exception_handlers[regs->int_no]) {
-        struct exception_handler* handler = NULL;
-        list_for_each_entry(handler, &exception_handlers[regs->int_no]->list,
-                            list)
-        {
-            if (handler->handler)
-                handler->handler(regs, handler->dev_id);
+        if (list_only_one(&exception_handlers[regs->int_no]->list)) {
+            if (exception_handlers[regs->int_no]->handler)
+                exception_handlers[regs->int_no]->handler(
+                    regs, exception_handlers[regs->int_no]->dev_id);
+        } else {
+            struct exception_handler* handler = NULL;
+            list_for_each_entry(handler,
+                                &exception_handlers[regs->int_no]->list, list)
+            {
+                if (handler->handler)
+                    handler->handler(regs, handler->dev_id);
+            }
         }
     } else {
         printk(INFO, "Unhandled exception %d: %s\n", regs->int_no,
@@ -65,12 +73,18 @@ void exception_dispatch(struct registers* regs)
 void interrupt_dispatch(struct registers* regs)
 {
     if (interrupt_handlers[regs->int_no]) {
-        struct interrupt_handler* handler = NULL;
-        list_for_each_entry(handler, &interrupt_handlers[regs->int_no]->list,
-                            list)
-        {
-            if (handler->handler)
-                handler->handler(regs, handler->dev_id);
+        if (list_only_one(&interrupt_handlers[regs->int_no]->list)) {
+            if (interrupt_handlers[regs->int_no]->handler)
+                interrupt_handlers[regs->int_no]->handler(
+                    regs, interrupt_handlers[regs->int_no]->dev_id);
+        } else {
+            struct interrupt_handler* handler = NULL;
+            list_for_each_entry(handler,
+                                &interrupt_handlers[regs->int_no]->list, list)
+            {
+                if (handler->handler)
+                    handler->handler(regs, handler->dev_id);
+            }
         }
     }
     interrupt_controller_ack(regs->int_no);
