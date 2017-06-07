@@ -191,8 +191,7 @@ static void printf_format(struct printf_data *data, const char *format,
                 int i = 0;
                 char padding[5];
                 while (*pos >= '0' && *pos <= '9') {
-                    padding[i] = *pos;
-                    pos++, i++;
+                    padding[i++] = *pos++;
                 }
                 params.padding = a2u(padding);
             }
@@ -263,6 +262,7 @@ static void printf_format(struct printf_data *data, const char *format,
                     break;
             }
             pos++;
+            memset(&params, 0, sizeof(struct parameters));
         } else {
             data->putcf(data, *pos++);
         }
@@ -304,6 +304,5 @@ int snprintf(char *s, size_t size, const char *format, ...)
     va_start(args, format);
     ret = vsnprintf(s, size, format, args);
     va_end(args);
-
     return ret;
 }
