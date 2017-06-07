@@ -43,11 +43,12 @@ static void x86_64_console_vga_update_cursor(int col, int row)
 
 static void x86_64_console_vga_write_string(const char *string, size_t length)
 {
-    while (length--) {
+    while (length) {
         if (*string == '\n') {
             x = 0;
             y++;
             string++;
+            length--;
         } else if (*string == '\e') {
             string += 3;
             length -= 3;
@@ -67,12 +68,16 @@ static void x86_64_console_vga_write_string(const char *string, size_t length)
                 case '9':
                     color = 15;  // Reset to white
                     break;
+                default:
+                    color = 15;
+                    break;
             }
             string += 2;
             length -= 2;
         } else {
             size_t index = y * VGA_WIDTH + x++;
             video[index] = *string++ | (color << 8);
+            length--;
         }
         if (x == VGA_WIDTH) {
             x = 0;
