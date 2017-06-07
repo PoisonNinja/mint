@@ -17,7 +17,10 @@
 
 #pragma once
 
+#include <lib/list.h>
 #include <types.h>
+
+#define HZ 1000
 
 extern time_t uptime;
 
@@ -25,3 +28,14 @@ static inline void uptime_increment(void)
 {
     uptime++;
 }
+
+struct clocksource {
+    char* name;
+    time_t (*read)(void);
+    uint32_t rating;
+    uint32_t mult;
+    uint32_t shift;
+    struct list_head list;
+};
+
+extern void clocksource_register(struct clocksource* cs);

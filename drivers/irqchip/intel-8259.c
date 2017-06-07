@@ -113,9 +113,8 @@ static struct interrupt_controller pic_info = {
     .ack = ack_intel_8259,
 };
 
-static int register_intel_8259(void)
+int register_intel_8259(void)
 {
     interrupt_controller_register(&pic_info);
     return 0;
 }
-EARLY_INITCALL(register_intel_8259);

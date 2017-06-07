@@ -18,6 +18,8 @@
 #include <arch/boot/multiboot.h>
 #include <boot/bootinfo.h>
 #include <cpu/interrupt.h>
+#include <drivers/irqchip/intel-8259.h>
+#include <drivers/irqchip/irqchip.h>
 #include <kernel.h>
 #include <kernel/init.h>
 #include <string.h>
@@ -65,5 +67,7 @@ void x86_64_init(uint32_t magic, struct multiboot_info *mboot)
         bootinfo.num_memregions++;
         mmap += (tmp->size + sizeof(tmp->size));
     }
+    register_intel_8259();
+    interrupt_controller_set(IC_INTEL_8259);
     kmain(&bootinfo);
 }
