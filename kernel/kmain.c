@@ -35,6 +35,7 @@ void kmain(struct mint_bootinfo* bootinfo)
     printk(INFO, "%llu KiB of memory available\n", bootinfo->total_mem);
     setup_arch();
     time_init();
+    interrupt_enable();
     do_initcall(EARLY_INIT);
     do_initcall(CORE_INIT);
     do_initcall(ARCH_INIT);
@@ -43,8 +44,6 @@ void kmain(struct mint_bootinfo* bootinfo)
     do_initcall(DEVICE_INIT);
     do_initcall(LATE_INIT);
     stacktrace();
-    interrupt_enable();
-    printk(INFO, "%llu\n", ktime_get());
     for (;;)
         ;
 }

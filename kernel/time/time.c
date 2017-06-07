@@ -38,6 +38,10 @@ time_t ktime_get(void)
 void time_update(void)
 {
     spinlock_lock(kernel_time_lock);
+    if (!kernel_time.ts.clock) {
+        spinlock_unlock(kernel_time_lock);
+        return;
+    }
     time_t now = kernel_time.ts.read();
     time_t offset = now - kernel_time.ts.last;
     kernel_time.ts.last = now;

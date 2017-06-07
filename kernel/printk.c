@@ -17,6 +17,7 @@
 
 #include <kernel.h>
 #include <kernel/console.h>
+#include <kernel/time/time.h>
 #include <lib/printf.h>
 #include <string.h>
 
@@ -29,14 +30,20 @@ static char* colors[] = {
 
 int _printk(int level, const char* format, ...)
 {
+    int r;
     char buffer[1024];
     memset(buffer, 0, 1024);
-    console_write(colors[level], 6);
+    time_t t = ktime_get();
+    time_t sec = t / NSECS_PER_SECS;
+    time_t nsec = t % NSECS_PER_SECS;
+    r = sprintf(buffer, "%s[%05lu.%09lu] ", colors[level], sec, nsec);
+    console_write(buffer, r);
+    console_write("\e[39m", 6);
+    memset(buffer, 0, 1024);
     va_list args;
-    int r;
     va_start(args, format);
     r = vsprintf(buffer, format, args);
     va_end(args);
-    console_write(buffer, strlen(buffer));
+    console_write(buffer, r);
     return r;
 }

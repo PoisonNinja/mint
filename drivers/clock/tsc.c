@@ -17,4 +17,4 @@ static int tsc_init(void)
     clocksource_register(&tsc_clocksource);
     return 0;
 }
-// EARLY_INITCALL(tsc_init);
+EARLY_INITCALL(tsc_init);
