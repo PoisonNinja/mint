@@ -36,9 +36,9 @@ int _printk(int level, const char* format, ...)
     time_t t = ktime_get();
     time_t sec = t / NSECS_PER_SECS;
     time_t nsec = t % NSECS_PER_SECS;
-    r = sprintf(buffer, "%s[%05lu.%09lu] ", colors[level], sec, nsec);
+    r = sprintf(buffer, "%s[%05lu.%09lu]%s ", colors[level], sec, nsec,
+                "\e[39m");
     console_write(buffer, r);
-    console_write("\e[39m", 6);
     memset(buffer, 0, 1024);
     va_list args;
     va_start(args, format);
