@@ -17,4 +17,4 @@ static int tsc_init(void)
     clocksource_register(&tsc_clocksource);
     return 0;
 }
-CORE_INITCALL(tsc_init);
+DEVICE_INITCALL(tsc_init);

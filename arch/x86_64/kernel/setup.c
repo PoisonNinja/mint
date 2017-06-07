@@ -15,6 +15,11 @@
  * Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#include <drivers/irqchip/intel-8259.h>
+#include <drivers/irqchip/irqchip.h>
+
 void setup_arch()
 {
+    register_intel_8259();
+    interrupt_controller_set(IC_INTEL_8259);
 }

@@ -14,14 +14,14 @@ void clocksource_select()
         } else
             current_clocksource = cs;
     }
-    printk(INFO, "Setting %s as current clocksource\n",
+    printk(INFO, "clocksource: Setting %s as current clocksource\n",
            current_clocksource->name);
 }
 
 void clocksource_register(struct clocksource* cs)
 {
     list_add_tail(&cs->list, &clocksource_list);
-    printk(INFO, "Registered clocksource %s with rating %d\n", cs->name,
-           cs->rating);
+    printk(INFO, "clocksource: Registered clocksource %s with rating %d\n",
+           cs->name, cs->rating);
     clocksource_select();
 }

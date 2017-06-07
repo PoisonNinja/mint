@@ -32,9 +32,9 @@ void kmain(struct mint_bootinfo* bootinfo)
 {
     printk(INFO, "%s\n", mint_banner);
     printk(INFO, "%llu KiB of memory available\n", bootinfo->total_mem);
+    setup_arch();
     do_initcall(EARLY_INIT);
     do_initcall(CORE_INIT);
-    setup_arch();
     do_initcall(ARCH_INIT);
     do_initcall(SUBSYS_INIT);
     do_initcall(FS_INIT);
