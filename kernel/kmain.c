@@ -20,6 +20,7 @@
 #include <kernel.h>
 #include <kernel/init.h>
 #include <kernel/stacktrace.h>
+#include <kernel/time/time.h>
 #include <kernel/version.h>
 
 static char mint_banner[] =
@@ -33,6 +34,7 @@ void kmain(struct mint_bootinfo* bootinfo)
     printk(INFO, "%s\n", mint_banner);
     printk(INFO, "%llu KiB of memory available\n", bootinfo->total_mem);
     setup_arch();
+    time_init();
     do_initcall(EARLY_INIT);
     do_initcall(CORE_INIT);
     do_initcall(ARCH_INIT);
@@ -42,6 +44,7 @@ void kmain(struct mint_bootinfo* bootinfo)
     do_initcall(LATE_INIT);
     stacktrace();
     interrupt_enable();
+    printk(INFO, "%llu\n", ktime_get());
     for (;;)
         ;
 }

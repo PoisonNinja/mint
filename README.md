@@ -20,6 +20,6 @@ To start, create a folder named anything you like, although I personally call it
 |CMAKE_C_FLAGS       |Additional CFLAGS         | `<text>` |
 |SYSROOT             |Path to Pepper sysroot    | `<path>` |
 
-If you want to use a different build system, such as Ninja, run `cmake -G <generator> ..`. Replace generator with the name of the build system. The full list of generators can be found by running `cmake --help`. I test Mint using Make. Other build systems are not guaranteed to work. The rest of the instructions will assume that you use Make, although it should be incredibly easy to use a different system.
+If you want to use a different build system, such as Ninja, run `cmake -G <generator> ..`. Replace generator with the name of the build system. The full list of generators can be found by running `cmake --help`. I test Mint using Ninja. Other build systems are not guaranteed to work. The rest of the instructions will assume that you use Ninja, although it should be incredibly easy to use a different system. In fact, Pepper calls cmake instead of directly calling the build generator, so switching build generators should not cause any problems with Pepper.
 
-After generating the build files, simple run `make`. The default target will build Mint. To install it into the sysroot configured earlier, run `make install`.
+After generating the build files, simple run `<your build system>`. The default target will build Mint. To install it into the sysroot configured earlier, run `<your build system> install`.

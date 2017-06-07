@@ -26,7 +26,7 @@
 static int intel_8253_handler(struct registers* regs __attribute__((unused)),
                               void* dev_id __attribute__((unused)))
 {
-    uptime_increment();
+    tick_handler();
     return 0;
 }
 

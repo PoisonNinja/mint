@@ -285,7 +285,6 @@ int sprintf(char *s, const char *format, ...)
     va_start(args, format);
     ret = vsprintf(s, format, args);
     va_end(args);
-
     return ret;
 }
 

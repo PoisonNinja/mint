@@ -9,7 +9,7 @@ static time_t tsc_read(void)
 }
 
 static struct clocksource tsc_clocksource = {
-    .name = "tsc", .rating = 350, .read = tsc_read,
+    .name = "tsc", .rating = 350, .read = tsc_read, .mult = 0x7D00, .shift = 8,
 };
 
 static int tsc_init(void)
@@ -17,4 +17,4 @@ static int tsc_init(void)
     clocksource_register(&tsc_clocksource);
     return 0;
 }
-DEVICE_INITCALL(tsc_init);
+// EARLY_INITCALL(tsc_init);

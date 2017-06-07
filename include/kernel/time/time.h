@@ -22,16 +22,19 @@
 
 #define HZ 1000
 
-extern time_t uptime;
+extern time_t jiffy;
 
-static inline void uptime_increment(void)
+#define NSECS_PER_SECS 1000000000
+
+static inline void jiffy_increase(void)
 {
-    uptime++;
+    jiffy++;
 }
 
 struct clocksource {
     char* name;
     time_t (*read)(void);
+    void (*enable)(void);
     uint32_t rating;
     uint32_t mult;
     uint32_t shift;
@@ -39,3 +42,31 @@ struct clocksource {
 };
 
 extern void clocksource_register(struct clocksource* cs);
+extern struct clocksource* clocksource_get(void);
+extern struct clocksource* clocksource_get_default(void);
+
+struct timesource {
+    struct clocksource* clock;
+    time_t (*read)(void);
+    uint32_t mult;
+    uint32_t shift;
+    time_t last;
+};
+
+struct timespec {
+    time_t tv_sec;
+    long tv_nsec;
+};
+
+struct time {
+    struct timesource ts;
+    struct timespec raw_time;
+};
+
+extern void time_update(void);
+extern void time_update_clocksource(struct clocksource* cs);
+extern void time_init(void);
+
+extern void tick_handler(void);
+
+extern time_t ktime_get(void);

@@ -8,4 +8,5 @@ target_sources(mint.kernel
     ${CMAKE_CURRENT_SOURCE_DIR}/stacktrace.c
 )
 
+add_subdirectory(lock)
 add_subdirectory(time)
