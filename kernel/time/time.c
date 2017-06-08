@@ -31,7 +31,7 @@ static time_t time_cycle_to_ns(uint64_t cycle, uint32_t mult, uint32_t shift)
 time_t ktime_get(void)
 {
     time_update();
-    return (kernel_time.raw_time.tv_sec * NSECS_PER_SECS) +
+    return (kernel_time.raw_time.tv_sec * NSEC_PER_SEC) +
            kernel_time.raw_time.tv_nsec;
 }
 
@@ -49,8 +49,8 @@ void time_update(void)
         time_cycle_to_ns(offset, kernel_time.ts.mult, kernel_time.ts.shift);
     kernel_time.raw_time.tv_nsec += nsec;
     // Coalesce nanoseconds into seconds
-    while (kernel_time.raw_time.tv_nsec >= NSECS_PER_SECS) {
-        kernel_time.raw_time.tv_nsec -= NSECS_PER_SECS;
+    while (kernel_time.raw_time.tv_nsec >= NSEC_PER_SEC) {
+        kernel_time.raw_time.tv_nsec -= NSEC_PER_SEC;
         kernel_time.raw_time.tv_sec++;
     }
     spinlock_unlock(kernel_time_lock);

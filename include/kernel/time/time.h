@@ -24,7 +24,8 @@
 
 extern time_t jiffy;
 
-#define NSECS_PER_SECS 1000000000
+#define NSEC_PER_SEC 1000000000L
+#define NSEC_PER_MSEC 1000000L
 
 static inline void jiffy_increase(void)
 {
