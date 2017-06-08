@@ -53,6 +53,18 @@ void exception_handler_register(int exception_number,
     }
 }
 
+void exception_handler_unregister(int exception_number,
+                                  struct exception_handler* handler)
+{
+    if (list_only_one(&exception_handlers[exception_number]->list)) {
+        exception_handlers[exception_number]->list.next = NULL;
+        exception_handlers[exception_number]->list.prev = NULL;
+        exception_handlers[exception_number] = NULL;
+    } else {
+        list_del(&handler->list);
+    }
+}
+
 void interrupt_handler_register(int interrupt_number,
                                 struct interrupt_handler* handler)
 {
@@ -61,6 +73,18 @@ void interrupt_handler_register(int interrupt_number,
         interrupt_handlers[interrupt_number] = handler;
     } else {
         list_add(&handler->list, &interrupt_handlers[interrupt_number]->list);
+    }
+}
+
+void interrupt_handler_unregister(int interrupt_number,
+                                  struct interrupt_handler* handler)
+{
+    if (list_only_one(&interrupt_handlers[interrupt_number]->list)) {
+        interrupt_handlers[interrupt_number]->list.next = NULL;
+        interrupt_handlers[interrupt_number]->list.prev = NULL;
+        interrupt_handlers[interrupt_number] = NULL;
+    } else {
+        list_del(&handler->list);
     }
 }
 

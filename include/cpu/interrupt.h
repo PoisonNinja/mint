@@ -44,8 +44,12 @@ struct interrupt_handler {
 
 extern void exception_handler_register(int exception_number,
                                        struct exception_handler *handler);
-void interrupt_handler_register(int interrupt_number,
-                                struct interrupt_handler *handler);
+extern void exception_handler_unregister(int exception_number,
+                                         struct exception_handler *handler);
+extern void interrupt_handler_register(int interrupt_number,
+                                       struct interrupt_handler *handler);
+extern void interrupt_handler_unregister(int interrupt_number,
+                                         struct interrupt_handler *handler);
 
 extern void interrupt_disable(void);
 extern void interrupt_enable(void);
