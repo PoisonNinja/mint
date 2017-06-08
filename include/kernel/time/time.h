@@ -41,6 +41,8 @@ struct clocksource {
     struct list_head list;
 };
 
+extern void clocksource_calculate(uint32_t* mult, uint32_t* shift, uint32_t to,
+                                  uint32_t from, uint32_t max);
 extern void clocksource_register(struct clocksource* cs);
 extern struct clocksource* clocksource_get(void);
 extern struct clocksource* clocksource_get_default(void);

@@ -3,6 +3,37 @@
 LIST_HEAD(clocksource_list);
 struct clocksource* current_clocksource = NULL;
 
+void clocksource_calculate(uint32_t* mult, uint32_t* shift, uint32_t to,
+                           uint32_t from, uint32_t max)
+{
+    uint64_t tmp;
+    uint32_t sft, sftacc = 32;
+
+    /*
+     * Calculate the shift factor which is limiting the conversion
+     * range:
+     */
+    tmp = ((uint64_t)max * from) >> 32;
+    while (tmp) {
+        tmp >>= 1;
+        sftacc--;
+    }
+
+    /*
+     * Find the conversion shift/mult pair which has the best
+     * accuracy and fits the maxsec conversion range:
+     */
+    for (sft = 32; sft > 0; sft--) {
+        tmp = (uint64_t)to << sft;
+        tmp += from / 2;
+        tmp /= from;
+        if ((tmp >> sftacc) == 0)
+            break;
+    }
+    *mult = tmp;
+    *shift = sft;
+}
+
 void clocksource_select()
 {
     struct clocksource* cs = NULL;
