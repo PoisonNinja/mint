@@ -16,6 +16,7 @@
  */
 
 #include <arch/boot/multiboot.h>
+#include <arch/cpu/cpu.h>
 #include <boot/bootinfo.h>
 #include <cpu/interrupt.h>
 #include <kernel.h>
@@ -49,6 +50,8 @@ void x86_64_init(uint32_t magic, struct multiboot_info *mboot)
               MULTIBOOT_BOOTLOADER_MAGIC, magic);
     printk(INFO, "x86_64-init: Multiboot information structure at 0x%llX\n",
            mboot);
+    cpu_initialize_information();
+    cpu_print_information(cpu_get_information(0));
     gdt_init();
     idt_init();
     uint32_t mmap = mboot->mmap_addr;
