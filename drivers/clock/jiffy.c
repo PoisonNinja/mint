@@ -15,5 +15,6 @@ static struct clocksource jiffy_clocksource = {
 
 struct clocksource* __attribute__((weak)) clocksource_get_default(void)
 {
+    // Needed when no clocksource is registered
     return &jiffy_clocksource;
 }

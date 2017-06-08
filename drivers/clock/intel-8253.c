@@ -26,6 +26,7 @@
 static int intel_8253_handler(struct registers* regs __attribute__((unused)),
                               void* dev_id __attribute__((unused)))
 {
+    // Call the generic tick handler
     tick_handler();
     return 0;
 }
@@ -39,10 +40,11 @@ static struct interrupt_handler intel_8253_interrupt = {
 static int init_intel_8253(void)
 {
     interrupt_handler_register(INTEL_8253_IRQ, &intel_8253_interrupt);
-    int divisor = 1193180 / 1000;
+    // We want a frequency of HZ (currently 1000)
+    int divisor = 1193180 / HZ;
     outb(0x43, 0x34);
     outb(0x40, divisor & 0xFF);
     outb(0x40, (divisor >> 8) & 0xFF);
     return 0;
 }
-CORE_INITCALL(init_intel_8253);
+EARLY_INITCALL(init_intel_8253);
