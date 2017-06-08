@@ -21,6 +21,8 @@ void cpu_print_information(struct cpuinfo* cpu)
            cpu->features[1]);
     printk(INFO, "  Extended Features: 0x%08X 0x%08X\n", cpu->features[2],
            cpu->features[3]);
+    printk(INFO, "  Invariant TSC: %s\n",
+           (cpu->invariant_tsc) ? "true" : "false");
 }
 
 void cpu_initialize_information(void)
@@ -62,6 +64,11 @@ void cpu_initialize_information(void)
     regs.eax = 0x80000004;
     cpuid(&regs.eax, &regs.ebx, &regs.ecx, &regs.edx);
     memcpy(&bsp_info.processor_name[32], &regs, 16);
+    if (bsp_info.highest_function < 0x80000007)
+        return;
+    regs.eax = 0x80000007;
+    cpuid(&regs.eax, &regs.ebx, &regs.ecx, &regs.edx);
+    bsp_info.invariant_tsc = (regs.edx >> 8);
 }
 
 struct cpuinfo* cpu_get_information(int cpu_num)

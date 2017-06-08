@@ -1,3 +1,4 @@
+#include <arch/cpu/cpu.h>
 #include <arch/drivers/io.h>
 #include <kernel/init.h>
 #include <kernel/time/time.h>
