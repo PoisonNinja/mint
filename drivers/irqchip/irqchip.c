@@ -41,6 +41,14 @@ int interrupt_controller_register(struct interrupt_controller* controller)
     return 0;
 }
 
+int interrupt_controller_unregister(struct interrupt_controller* controller)
+{
+    if (interrupt_controller == controller)
+        interrupt_controller = NULL;
+    list_del(&controller->list);
+    return 0;
+}
+
 int interrupt_controller_set(uint32_t controller)
 {
     interrupt_disable();

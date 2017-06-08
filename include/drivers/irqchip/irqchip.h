@@ -40,7 +40,10 @@ struct interrupt_controller {
     struct list_head list;
 };
 
-extern int interrupt_controller_register(struct interrupt_controller*);
+extern int interrupt_controller_register(
+    struct interrupt_controller* controller);
+extern int interrupt_controller_unregister(
+    struct interrupt_controller* controller);
 extern int interrupt_controller_set(uint32_t);
 
 extern int interrupt_controller_enable(void);
