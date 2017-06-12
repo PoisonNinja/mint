@@ -8,12 +8,30 @@
 #define TSC_CALIBRATE_MS 10
 #define TSC_CALIBRATE_LATCH (PIT_FREQ / (1000 / TSC_CALIBRATE_MS))
 
+/*
+ * Results are in EAX and EDX for both 64-bit and 32-bit, but on 64-bit,
+ * =A unfortunately means RAX, which means that it will wrap around
+ * on 32-bit boundaries. Thus, we manually shift them together.
+ */
+#ifdef X86_64
+static time_t tsc_read()
+{
+    unsigned int low, high;
+    __asm__ __volatile__("rdtsc" : "=a"(low), "=d"(high));
+    return ((uint64_t)high << 32) | low;
+}
+#else
+/*
+ * On 32-bit platforms, =A combines the two 32-bit values in EAX and EDX
+ * into one 64-bit :)
+ */
 static time_t tsc_read(void)
 {
     uint64_t ret;
     asm volatile("rdtsc" : "=A"(ret));
     return ret;
 }
+#endif
 
 static struct clocksource tsc_clocksource = {
     .name = "tsc", .rating = 350, .read = tsc_read,
