@@ -22,8 +22,8 @@ struct clocksource* current_clocksource = NULL;
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
  */
-void clocksource_calculate(uint32_t* mult, uint32_t* shift, uint32_t to,
-                           uint32_t from, uint32_t max)
+void clocksource_calculate(uint32_t* mult, uint32_t* shift, uint32_t from,
+                           uint32_t to, uint32_t max)
 {
     uint64_t tmp;
     uint32_t sft, sftacc = 32;
