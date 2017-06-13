@@ -11,7 +11,7 @@ SECTIONS
 
 	. += 0xFFFFFFFF80000000;
 
-    kernel_start = .;
+    __kernel_start = .;
 
     .text ALIGN (0x1000) : AT(ADDR(.text) - 0xFFFFFFFF80000000)
     {
@@ -56,7 +56,7 @@ SECTIONS
         __initcall_end = .;
     }
 
-    kernel_end = .;
+    __kernel_end = .;
     /DISCARD/ :
     {
        	*(.comment)

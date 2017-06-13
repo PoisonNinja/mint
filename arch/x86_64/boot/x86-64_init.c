@@ -21,6 +21,7 @@
 #include <cpu/interrupt.h>
 #include <kernel.h>
 #include <kernel/init.h>
+#include <mm/heap.h>
 #include <string.h>
 #include <types.h>
 
@@ -34,6 +35,8 @@ static struct mint_bootinfo bootinfo;
 
 extern uint64_t __bss_start;
 extern uint64_t __bss_end;
+
+extern uint64_t __kernel_end;
 
 void zero_bss(void)
 {
@@ -68,5 +71,10 @@ void x86_64_init(uint32_t magic, struct multiboot_info *mboot)
         bootinfo.num_memregions++;
         mmap += (tmp->size + sizeof(tmp->size));
     }
+    /*
+     * Tell early_malloc where it can allocate memory from and the extent that
+     * it can allocate to
+     */
+    early_malloc_set_properties((uint64_t)&__kernel_end, 0x10000);
     kmain(&bootinfo);
 }
