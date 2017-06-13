@@ -23,3 +23,8 @@ To start, create a folder named anything you like, although I personally call it
 If you want to use a different build system, such as Ninja, run `cmake -G <generator> ..`. Replace generator with the name of the build system. The full list of generators can be found by running `cmake --help`. I test Mint using Ninja. Other build systems are not guaranteed to work. The rest of the instructions will assume that you use Ninja, although it should be incredibly easy to use a different system. In fact, Pepper calls cmake instead of directly calling the build generator, so switching build generators should not cause any problems with Pepper.
 
 After generating the build files, simple run `<your build system>`. The default target will build Mint. To install it into the sysroot configured earlier, run `<your build system> install`.
+
+# License
+Mint is licensed under the GPLv2 license.
+
+Portions of the codebase (notably the linked list and the clocksource_calculate function) are from Linux. The appropriate license headers have been included. In the future, as the code is phased out, those notices will be removed as they no longer apply.

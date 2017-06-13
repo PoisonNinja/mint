@@ -20,7 +20,6 @@ struct clocksource* current_clocksource = NULL;
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- *
  */
 void clocksource_calculate(uint32_t* mult, uint32_t* shift, uint32_t from,
                            uint32_t to, uint32_t max)
