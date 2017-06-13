@@ -18,3 +18,4 @@
 #pragma once
 
 typedef uint64_t time_t;
+typedef uint64_t addr_t;
