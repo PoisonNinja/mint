@@ -1,6 +1,6 @@
 #include <kernel/time/time.h>
 
-LIST_HEAD(clocksource_list);
+struct clocksource* clocksource_list = NULL;
 struct clocksource* current_clocksource = NULL;
 
 // Copied verbatim from the Linux kernel - To comply with licensing:
@@ -56,7 +56,7 @@ void clocksource_select()
 {
     struct clocksource* cs = NULL;
     int cs_changed = 0;
-    list_for_each_entry(cs, &clocksource_list, list)
+    LIST_FOR_EACH(clocksource_list, cs)
     {
         if (current_clocksource) {
             if (cs->rating > current_clocksource->rating)
@@ -76,7 +76,7 @@ void clocksource_select()
 
 void clocksource_register(struct clocksource* cs)
 {
-    list_add_tail(&cs->list, &clocksource_list);
+    LIST_APPEND(clocksource_list, cs);
     printk(INFO, "clocksource: Registered clocksource %s with rating %d\n",
            cs->name, cs->rating);
     clocksource_select();

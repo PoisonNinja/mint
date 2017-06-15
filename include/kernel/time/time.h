@@ -39,7 +39,7 @@ struct clocksource {
     uint32_t rating;
     uint32_t mult;
     uint32_t shift;
-    struct list_head list;
+    struct clocksource *next, *prev;
 };
 
 extern void clocksource_calculate(uint32_t* mult, uint32_t* shift,

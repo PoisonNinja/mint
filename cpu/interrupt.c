@@ -45,66 +45,31 @@ void interrupt_enable(void)
 void exception_handler_register(int exception_number,
                                 struct exception_handler* handler)
 {
-    if (!exception_handlers[exception_number]) {
-        INIT_LIST_HEAD(&handler->list);
-        exception_handlers[exception_number] = handler;
-    } else {
-        list_add(&handler->list, &exception_handlers[exception_number]->list);
-    }
+    LIST_APPEND(exception_handlers[exception_number], handler);
 }
 
 void exception_handler_unregister(int exception_number,
                                   struct exception_handler* handler)
 {
-    if (list_only_one(&exception_handlers[exception_number]->list)) {
-        exception_handlers[exception_number]->list.next = NULL;
-        exception_handlers[exception_number]->list.prev = NULL;
-        exception_handlers[exception_number] = NULL;
-    } else {
-        list_del(&handler->list);
-    }
+    LIST_REMOVE(exception_handlers[exception_number], handler);
 }
 
 void interrupt_handler_register(int interrupt_number,
                                 struct interrupt_handler* handler)
 {
-    if (!interrupt_handlers[interrupt_number]) {
-        INIT_LIST_HEAD(&handler->list);
-        interrupt_handlers[interrupt_number] = handler;
-    } else {
-        list_add(&handler->list, &interrupt_handlers[interrupt_number]->list);
-    }
+    LIST_APPEND(interrupt_handlers[interrupt_number], handler);
 }
 
 void interrupt_handler_unregister(int interrupt_number,
                                   struct interrupt_handler* handler)
 {
-    if (list_only_one(&interrupt_handlers[interrupt_number]->list)) {
-        interrupt_handlers[interrupt_number]->list.next = NULL;
-        interrupt_handlers[interrupt_number]->list.prev = NULL;
-        interrupt_handlers[interrupt_number] = NULL;
-    } else {
-        list_del(&handler->list);
-    }
+    LIST_REMOVE(interrupt_handlers[interrupt_number], handler);
 }
 
 extern char* arch_exception_translate(int);
 void exception_dispatch(struct registers* regs)
 {
     if (exception_handlers[regs->int_no]) {
-        if (list_only_one(&exception_handlers[regs->int_no]->list)) {
-            if (exception_handlers[regs->int_no]->handler)
-                exception_handlers[regs->int_no]->handler(
-                    regs, exception_handlers[regs->int_no]->dev_id);
-        } else {
-            struct exception_handler* handler = NULL;
-            list_for_each_entry(handler,
-                                &exception_handlers[regs->int_no]->list, list)
-            {
-                if (handler->handler)
-                    handler->handler(regs, handler->dev_id);
-            }
-        }
     } else {
         printk(INFO, "Unhandled exception %d: %s\n", regs->int_no,
                arch_exception_translate(regs->int_no));
@@ -114,19 +79,6 @@ void exception_dispatch(struct registers* regs)
 void interrupt_dispatch(struct registers* regs)
 {
     if (interrupt_handlers[regs->int_no]) {
-        if (list_only_one(&interrupt_handlers[regs->int_no]->list)) {
-            if (interrupt_handlers[regs->int_no]->handler)
-                interrupt_handlers[regs->int_no]->handler(
-                    regs, interrupt_handlers[regs->int_no]->dev_id);
-        } else {
-            struct interrupt_handler* handler = NULL;
-            list_for_each_entry(handler,
-                                &interrupt_handlers[regs->int_no]->list, list)
-            {
-                if (handler->handler)
-                    handler->handler(regs, handler->dev_id);
-            }
-        }
     }
     interrupt_controller_ack(regs->int_no);
 }

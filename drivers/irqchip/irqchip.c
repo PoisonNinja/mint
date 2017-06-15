@@ -19,15 +19,14 @@
 #include <drivers/irqchip/irqchip.h>
 
 static struct interrupt_controller* interrupt_controller = NULL;
-static struct list_head interrupt_controllers =
-    LIST_HEAD_INIT(interrupt_controllers);
+static struct interrupt_controller* interrupt_controllers = NULL;
 static uint32_t irq_mask = 0;
 
 static struct interrupt_controller* find_interrupt_controller(
     uint32_t controller)
 {
     struct interrupt_controller* node = NULL;
-    list_for_each_entry(node, &interrupt_controllers, list)
+    LIST_FOR_EACH(interrupt_controllers, node)
     {
         if (node->identifier == controller)
             return node;
@@ -37,7 +36,7 @@ static struct interrupt_controller* find_interrupt_controller(
 
 int interrupt_controller_register(struct interrupt_controller* controller)
 {
-    list_add(&controller->list, &interrupt_controllers);
+    LIST_APPEND(interrupt_controllers, controller);
     return 0;
 }
 
@@ -45,7 +44,7 @@ int interrupt_controller_unregister(struct interrupt_controller* controller)
 {
     if (interrupt_controller == controller)
         interrupt_controller = NULL;
-    list_del(&controller->list);
+    LIST_REMOVE(interrupt_controllers, controller);
     return 0;
 }
 

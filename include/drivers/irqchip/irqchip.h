@@ -37,7 +37,7 @@ struct interrupt_controller {
     int (*mask)(int);
     int (*unmask)(int);
     int (*ack)(int);
-    struct list_head list;
+    struct interrupt_controller *next, *prev;
 };
 
 extern int interrupt_controller_register(

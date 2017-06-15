@@ -23,7 +23,7 @@
 struct console {
     const char *name;
     int (*write)(const char *, size_t);
-    struct list_head list;
+    struct console *next, *prev;
 };
 
 extern void console_register(struct console *console);

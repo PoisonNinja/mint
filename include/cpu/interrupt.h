@@ -32,14 +32,14 @@ struct exception_handler {
     exception_handler_t handler;
     const char *dev_name;
     void *dev_id;
-    struct list_head list;
+    struct exception_handler *next, *prev;
 };
 
 struct interrupt_handler {
     irq_handler_t handler;
     const char *dev_name;
     void *dev_id;
-    struct list_head list;
+    struct interrupt_handler *next, *prev;
 };
 
 extern void exception_handler_register(int exception_number,

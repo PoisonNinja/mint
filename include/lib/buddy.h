@@ -4,7 +4,6 @@
 #include <types.h>
 
 struct buddy_order {
-    struct list_head free;
     uint8_t* bitmap;
 };
 
