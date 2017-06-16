@@ -70,6 +70,12 @@ extern char* arch_exception_translate(int);
 void exception_dispatch(struct registers* regs)
 {
     if (exception_handlers[regs->int_no]) {
+        struct exception_handler* handler = NULL;
+        LIST_FOR_EACH(exception_handlers[regs->int_no], handler)
+        {
+            if (handler->handler)
+                handler->handler(regs, handler->dev_id);
+        }
     } else {
         printk(INFO, "Unhandled exception %d: %s\n", regs->int_no,
                arch_exception_translate(regs->int_no));
@@ -79,6 +85,12 @@ void exception_dispatch(struct registers* regs)
 void interrupt_dispatch(struct registers* regs)
 {
     if (interrupt_handlers[regs->int_no]) {
+        struct interrupt_handler* handler = NULL;
+        LIST_FOR_EACH(interrupt_handlers[regs->int_no], handler)
+        {
+            if (handler->handler)
+                handler->handler(regs, handler->dev_id);
+        }
     }
     interrupt_controller_ack(regs->int_no);
 }
