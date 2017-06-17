@@ -6,11 +6,7 @@ static time_t jiffy_read(void)
 }
 
 static struct clocksource jiffy_clocksource = {
-    .name = "jiffy",
-    .rating = 1,
-    .read = jiffy_read,
-    .mult = 0xF424000,
-    .shift = 8,
+    .name = "jiffy", .rating = 1, .read = jiffy_read, .frequency = 1000,
 };
 
 struct clocksource* __attribute__((weak)) clocksource_get_default(void)

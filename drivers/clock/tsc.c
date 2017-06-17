@@ -58,11 +58,8 @@ static int tsc_init(void)
     for (int i = 0; i < 5; i++)
         if ((khz = tsc_calibrate(TSC_CALIBRATE_MS)) < lowest)
             lowest = khz;
-    printk(INFO, "tsc: Calibrated to %luMHz\n", lowest / 1000);
-    clocksource_calculate(&tsc_clocksource.mult, &tsc_clocksource.shift, lowest,
-                          NSEC_PER_MSEC, 0);
-    printk(INFO, "tsc: Setting mult to %u and shift to %u\n",
-           tsc_clocksource.mult, tsc_clocksource.shift);
+    printk(INFO, "tsc: Calibrated to %lluKHz\n", lowest);
+    tsc_clocksource.frequency = khz * 1000;
     clocksource_register(&tsc_clocksource);
     return 0;
 }

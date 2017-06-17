@@ -3,11 +3,6 @@
 struct clocksource* clocksource_list = NULL;
 struct clocksource* current_clocksource = NULL;
 
-void clocksource_calculate(uint32_t* mult, uint32_t* shift, uint32_t from,
-                           uint32_t to, uint32_t max)
-{
-}
-
 void clocksource_select()
 {
     struct clocksource* cs = NULL;

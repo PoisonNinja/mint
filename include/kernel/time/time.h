@@ -37,8 +37,7 @@ struct clocksource {
     time_t (*read)(void);
     void (*enable)(void);
     uint32_t rating;
-    uint32_t mult;
-    uint32_t shift;
+    uint32_t frequency;
     struct clocksource *next, *prev;
 };
 
@@ -51,8 +50,7 @@ extern struct clocksource* clocksource_get_default(void);
 struct timesource {
     struct clocksource* clock;
     time_t (*read)(void);
-    uint32_t mult;
-    uint32_t shift;
+    uint32_t frequency;
     time_t last;
 };
 

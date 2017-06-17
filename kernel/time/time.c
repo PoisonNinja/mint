@@ -23,9 +23,9 @@ time_t jiffy = 0;
 static struct time kernel_time;
 static spinlock_t kernel_time_lock = {0};
 
-static time_t time_cycle_to_ns(uint64_t cycle, uint32_t mult, uint32_t shift)
+static inline time_t time_cycle_to_ns(uint64_t cycle, uint32_t frequency)
 {
-    return ((cycle * mult) >> shift);
+    return cycle * NSEC_PER_SEC / frequency;
 }
 
 time_t ktime_get(void)
@@ -45,8 +45,7 @@ void time_update(void)
     time_t now = kernel_time.ts.read();
     time_t offset = now - kernel_time.ts.last;
     kernel_time.ts.last = now;
-    time_t nsec =
-        time_cycle_to_ns(offset, kernel_time.ts.mult, kernel_time.ts.shift);
+    time_t nsec = time_cycle_to_ns(offset, kernel_time.ts.frequency);
     kernel_time.raw_time.tv_nsec += nsec;
     // Coalesce nanoseconds into seconds
     while (kernel_time.raw_time.tv_nsec >= NSEC_PER_SEC) {
@@ -61,8 +60,7 @@ void time_update_clocksource(struct clocksource* cs)
     kernel_time.ts.clock = cs;
     kernel_time.ts.read = cs->read;
     kernel_time.ts.last = cs->read();
-    kernel_time.ts.mult = cs->mult;
-    kernel_time.ts.shift = cs->shift;
+    kernel_time.ts.frequency = cs->frequency;
 }
 
 void time_init(void)
