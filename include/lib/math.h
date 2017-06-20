@@ -40,7 +40,7 @@
 #define DIV_ROUND_UP(x, y) ((x + (y - 1)) / y)
 
 // 2 ^ power
-#define POW_2(power) (2 << (power - 1))
+#define POW_2(power) (1 << (power))
 
 static inline uint32_t log_2(uint64_t x)
 {
