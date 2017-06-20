@@ -31,16 +31,24 @@
 
 #pragma once
 
-#include <lib/list.h>
+#include <lib/stack.h>
 #include <types.h>
 
+#define BUDDY_MAX_ORDER 64
+
+#define BUDDY_ADDRESS(x, order) (x ^ (1 << order))
+#define BUDDY_INDEX(x, order) (x / (POW_2(order)))
+
 struct buddy_order {
-    uint8_t* bitmap;
+    struct stack free;
+    uint8_t* bitset;  // Bitmap indicating whether this is OK to coalesce
 };
 
 struct buddy {
-    uint8_t
-        max_order;  // Unlikely the order (2^n) will ever go beyond 256, because
-                    // that is 1.157920892E77 bytes of memory
-    struct buddy_order* orders;
+    size_t min_order;
+    size_t max_order;
+    struct buddy_order orders[BUDDY_MAX_ORDER];
 };
+
+extern struct buddy* buddy_init(size_t size, uint8_t min, uint8_t max);
+extern void* buddy_alloc(struct buddy* buddy, size_t size);

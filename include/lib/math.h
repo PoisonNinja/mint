@@ -34,4 +34,30 @@
  */
 #pragma once
 
+#include <types.h>
+
+// Division, but rounding up
 #define DIV_ROUND_UP(x, y) ((x + (y - 1)) / y)
+
+// 2 ^ power
+#define POW_2(power) (2 << (power - 1))
+
+static inline uint32_t log_2(uint64_t x)
+{
+    static const uint64_t t[6] = {0xFFFFFFFF00000000ull, 0x00000000FFFF0000ull,
+                                  0x000000000000FF00ull, 0x00000000000000F0ull,
+                                  0x000000000000000Cull, 0x0000000000000002ull};
+
+    int y = (((x & (x - 1)) == 0) ? 0 : 1);
+    int j = 32;
+    int i;
+
+    for (i = 0; i < 6; i++) {
+        int k = (((x & t[i]) == 0) ? 0 : j);
+        y += k;
+        x >>= k;
+        j >>= 1;
+    }
+
+    return y;
+}
