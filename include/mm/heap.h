@@ -33,5 +33,12 @@
 
 #include <types.h>
 
+#define HEAP_UNINITIALIZED 0
+#define HEAP_EARLY 1
+#define HEAP_INITIALIZED 2
+
+extern uint8_t heap_status;
+
 extern void early_malloc_set_properties(addr_t start, addr_t extent);
-extern void* __attribute__((malloc)) early_malloc(size_t size);
+
+extern void* __attribute__((malloc)) kmalloc(size_t size);

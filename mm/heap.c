@@ -32,11 +32,12 @@
 #include <kernel.h>
 #include <mm/heap.h>
 
+uint8_t heap_status = HEAP_UNINITIALIZED;
+
 // Variables for early heap
 static addr_t early_heap_start = 0;
 static addr_t early_heap_end = 0;
 static addr_t early_heap_extent = 0;
-static uint8_t early_heap_configured = 0;
 static addr_t early_heap_watermark = 0;
 
 void early_malloc_set_properties(addr_t start, addr_t extent)
@@ -44,7 +45,7 @@ void early_malloc_set_properties(addr_t start, addr_t extent)
     if (!start || !extent)
         return;
     // No, I don't want to configure this twice
-    if (early_heap_configured) {
+    if (heap_status) {
         printk(WARNING, "early_malloc: Already configured! Allowing this "
                         "action, but unexpected behavior may occur\n");
     }
@@ -56,10 +57,10 @@ void early_malloc_set_properties(addr_t start, addr_t extent)
     // Set the heap pointer to the start of the memory region
     early_heap_watermark = start;
     printk(INFO, "early_malloc: Start at %p, extent is %p\n", start, extent);
-    early_heap_configured = 1;
+    heap_status = HEAP_EARLY;
 }
 
-void* __attribute__((malloc)) early_malloc(size_t size)
+static void* __attribute__((malloc)) early_malloc(size_t size)
 {
     // Make sure we don't overshoot the extent
     if (early_heap_watermark + size > early_heap_end) {
@@ -69,4 +70,18 @@ void* __attribute__((malloc)) early_malloc(size_t size)
     void* ret = (void*)early_heap_watermark;
     early_heap_watermark += size;
     return ret;
+}
+
+void* __attribute__((malloc)) kmalloc(size_t size)
+{
+    if (heap_status == HEAP_UNINITIALIZED) {
+        printk(WARNING, "Attempting to use kmalloc before initializing?\n");
+        return NULL;
+    }
+    if (heap_status == HEAP_EARLY) {
+        return early_malloc(size);
+    } else {
+        // Not implemented
+        return NULL;
+    }
 }
