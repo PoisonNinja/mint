@@ -1,4 +1,3 @@
-#include <kernel.h>
 #include <lib/stack.h>
 
 /*
