@@ -36,7 +36,7 @@
 
 #define BUDDY_MAX_ORDER 64
 
-#define BUDDY_ADDRESS(x, order) (x ^ (1 << order))
+#define BUDDY_ADDRESS(x, order) (x ^ (1 << (order)))
 #define BUDDY_INDEX(x, order) (x / (POW_2(order)))
 
 struct buddy_order {

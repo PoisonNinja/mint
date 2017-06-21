@@ -29,7 +29,6 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <kernel.h>
 #include <lib/bitset.h>
 #include <lib/buddy.h>
 #include <lib/math.h>
@@ -44,13 +43,12 @@ struct buddy* buddy_init(size_t size, uint8_t min, uint8_t max)
     for (int i = min; i <= max; i++) {
         stack_init(&buddy->orders[i].free);
         size_t space = BITSET_SIZE_CALC(size / POW_2(i));
-        printk(DEBUG, "Requiring %llu of space for level %d\n", space, i);
         buddy->orders[i].bitset = kmalloc(space);
         memset(buddy->orders[i].bitset, 0, space);
     }
     for (addr_t i = 0; i < size; i += POW_2(max)) {
         struct stack_item* item = (struct stack_item*)i;
-        item->data = i;
+        item->data = (void*)i;
         stack_push(&buddy->orders[max].free, item);
     }
     return buddy;
@@ -62,37 +60,26 @@ void* buddy_alloc(struct buddy* buddy, size_t size)
     if (order < buddy->min_order)
         order = buddy->min_order;
     if (order > buddy->max_order) {
-        printk(WARNING, "Requested allocation size is too large!\n");
         return NULL;
     }
     uint32_t original_order = order;
-    printk(DEBUG, "order is %u\n", order);
     if (!buddy->orders[order].free.size) {
-        printk(DEBUG, "No free block found in requested size. Searching for a "
-                      "larger block...\n");
         while (order <= buddy->max_order) {
             if (buddy->orders[order].free.size)
                 break;
             order++;
         }
-        printk(DEBUG, "Found free block at order %u\n", order);
         void* addr = stack_pop(&buddy->orders[order].free);
         for (; order > original_order; order--) {
             bitset_set(buddy->orders[order].bitset,
                        (addr_t)addr / POW_2(order));
             bitset_set(buddy->orders[order - 1].bitset,
                        (addr_t)addr / POW_2(order - 1));
-            bitset_set(buddy->orders[order - 1].bitset,
-                       BUDDY_ADDRESS((addr_t)addr, order) / POW_2(order - 1));
             struct stack_item* item =
-                (struct stack_item*)BUDDY_ADDRESS((addr_t)addr, order);
-            item->data = BUDDY_ADDRESS((addr_t)addr, order);
-            stack_push(&buddy->orders[order].free, item);
+                (struct stack_item*)BUDDY_ADDRESS((addr_t)addr, order - 1);
+            item->data = (void*)BUDDY_ADDRESS((addr_t)addr, order - 1);
+            stack_push(&buddy->orders[order - 1].free, item);
         }
-        struct stack_item* item =
-            (struct stack_item*)BUDDY_ADDRESS((addr_t)addr, original_order);
-        item->data = BUDDY_ADDRESS((addr_t)addr, original_order);
-        stack_push(&buddy->orders[order].free, item);
         return addr;
     } else {
         void* addr = stack_pop(&buddy->orders[order].free);
