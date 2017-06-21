@@ -37,8 +37,6 @@
 #include <kernel/time/time.h>
 #include <kernel/version.h>
 
-#include <lib/buddy.h>
-
 static char mint_banner[] =
     "Mint version " UTS_RELEASE " (" MINT_COMPILE_BY "@" MINT_COMPILE_HOST
     ") (" MINT_COMPILER ") " UTS_VERSION;
@@ -59,15 +57,6 @@ void kmain(struct mint_bootinfo* bootinfo)
     do_initcall(FS_INIT);
     do_initcall(DEVICE_INIT);
     do_initcall(LATE_INIT);
-    struct buddy* buddy = buddy_init(0x20000, 32768, 4, 8);
-    buddy_free_region(buddy, 0x20000, 0x1000);
-    void* a = buddy_alloc(buddy, 128);
-    void* b = buddy_alloc(buddy, 128);
-    printk(INFO, "Allocated: 0x%llX\n", a);
-    printk(INFO, "Allocated: 0x%llX\n", b);
-    buddy_free(buddy, a, 128);
-    void* c = buddy_alloc(buddy, 256);
-    printk(INFO, "Allocated: 0x%llX\n", c);
     stacktrace();
     for (;;)
         ;
