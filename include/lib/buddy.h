@@ -36,19 +36,19 @@
 
 #define BUDDY_MAX_ORDER 64
 
-#define BUDDY_ADDRESS(x, order) (x ^ (1 << (order)))
-#define BUDDY_INDEX(x, order) (x / (POW_2(order)))
-
 struct buddy_order {
     struct stack free;
     uint8_t* bitset;  // Bitmap indicating whether this is OK to coalesce
 };
 
 struct buddy {
-    size_t min_order;
-    size_t max_order;
+    addr_t base;
+    size_t size;
+    uint32_t min_order;
+    uint32_t max_order;
     struct buddy_order orders[BUDDY_MAX_ORDER];
 };
 
-extern struct buddy* buddy_init(size_t size, uint8_t min, uint8_t max);
+extern struct buddy* buddy_init(addr_t base, size_t size, uint8_t min,
+                                uint8_t max);
 extern void* buddy_alloc(struct buddy* buddy, size_t size);
