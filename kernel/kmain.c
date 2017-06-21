@@ -60,9 +60,9 @@ void kmain(struct mint_bootinfo* bootinfo)
     do_initcall(DEVICE_INIT);
     do_initcall(LATE_INIT);
     struct buddy* buddy = buddy_init(32768, 4, 8);
-    printk(INFO, "Allocated: 0x%llX\n", buddy_alloc(buddy, 64));
-    printk(INFO, "Allocated: 0x%llX\n", buddy_alloc(buddy, 64));
-    printk(INFO, "Allocated: 0x%llX\n", buddy_alloc(buddy, 64));
+    for (int i = 0; i < 16; i++) {
+        printk(INFO, "Allocated: 0x%llX\n", buddy_alloc(buddy, 128));
+    }
     stacktrace();
     for (;;)
         ;
