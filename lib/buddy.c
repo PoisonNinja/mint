@@ -52,12 +52,7 @@ struct buddy* buddy_init(addr_t base, size_t size, uint8_t min, uint8_t max)
         stack_init(&buddy->orders[i].free);
         size_t space = BITSET_SIZE_CALC(size / POW_2(i));
         buddy->orders[i].bitset = kmalloc(space);
-        memset(buddy->orders[i].bitset, 0, space);
-    }
-    for (addr_t i = base; i < base + size; i += POW_2(max)) {
-        struct stack_item* item = (struct stack_item*)i;
-        item->data = (void*)i;
-        stack_push(&buddy->orders[max].free, item);
+        memset(buddy->orders[i].bitset, BITSET_FULL, space);
     }
     return buddy;
 }
@@ -112,6 +107,20 @@ void buddy_free(struct buddy* buddy, void* addr, size_t size)
             item->data = (void*)addr;
             stack_push(&buddy->orders[order].free, item);
             break;
+        }
+    }
+}
+
+void buddy_set_free(struct buddy* buddy, addr_t start, size_t size)
+{
+    addr_t end = start + size;
+    addr_t addr = start;
+    for (uint32_t order = buddy->max_order; order >= buddy->min_order;
+         order--) {
+        size_t chunk = POW_2(order);
+        while (addr + chunk <= end) {
+            buddy_free(buddy, (void*)addr, chunk);
+            addr += chunk;
         }
     }
 }
