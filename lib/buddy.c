@@ -111,7 +111,7 @@ void buddy_free(struct buddy* buddy, void* addr, size_t size)
     }
 }
 
-void buddy_set_free(struct buddy* buddy, addr_t start, size_t size)
+void buddy_free_region(struct buddy* buddy, addr_t start, size_t size)
 {
     addr_t end = start + size;
     addr_t addr = start;

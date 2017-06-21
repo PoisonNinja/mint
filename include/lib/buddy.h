@@ -54,4 +54,4 @@ extern struct buddy* buddy_init(addr_t base, size_t size, uint8_t min,
 extern void* buddy_alloc(struct buddy* buddy, size_t size);
 extern void buddy_free(struct buddy* buddy, void* addr, size_t size);
 
-extern void buddy_set_free(struct buddy* buddy, addr_t start, size_t size);
+extern void buddy_free_region(struct buddy* buddy, addr_t start, size_t size);

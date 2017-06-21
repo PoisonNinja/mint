@@ -60,7 +60,7 @@ void kmain(struct mint_bootinfo* bootinfo)
     do_initcall(DEVICE_INIT);
     do_initcall(LATE_INIT);
     struct buddy* buddy = buddy_init(0x20000, 32768, 4, 8);
-    buddy_set_free(buddy, 0x20000, 0x1000);
+    buddy_free_region(buddy, 0x20000, 0x1000);
     void* a = buddy_alloc(buddy, 128);
     void* b = buddy_alloc(buddy, 128);
     printk(INFO, "Allocated: 0x%llX\n", a);
