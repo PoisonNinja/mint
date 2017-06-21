@@ -38,6 +38,9 @@
 #define BITSET_INDEX(index) (index / 8)
 #define BITSET_DECLARE(name, size) uint8_t name[BITSET_SIZE_CALC(size)];
 
+#define BITSET_FULL 0xFF
+#define BITSET_EMPTY 0x00
+
 #define bitset_set(bitset, index) bitset[index / 8] |= (1 << (index % 8))
 #define bitset_unset(bitset, index) bitset[index / 8] &= ~(1 << (index % 8))
 #define bitset_test(bitset, index) \
