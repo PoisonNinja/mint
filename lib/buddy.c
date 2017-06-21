@@ -97,3 +97,21 @@ void* buddy_alloc(struct buddy* buddy, size_t size)
         return addr;
     }
 }
+
+void buddy_free(struct buddy* buddy, void* addr, size_t size)
+{
+    uint32_t order = log_2(size);
+    for (; order <= buddy->max_order; order++) {
+        bitset_unset(buddy->orders[order].bitset,
+                     BUDDY_INDEX((addr_t)addr - buddy->base, order));
+        addr_t buddy_addr = BUDDY_ADDRESS((addr_t)addr, order);
+        if (bitset_test(buddy->orders[order].bitset,
+                        BUDDY_INDEX(buddy_addr - buddy->base, order)) ||
+            order == buddy->max_order) {
+            struct stack_item* item = (struct stack_item*)addr;
+            item->data = (void*)addr;
+            stack_push(&buddy->orders[order].free, item);
+            break;
+        }
+    }
+}
