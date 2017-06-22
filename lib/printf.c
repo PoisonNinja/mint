@@ -252,11 +252,15 @@ static void printf_format(struct printf_data *data, const char *format,
                     break;
                 case 'p':
                     puts(&params, data, "0x");
+                    params.zero = 1;
 #if __SIZEOF_POINTER__ <= __SIZEOF_INT__
+                    params.padding = 8;
                     lng = 0;
 #elif __SIZEOF_POINTER__ <= __SIZEOF_LONG__
+                    params.padding = 16;
                     lng = 1;
 #elif __SIZEOF_POINTER__ <= __SIZEOF_LONG_LONG__
+                    params.padding = 16;
                     lng = 2;
 #endif
                 case 'X':
