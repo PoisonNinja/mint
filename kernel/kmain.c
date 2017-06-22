@@ -47,6 +47,12 @@ void kmain(struct mint_bootinfo* bootinfo)
 {
     printk(INFO, "%s\n", mint_banner);
     printk(INFO, "%llu KiB of memory available\n", bootinfo->total_mem);
+    printk(INFO, "Highest address is %p\n", bootinfo->highest_mem);
+    for (struct mint_memory_region* region = bootinfo->memregions; region;
+         region = region->next) {
+        printk(INFO, "  Start: %p. Size: %p. Type: 0x%X\n", region->addr,
+               region->size, region->type);
+    }
     setup_arch();
     time_init();
     interrupt_enable();

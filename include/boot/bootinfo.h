@@ -39,15 +39,16 @@
 #define MEMORY_TYPE_BAD 0x5
 
 struct mint_memory_region {
-    uint64_t lower;
-    uint64_t upper;
+    uint64_t addr;
+    uint64_t size;
     uint64_t type;
     struct mint_memory_region* next;
 };
 
 struct mint_bootinfo {
     char* cmdline;
-    uint64_t total_mem;
+    size_t total_mem;
+    addr_t highest_mem;
     uint8_t num_memregions;
     struct mint_memory_region* memregions;
 };

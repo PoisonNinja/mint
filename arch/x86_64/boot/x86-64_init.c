@@ -71,6 +71,12 @@ void x86_64_init(uint32_t magic, struct multiboot_info *mboot)
     cpu_print_information(cpu_get_information(0));
     gdt_init();
     idt_init();
+    /*
+     * Tell early_malloc where it can allocate memory from and the extent that
+     * it can allocate to
+     */
+    early_malloc_set_properties((uint64_t)&__kernel_end, 0x100000);
+    memset(&bootinfo, 0, sizeof(struct mint_bootinfo));
     uint32_t mmap = mboot->mmap_addr;
     while (mmap < mboot->mmap_addr + mboot->mmap_length) {
         multiboot_memory_map_t *tmp = (multiboot_memory_map_t *)(uint64_t)mmap;
@@ -81,14 +87,24 @@ void x86_64_init(uint32_t magic, struct multiboot_info *mboot)
              * 3GB. This could be a QEMU bug though...
              */
             bootinfo.total_mem += tmp->len;
+            if ((tmp->addr + tmp->len) > bootinfo.highest_mem)
+                bootinfo.highest_mem = tmp->addr + tmp->len;
         }
+        struct mint_memory_region *memregion = bootinfo.memregions;
+        if (memregion) {
+            while (memregion->next)
+                memregion = memregion->next;
+            memregion->next = kmalloc(sizeof(struct mint_memory_region));
+            memregion = memregion->next;
+        } else {
+            bootinfo.memregions = kmalloc(sizeof(struct mint_memory_region));
+            memregion = bootinfo.memregions;
+        }
+        memregion->addr = tmp->addr;
+        memregion->size = tmp->len;
+        memregion->type = tmp->type;
         bootinfo.num_memregions++;
         mmap += (tmp->size + sizeof(tmp->size));
     }
-    /*
-     * Tell early_malloc where it can allocate memory from and the extent that
-     * it can allocate to
-     */
-    early_malloc_set_properties((uint64_t)&__kernel_end, 0x10000);
     kmain(&bootinfo);
 }
