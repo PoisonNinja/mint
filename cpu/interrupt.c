@@ -93,6 +93,9 @@ void exception_dispatch(struct registers* regs)
     } else {
         printk(INFO, "Unhandled exception %d: %s\n", regs->int_no,
                arch_exception_translate(regs->int_no));
+        interrupt_disable();
+        for (;;)
+            __asm__("hlt");
     }
 }
 
