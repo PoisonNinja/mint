@@ -61,15 +61,17 @@ pml3_base:
 align 4096
 pml2_base:
     %assign i 0
-    %rep 512
+    %rep 25
     dq (pml1_base + i + 0x7)
     %assign i i+4096
     %endrep
 
+    times (512-25) dq 0
+
 align 4096
 pml1_base:
     %assign i 0
-    %rep 512*512
+    %rep 512*25
     dq (i << 12) | 0x087
     %assign i i+1
     %endrep
