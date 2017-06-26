@@ -31,6 +31,7 @@
 
 #include <kernel.h>
 #include <mm/heap.h>
+#include <string.h>
 
 uint8_t heap_status = HEAP_UNINITIALIZED;
 
@@ -79,7 +80,10 @@ void* __attribute__((malloc)) kmalloc(size_t size)
         return NULL;
     }
     if (heap_status == HEAP_EARLY) {
-        return early_malloc(size);
+        void* ptr = early_malloc(size);
+        if (ptr)
+            memset(ptr, 0, size);
+        return ptr;
     } else {
         // Not implemented
         return NULL;
