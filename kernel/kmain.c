@@ -36,6 +36,7 @@
 #include <kernel/stacktrace.h>
 #include <kernel/time/time.h>
 #include <kernel/version.h>
+#include <mm/physical.h>
 
 static char mint_banner[] =
     "Mint version " UTS_RELEASE " (" MINT_COMPILE_BY "@" MINT_COMPILE_HOST
@@ -48,10 +49,13 @@ void kmain(struct mint_bootinfo* bootinfo)
     printk(INFO, "%s\n", mint_banner);
     printk(INFO, "%llu KiB of memory available\n", bootinfo->total_mem);
     printk(INFO, "Highest address is %p\n", bootinfo->highest_mem);
+    physical_init(bootinfo->highest_mem);
     for (struct mint_memory_region* region = bootinfo->memregions; region;
          region = region->next) {
         printk(INFO, "  Start: %p. Size: %p. Type: 0x%X\n", region->addr,
                region->size, region->type);
+        if (region->type == MEMORY_TYPE_AVAILABLE)
+            physical_free_region(region->addr, region->size);
     }
     setup_arch();
     time_init();
