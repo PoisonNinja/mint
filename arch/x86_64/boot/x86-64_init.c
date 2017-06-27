@@ -52,15 +52,9 @@ extern uint64_t __bss_end;
 
 extern uint64_t __kernel_end;
 
-void zero_bss(void)
-{
-    memset(&__bss_start, 0, &__bss_end - &__bss_start);
-}
-
 void x86_64_init(uint32_t magic, struct multiboot_info *mboot)
 {
     interrupt_disable();
-    zero_bss();
     x86_64_init_console();
     if (magic != MULTIBOOT_BOOTLOADER_MAGIC)
         panic("Bad multiboot magic! Expected 0x%X, but got 0x%X\n",
