@@ -49,6 +49,7 @@ void console_write(const char *message, size_t length)
     struct console *current;
     LIST_FOR_EACH(console_list, current)
     {
-        current->write(message, length);
+        if (current->write)
+            current->write(message, length);
     }
 }
