@@ -34,7 +34,7 @@
 #include <lib/printf.h>
 #include <string.h>
 
-#define VGA_BUFFER 0xB8000
+#define VGA_BUFFER 0xFFFFFFFF800B8000
 #define VGA_WIDTH 80
 #define VGA_HEIGHT 25
 
