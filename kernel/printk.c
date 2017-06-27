@@ -50,13 +50,13 @@ int _printk(int level, const char* format, ...)
     time_t t = ktime_get();
     time_t sec = t / NSEC_PER_SEC;
     time_t nsec = t % NSEC_PER_SEC;
-    r = sprintf(buffer, "%s[%05lu.%09lu]%s ", colors[level], sec, nsec,
-                "\e[39m");
+    r = snprintf(buffer, 1024, "%s[%05lu.%09lu]%s ", colors[level], sec, nsec,
+                 "\e[39m");
     console_write(buffer, r);
     memset(buffer, 0, 1024);
     va_list args;
     va_start(args, format);
-    r = vsprintf(buffer, format, args);
+    r = vsnprintf(buffer, 1024, format, args);
     va_end(args);
     console_write(buffer, r);
     return r;
