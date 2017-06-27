@@ -38,13 +38,15 @@
 #define BUDDY_ADDRESS(x, order) ((x) ^ (1 << (order)))
 #define BUDDY_INDEX(x, order) ((x) / (POW_2(order)))
 
-struct buddy* buddy_init(addr_t base, size_t size, uint8_t min, uint8_t max)
+struct buddy* buddy_init(addr_t base, addr_t virtual_base, size_t size,
+                         uint8_t min, uint8_t max)
 {
     if (!size || !min || !max)
         return NULL;
     struct buddy* buddy = kmalloc(sizeof(struct buddy));
     // No zero checks for base because 0 is a valid base (e.g. low memory)
     buddy->base = base;
+    buddy->virtual_base = virtual_base;
     buddy->size = size;
     buddy->min_order = min;
     buddy->max_order = max;
@@ -80,7 +82,8 @@ void* buddy_alloc(struct buddy* buddy, size_t size)
             bitset_set(buddy->orders[order - 1].bitset,
                        BUDDY_INDEX((addr_t)addr - buddy->base, order - 1));
             struct stack_item* item =
-                (struct stack_item*)BUDDY_ADDRESS((addr_t)addr, order - 1);
+                (struct stack_item*)(BUDDY_ADDRESS((addr_t)addr, order - 1) +
+                                     buddy->virtual_base);
             item->data = (void*)BUDDY_ADDRESS((addr_t)addr, order - 1);
             stack_push(&buddy->orders[order - 1].free, item);
         }
@@ -103,7 +106,8 @@ void buddy_free(struct buddy* buddy, void* addr, size_t size)
         if (bitset_test(buddy->orders[order].bitset,
                         BUDDY_INDEX(buddy_addr - buddy->base, order)) ||
             order == buddy->max_order) {
-            struct stack_item* item = (struct stack_item*)addr;
+            struct stack_item* item =
+                (struct stack_item*)(addr + buddy->virtual_base);
             item->data = (void*)addr;
             stack_push(&buddy->orders[order].free, item);
             break;

@@ -43,14 +43,15 @@ struct buddy_order {
 
 struct buddy {
     addr_t base;
+    addr_t virtual_base;
     size_t size;
     uint32_t min_order;
     uint32_t max_order;
     struct buddy_order orders[BUDDY_MAX_ORDER];
 };
 
-extern struct buddy* buddy_init(addr_t base, size_t size, uint8_t min,
-                                uint8_t max);
+extern struct buddy* buddy_init(addr_t base, addr_t virtual_base, size_t size,
+                                uint8_t min, uint8_t max);
 extern void* buddy_alloc(struct buddy* buddy, size_t size);
 extern void buddy_free(struct buddy* buddy, void* addr, size_t size);
 
