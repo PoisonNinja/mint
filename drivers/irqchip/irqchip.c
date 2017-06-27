@@ -31,6 +31,7 @@
 
 #include <cpu/interrupt.h>
 #include <drivers/irqchip/irqchip.h>
+#include <kernel.h>
 
 static struct interrupt_controller* interrupt_controller = NULL;
 static struct interrupt_controller* interrupt_controllers = NULL;

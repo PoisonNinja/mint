@@ -29,6 +29,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <kernel.h>
 #include <kernel/time/time.h>
 
 struct clocksource* clocksource_list = NULL;

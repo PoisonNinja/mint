@@ -31,9 +31,6 @@
 
 #pragma once
 
-#include <kernel.h>
-#include <types.h>
-
 #define LIST_FOR_EACH(head, element)    \
     for ((element) = (head); (element); \
          (element) = (((element)->next == (head)) ? NULL : (element)->next))
