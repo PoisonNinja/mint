@@ -16,8 +16,8 @@ __attribute__((aligned(0x1000))) static struct page_table pml2[512];
 void x86_64_patch_pml4(void)
 {
     struct page_table *pml4 = (struct page_table *)(read_cr3() + KERNEL_START);
-    // pml4->pages[0].address = 0;
-    // pml4->pages[0].present = 0;
+    pml4->pages[0].address = 0;
+    pml4->pages[0].present = 0;
     addr_t address = 0;
     for (int i = 0; i < 512; i++) {
         pml3.pages[i].address = ((addr_t)&pml2[i] - KERNEL_START) / 0x1000;
@@ -35,7 +35,6 @@ void x86_64_patch_pml4(void)
         ((addr_t)&pml3 - KERNEL_START) / 0x1000;
     pml4->pages[PML4_INDEX(PHYS_START)].present = 1;
     pml4->pages[PML4_INDEX(PHYS_START)].writable = 1;
-    printk(INFO, "Done patching PML4\n");
 }
 
 void arch_mm_init(void)
