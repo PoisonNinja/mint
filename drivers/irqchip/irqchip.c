@@ -72,6 +72,10 @@ int interrupt_controller_set(uint32_t controller)
      * and maybe even the status when doing this.
      */
     interrupt_controller = find_interrupt_controller(controller);
+    if (!interrupt_controller) {
+        printk(WARNING, "Interrupt controller not found!\n");
+        return 1;
+    }
     if (interrupt_controller->status == IC_STATUS_UNINITIALIZED) {
         // Some chips may not need an init function
         if (interrupt_controller->init)
@@ -85,6 +89,8 @@ int interrupt_controller_set(uint32_t controller)
 
 int interrupt_controller_enable(void)
 {
+    if (!interrupt_controller)
+        return 1;
     if (interrupt_controller->status == IC_STATUS_DISABLED) {
         if (interrupt_controller->enable) {
             interrupt_controller->enable();
@@ -105,6 +111,8 @@ int interrupt_controller_enable(void)
 
 int interrupt_controller_disable(void)
 {
+    if (!interrupt_controller)
+        return 1;
     if (interrupt_controller->status == IC_STATUS_ENABLED) {
         if (interrupt_controller->enable) {
             interrupt_controller->enable();
@@ -119,6 +127,8 @@ int interrupt_controller_disable(void)
 
 int interrupt_controller_mask(int irq)
 {
+    if (!interrupt_controller)
+        return 1;
     if (!(irq_mask & (1 << irq))) {
         if (interrupt_controller->status == IC_STATUS_ENABLED &&
             interrupt_controller->mask) {
@@ -131,6 +141,8 @@ int interrupt_controller_mask(int irq)
 
 int interrupt_controller_unmask(int irq)
 {
+    if (!interrupt_controller)
+        return 1;
     if (irq_mask & (1 << irq)) {
         if (interrupt_controller->status == IC_STATUS_ENABLED &&
             interrupt_controller->unmask) {
@@ -143,6 +155,8 @@ int interrupt_controller_unmask(int irq)
 
 int interrupt_controller_ack(int int_no)
 {
+    if (!interrupt_controller)
+        return 1;
     if (interrupt_controller->status == IC_STATUS_ENABLED &&
         interrupt_controller->ack) {
         interrupt_controller->ack(int_no);

@@ -14,7 +14,8 @@ void mm_init(struct mint_bootinfo* bootinfo)
          region = region->next) {
         printk(INFO, "  Start: %p. Size: %p. Type: 0x%X\n", region->addr,
                region->size, region->type);
-        if (region->type == MEMORY_TYPE_AVAILABLE)
+        if (region->type == MEMORY_TYPE_AVAILABLE) {
             physical_free_region(region->addr, region->size);
+        }
     }
 }
