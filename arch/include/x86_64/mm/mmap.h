@@ -1,7 +1,11 @@
 #pragma once
 
+// Virtual memory maps
 #define KERNEL_START 0xFFFFFFFF80000000
 #define KERNEL_END 0xFFFFFFFF80A00000
 
 #define PHYS_START 0xFFFF880000000000
 #define PHYS_END 0xFFFF887FFFE00000
+
+// Physical memory
+#define DMA_MAX 0x1000000
