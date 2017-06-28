@@ -25,6 +25,24 @@ void physical_init(size_t size)
         buddy_init(normal_region.base, PHYS_START, normal_region.size, 12, 28);
 }
 
+void* physical_alloc(size_t size, uint8_t flags)
+{
+    if (flags & PHYS_DMA) {
+        return buddy_alloc(dma_region.buddy, size);
+    } else {
+        return buddy_alloc(normal_region.buddy, size);
+    }
+}
+
+void physical_free(void* addr, size_t size)
+{
+    if ((addr_t)addr < 0x1000000) {
+        return buddy_free(dma_region.buddy, addr, size);
+    } else {
+        return buddy_free(normal_region.buddy, addr, size);
+    }
+}
+
 void physical_free_region(addr_t start, size_t size)
 {
     if (start < 0x1000000) {
