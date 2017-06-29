@@ -3,6 +3,9 @@ OUTPUT_FORMAT("elf64-x86-64")
 SECTIONS
 {
 	. = 0x100000;
+
+    __kernel_start = .;
+
 	.bootstrap :
 	{
 		*(.bootstrap)
@@ -10,8 +13,6 @@ SECTIONS
 	}
 
 	. += 0xFFFFFFFF80000000;
-
-    __kernel_start = .;
 
     .text ALIGN (0x1000) : AT(ADDR(.text) - 0xFFFFFFFF80000000)
     {
@@ -56,7 +57,7 @@ SECTIONS
         __initcall_end = .;
     }
 
-    __kernel_end = .;
+    __kernel_end = . - 0xFFFFFFFF80000000;
     /DISCARD/ :
     {
        	*(.comment)

@@ -31,6 +31,7 @@
 
 #include <arch/boot/multiboot.h>
 #include <arch/cpu/cpu.h>
+#include <arch/mm/mmap.h>
 #include <boot/bootinfo.h>
 #include <cpu/interrupt.h>
 #include <kernel.h>
@@ -69,7 +70,8 @@ void x86_64_init(uint32_t magic, struct multiboot_info *mboot)
      * Tell early_malloc where it can allocate memory from and the extent that
      * it can allocate to
      */
-    early_malloc_set_properties((uint64_t)&__kernel_end, 0x100000);
+    early_malloc_set_properties((uint64_t)&__kernel_end + KERNEL_START,
+                                0x100000);
     memset(&bootinfo, 0, sizeof(struct mint_bootinfo));
     uint32_t mmap = mboot->mmap_addr;
     while (mmap < mboot->mmap_addr + mboot->mmap_length) {
