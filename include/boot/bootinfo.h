@@ -42,7 +42,7 @@ struct mint_memory_region {
     uint64_t addr;
     uint64_t size;
     uint64_t type;
-    struct mint_memory_region* next;
+    struct mint_memory_region *next, *prev;
 };
 
 struct mint_bootinfo {

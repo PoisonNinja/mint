@@ -91,6 +91,7 @@ void x86_64_init(uint32_t magic, struct multiboot_info *mboot)
             while (memregion->next)
                 memregion = memregion->next;
             memregion->next = kmalloc(sizeof(struct mint_memory_region));
+            memregion->next->prev = memregion;
             memregion = memregion->next;
         } else {
             bootinfo.memregions = kmalloc(sizeof(struct mint_memory_region));

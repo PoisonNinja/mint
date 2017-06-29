@@ -3,6 +3,7 @@
 #include <types.h>
 
 #define PHYS_DMA 0x1
+#define PHYS_ALIGN 0x2
 
 extern void* physical_alloc(size_t size, uint8_t region);
 extern void physical_free(void* addr, size_t size);

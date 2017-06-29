@@ -37,7 +37,11 @@
 #include <types.h>
 
 // Division, but rounding up
-#define DIV_ROUND_UP(x, y) ((x + (y - 1)) / y)
+#define DIV_ROUND_UP(x, y) (((x) + ((y)-1)) / (y))
+
+// Rounding
+#define ROUND_DOWN(x, y) ((x) - ((x) % (y)))
+#define ROUND_UP(x, y) (ROUND_DOWN((x), (y)) + (y))
 
 // 2 ^ power
 #define POW_2(power) (1 << (power))
