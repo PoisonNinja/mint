@@ -5,6 +5,7 @@
 #include <lib/math.h>
 #include <mm/heap.h>
 #include <mm/physical.h>
+#include <mm/virtual.h>
 #include <string.h>
 
 __attribute__((aligned(0x1000))) static struct page_table pml3;
@@ -23,7 +24,7 @@ static uint8_t free_fixup_region = 0;
  * we can't allocate new pages yet, only using preallocated/compiled in
  */
 
-void x86_64_patch_pml4(void)
+void x86_64_patch_pml4(struct memory_context *context)
 {
     struct page_table *pml4 = (struct page_table *)(read_cr3() + KERNEL_START);
     pml4->pages[0].address = 0;
@@ -45,6 +46,7 @@ void x86_64_patch_pml4(void)
         ((addr_t)&pml3 - KERNEL_START) / 0x1000;
     pml4->pages[PML4_INDEX(PHYS_START)].present = 1;
     pml4->pages[PML4_INDEX(PHYS_START)].writable = 1;
+    context->page_table = (addr_t)pml4;
 }
 
 /*
@@ -124,9 +126,10 @@ void x86_64_fix_multiboot(struct mint_bootinfo *bootinfo)
     }
 }
 
-void arch_mm_init(struct mint_bootinfo *bootinfo)
+void arch_mm_init(struct mint_bootinfo *bootinfo,
+                  struct memory_context *context)
 {
-    x86_64_patch_pml4();
+    x86_64_patch_pml4(context);
     physical_init(bootinfo->highest_mem, DMA_MAX);
     x86_64_fix_multiboot(bootinfo);
     for (struct mint_memory_region *region = bootinfo->memregions; region;
