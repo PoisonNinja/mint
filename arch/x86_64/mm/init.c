@@ -134,8 +134,9 @@ static void x86_64_finalize_paging(struct memory_context *context)
     struct page_table *pml4 = (struct page_table *)physical_alloc(0x1000, 0);
     context->page_table = (addr_t)pml4;
     virtual_map(context, PHYS_START, 0, PHYS_END - PHYS_START,
-                PAGE_WRITABLE | PAGE_NX | PAGE_HUGE);
-    printk(INFO, "Hello!\n");
+                PAGE_PRESENT | PAGE_WRITABLE | PAGE_NX | PAGE_HUGE);
+    virtual_map(context, KERNEL_START, 0, KERNEL_END - KERNEL_START,
+                PAGE_PRESENT | PAGE_WRITABLE);
     write_cr3(context->page_table);
 }
 
