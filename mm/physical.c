@@ -3,6 +3,7 @@
 #include <lib/buddy.h>
 #include <mm/heap.h>
 #include <mm/physical.h>
+#include <string.h>
 
 struct physical_region {
     addr_t base;
@@ -27,11 +28,14 @@ void physical_init(size_t size, addr_t dma_boundary)
 
 void* physical_alloc(size_t size, uint8_t flags)
 {
+    void* ret = 0;
     if (flags & PHYS_DMA) {
-        return buddy_alloc(dma_region.buddy, size);
+        ret = buddy_alloc(dma_region.buddy, size);
     } else {
-        return buddy_alloc(normal_region.buddy, size);
+        ret = buddy_alloc(normal_region.buddy, size);
     }
+    memset(ret + PHYS_START, 0, size);
+    return ret;
 }
 
 void physical_free(void* addr, size_t size)

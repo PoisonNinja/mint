@@ -2,9 +2,6 @@
 #include <arch/mm/mmap.h>
 #include <mm/physical.h>
 #include <mm/virtual.h>
-#include <string.h>
-
-#include <kernel.h>
 
 void arch_virtual_map(struct memory_context* context, addr_t virtual,
                       addr_t physical, uint8_t flags)
@@ -16,7 +13,6 @@ void arch_virtual_map(struct memory_context* context, addr_t virtual,
     struct page_table* pt = NULL;
     if (!pml4->pages[PML4_INDEX(virtual)].present) {
         pdpt = (struct page_table*)physical_alloc(0x1000, 0);
-        memset((addr_t)pdpt + PHYS_START, 0, 0x1000);
         pml4->pages[PML4_INDEX(virtual)].present = 1;
         pml4->pages[PML4_INDEX(virtual)].writable =
             (flags & PAGE_WRITABLE) ? 1 : 0;
@@ -30,7 +26,6 @@ void arch_virtual_map(struct memory_context* context, addr_t virtual,
     pdpt = (addr_t)pdpt + PHYS_START;
     if (!pdpt->pages[PDPT_INDEX(virtual)].present) {
         pd = (struct page_table*)physical_alloc(0x1000, 0);
-        memset((addr_t)pd + PHYS_START, 0, 0x1000);
         pdpt->pages[PDPT_INDEX(virtual)].present = 1;
         pdpt->pages[PDPT_INDEX(virtual)].writable =
             (flags & PAGE_WRITABLE) ? 1 : 0;
@@ -45,7 +40,6 @@ void arch_virtual_map(struct memory_context* context, addr_t virtual,
     if (!flags & PAGE_HUGE) {
         if (!pd->pages[PD_INDEX(virtual)].present) {
             pt = (struct page_table*)physical_alloc(0x1000, 0);
-            memset((addr_t)pt + PHYS_START, 0, 0x1000);
             pd->pages[PD_INDEX(virtual)].present = 1;
             pd->pages[PD_INDEX(virtual)].writable =
                 (flags & PAGE_WRITABLE) ? 1 : 0;
