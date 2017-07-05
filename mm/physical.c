@@ -46,11 +46,11 @@ void physical_free(void* addr, size_t size)
 void physical_free_region(addr_t start, size_t size)
 {
     if (start < dma_region.size) {
-        if (start + size > dma_region.size) {
+        if (start < dma_region.size && start + size >= dma_region.size) {
             size_t dma_size = (dma_region.base + dma_region.size) - start;
             size -= dma_size;
             buddy_free_region(dma_region.buddy, start, dma_size);
-            start = dma_region.size;
+            start = dma_region.base + dma_region.size;
             buddy_free_region(normal_region.buddy, start, size);
         } else {
             buddy_free_region(dma_region.buddy, start, size);
