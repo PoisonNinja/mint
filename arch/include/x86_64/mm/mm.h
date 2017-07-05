@@ -3,14 +3,8 @@
 #include <types.h>
 
 #define PAGE_SIZE 4096
+#define PAGE_HUGE_SIZE 2097152
 #define PAGE_MASK 0xFFFFFFFFFFFFF000
-
-#define PAGE_PRESENT 0x1
-#define PAGE_WRITABLE 0x2
-#define PAGE_USER 0x4
-#define PAGE_GLOBAL 0x8
-#define PAGE_NX 0x10
-#define PAGE_COW 0x20
 
 #define PML4_INDEX(x) ((x >> 39) & 0x1FF)
 #define PDPT_INDEX(x) ((x >> 30) & 0x1FF)

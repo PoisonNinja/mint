@@ -24,7 +24,7 @@ static uint8_t free_fixup_region = 0;
  * we can't allocate new pages yet, only using preallocated/compiled in
  */
 
-void x86_64_patch_pml4(struct memory_context *context)
+static void x86_64_patch_pml4(struct memory_context *context)
 {
     struct page_table *pml4 = (struct page_table *)(read_cr3() + KERNEL_START);
     pml4->pages[0].address = 0;
@@ -59,7 +59,7 @@ void x86_64_patch_pml4(struct memory_context *context)
  * regions and fixes any overlap between the free regions and the kernel
  * space.
  */
-void x86_64_fix_multiboot(struct mint_bootinfo *bootinfo)
+static void x86_64_fix_multiboot(struct mint_bootinfo *bootinfo)
 {
     addr_t kernel_start = ROUND_DOWN((addr_t)&__kernel_start, PAGE_SIZE);
     addr_t kernel_end = ROUND_UP((addr_t)kmalloc(0) - KERNEL_START, PAGE_SIZE);
@@ -96,9 +96,12 @@ void x86_64_fix_multiboot(struct mint_bootinfo *bootinfo)
                 // Case 1
                 size_t overlap = (region->addr + region->size) - kernel_start;
                 region->size -= overlap;
-            } else if (region->addr >= kernel_start) {
+            } else if (region->addr >= kernel_start &&
+                       region->addr <= kernel_end) {
+                size_t overlap = (kernel_end - region->addr);
                 // Case 2
                 region->addr = kernel_end;
+                region->size -= overlap;
             } else if (region->addr < kernel_start &&
                        region->addr + region->size >= kernel_end) {
                 // Case 3
@@ -126,6 +129,16 @@ void x86_64_fix_multiboot(struct mint_bootinfo *bootinfo)
     }
 }
 
+static void x86_64_finalize_paging(struct memory_context *context)
+{
+    struct page_table *pml4 = (struct page_table *)physical_alloc(0x1000, 0);
+    context->page_table = (addr_t)pml4;
+    virtual_map(context, PHYS_START, 0, PHYS_END - PHYS_START,
+                PAGE_WRITABLE | PAGE_NX | PAGE_HUGE);
+    printk(INFO, "Hello!\n");
+    write_cr3(context->page_table);
+}
+
 void arch_mm_init(struct mint_bootinfo *bootinfo,
                   struct memory_context *context)
 {
@@ -140,4 +153,5 @@ void arch_mm_init(struct mint_bootinfo *bootinfo,
             physical_free_region(region->addr, region->size);
         }
     }
+    x86_64_finalize_paging(context);
 }
