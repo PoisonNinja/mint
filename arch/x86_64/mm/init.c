@@ -26,12 +26,12 @@ static uint8_t free_fixup_region = 0;
 
 static void x86_64_patch_pml4(struct memory_context *context)
 {
-    struct page_table *pml4 = (struct page_table *)(read_cr3() + KERNEL_START);
+    struct page_table *pml4 = (struct page_table *)(read_cr3() + VMA_BASE);
     pml4->pages[0].address = 0;
     pml4->pages[0].present = 0;
     addr_t address = 0;
     for (int i = 0; i < 512; i++) {
-        pml3.pages[i].address = ((addr_t)&pml2[i] - KERNEL_START) / 0x1000;
+        pml3.pages[i].address = ((addr_t)&pml2[i] - VMA_BASE) / 0x1000;
         pml3.pages[i].present = 1;
         pml3.pages[i].writable = 1;
         for (int j = 0; j < 512; j++) {
@@ -43,7 +43,7 @@ static void x86_64_patch_pml4(struct memory_context *context)
         }
     }
     pml4->pages[PML4_INDEX(PHYS_START)].address =
-        ((addr_t)&pml3 - KERNEL_START) / 0x1000;
+        ((addr_t)&pml3 - VMA_BASE) / 0x1000;
     pml4->pages[PML4_INDEX(PHYS_START)].present = 1;
     pml4->pages[PML4_INDEX(PHYS_START)].writable = 1;
     context->page_table = (addr_t)pml4;
@@ -62,7 +62,7 @@ static void x86_64_patch_pml4(struct memory_context *context)
 static void x86_64_fix_multiboot(struct mint_bootinfo *bootinfo)
 {
     addr_t kernel_start = ROUND_DOWN((addr_t)&__kernel_start, PAGE_SIZE);
-    addr_t kernel_end = ROUND_UP((addr_t)kmalloc(0) - KERNEL_START, PAGE_SIZE);
+    addr_t kernel_end = ROUND_UP((addr_t)kmalloc(0) - VMA_BASE, PAGE_SIZE);
     printk(INFO, "Kernel between %p and %p\n", kernel_start, kernel_end);
     for (struct mint_memory_region *region = bootinfo->memregions; region;
          region = region->next) {
@@ -135,7 +135,7 @@ static void x86_64_finalize_paging(struct memory_context *context)
     context->page_table = (addr_t)pml4;
     virtual_map(context, PHYS_START, 0, PHYS_END - PHYS_START,
                 PAGE_PRESENT | PAGE_WRITABLE | PAGE_NX | PAGE_HUGE);
-    virtual_map(context, KERNEL_START, 0, KERNEL_END - KERNEL_START,
+    virtual_map(context, VMA_BASE, 0, KERNEL_END - VMA_BASE,
                 PAGE_PRESENT | PAGE_WRITABLE);
     write_cr3(context->page_table);
 }

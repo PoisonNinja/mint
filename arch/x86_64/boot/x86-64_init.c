@@ -70,7 +70,7 @@ void x86_64_init(uint32_t magic, struct multiboot_info *mboot)
      * Tell early_malloc where it can allocate memory from and the extent that
      * it can allocate to
      */
-    early_malloc_set_properties((uint64_t)&__kernel_end + KERNEL_START,
+    early_malloc_set_properties((uint64_t)&__kernel_end + VMA_BASE,
                                 0x100000);
     memset(&bootinfo, 0, sizeof(struct mint_bootinfo));
     uint32_t mmap = mboot->mmap_addr;
