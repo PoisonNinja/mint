@@ -21,9 +21,10 @@ void arch_virtual_map(struct memory_context* context, addr_t virtual,
         pml4->pages[PML4_INDEX(virtual)].nx = (flags & PAGE_NX) ? 1 : 0;
         pml4->pages[PML4_INDEX(virtual)].address = (addr_t)pdpt / 0x1000;
     } else {
-        pdpt = pml4->pages[PML4_INDEX(virtual)].address * 0x1000;
+        pdpt = (struct page_table*)(pml4->pages[PML4_INDEX(virtual)].address *
+                                    0x1000);
     }
-    pdpt = (addr_t)pdpt + PHYS_START;
+    pdpt = (struct page_table*)((addr_t)pdpt + PHYS_START);
     if (!pdpt->pages[PDPT_INDEX(virtual)].present) {
         pd = (struct page_table*)physical_alloc(0x1000, 0);
         pdpt->pages[PDPT_INDEX(virtual)].present = 1;
@@ -34,10 +35,11 @@ void arch_virtual_map(struct memory_context* context, addr_t virtual,
         pdpt->pages[PDPT_INDEX(virtual)].nx = (flags & PAGE_NX) ? 1 : 0;
         pdpt->pages[PDPT_INDEX(virtual)].address = (addr_t)pd / 0x1000;
     } else {
-        pd = pdpt->pages[PDPT_INDEX(virtual)].address * 0x1000;
+        pd = (struct page_table*)(pdpt->pages[PDPT_INDEX(virtual)].address *
+                                  0x1000);
     }
-    pd = (addr_t)pd + PHYS_START;
-    if (!flags & PAGE_HUGE) {
+    pd = (struct page_table*)((addr_t)pd + PHYS_START);
+    if (!(flags & PAGE_HUGE)) {
         if (!pd->pages[PD_INDEX(virtual)].present) {
             pt = (struct page_table*)physical_alloc(0x1000, 0);
             pd->pages[PD_INDEX(virtual)].present = 1;
@@ -48,9 +50,10 @@ void arch_virtual_map(struct memory_context* context, addr_t virtual,
             pd->pages[PD_INDEX(virtual)].nx = (flags & PAGE_NX) ? 1 : 0;
             pd->pages[PD_INDEX(virtual)].address = (addr_t)pt / 0x1000;
         } else {
-            pt = pd->pages[PD_INDEX(virtual)].address * 0x1000;
+            pt = (struct page_table*)(pd->pages[PD_INDEX(virtual)].address *
+                                      0x1000);
         }
-        pt = (addr_t)pt + PHYS_START;
+        pt = (struct page_table*)((addr_t)pt + PHYS_START);
         if (!pt->pages[PT_INDEX(virtual)].present) {
             pt->pages[PT_INDEX(virtual)].present = 1;
             pt->pages[PT_INDEX(virtual)].writable =
