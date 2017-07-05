@@ -15,12 +15,8 @@ void stack_init(struct stack* stack)
 size_t stack_push(struct stack* stack, struct stack_item* item)
 {
     stack->size++;
-    if (stack->top != &sentry) {
-        stack->top->next = item;
-        item->prev = stack->top;
-    } else {
-        item->prev = &sentry;
-    }
+    stack->top->next = item;
+    item->prev = stack->top;
     item->next = &sentry;
     stack->top = item;
     return stack->size;
