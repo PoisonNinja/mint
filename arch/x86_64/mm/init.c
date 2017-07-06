@@ -129,6 +129,10 @@ static void x86_64_fix_multiboot(struct mint_bootinfo *bootinfo)
     }
 }
 
+/*
+ * Construct the final kernel page table using the newly intialized kernel
+ * physical memory manager and virtual memory mapping functions.
+ */
 static void x86_64_finalize_paging(struct memory_context *context)
 {
     struct page_table *pml4 = (struct page_table *)physical_alloc(0x1000, 0);
