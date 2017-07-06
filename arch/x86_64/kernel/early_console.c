@@ -30,11 +30,12 @@
  */
 
 #include <arch/drivers/io.h>
+#include <arch/mm/mmap.h>
 #include <kernel/console.h>
 #include <lib/printf.h>
 #include <string.h>
 
-#define VGA_BUFFER 0xFFFFFFFF800B8000
+#define VGA_BUFFER (VGA_PHYS + VMA_BASE)
 #define VGA_WIDTH 80
 #define VGA_HEIGHT 25
 

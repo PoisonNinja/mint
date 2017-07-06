@@ -135,7 +135,9 @@ static void x86_64_finalize_paging(struct memory_context *context)
     context->page_table = (addr_t)pml4;
     virtual_map(context, PHYS_START, 0, PHYS_END - PHYS_START,
                 PAGE_PRESENT | PAGE_WRITABLE | PAGE_NX | PAGE_HUGE);
-    virtual_map(context, VMA_BASE, 0, KERNEL_END - VMA_BASE,
+    virtual_map(context, KERNEL_START, KERNEL_PHYS, KERNEL_END - KERNEL_START,
+                PAGE_PRESENT | PAGE_WRITABLE);
+    virtual_map(context, VGA_START, VGA_PHYS, VGA_END - VGA_START,
                 PAGE_PRESENT | PAGE_WRITABLE);
     write_cr3(context->page_table);
 }
