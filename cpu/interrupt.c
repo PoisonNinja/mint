@@ -39,10 +39,9 @@
 extern void arch_interrupt_disable(void);
 extern void arch_interrupt_enable(void);
 
-_Atomic int interrupt_depth = 0;
+static _Atomic int interrupt_depth = 0;
 
-struct exception_handler* exception_handlers[EXCEPTIONS_MAX];
-struct interrupt_handler* interrupt_handlers[INTERRUPTS_MAX];
+static struct interrupt_handler* interrupt_handlers[INTERRUPTS_MAX];
 
 void interrupt_disable(void)
 {
@@ -56,18 +55,6 @@ void interrupt_enable(void)
         arch_interrupt_enable();
 }
 
-void exception_handler_register(int exception_number,
-                                struct exception_handler* handler)
-{
-    LIST_APPEND(exception_handlers[exception_number], handler);
-}
-
-void exception_handler_unregister(int exception_number,
-                                  struct exception_handler* handler)
-{
-    LIST_REMOVE(exception_handlers[exception_number], handler);
-}
-
 void interrupt_handler_register(int interrupt_number,
                                 struct interrupt_handler* handler)
 {
@@ -78,25 +65,6 @@ void interrupt_handler_unregister(int interrupt_number,
                                   struct interrupt_handler* handler)
 {
     LIST_REMOVE(interrupt_handlers[interrupt_number], handler);
-}
-
-extern char* arch_exception_translate(int);
-void exception_dispatch(struct registers* regs)
-{
-    if (exception_handlers[regs->int_no]) {
-        struct exception_handler* handler = NULL;
-        LIST_FOR_EACH(exception_handlers[regs->int_no], handler)
-        {
-            if (handler->handler)
-                handler->handler(regs, handler->dev_id);
-        }
-    } else {
-        printk(INFO, "Unhandled exception %d: %s\n", regs->int_no,
-               arch_exception_translate(regs->int_no));
-        interrupt_disable();
-        for (;;)
-            __asm__("hlt");
-    }
 }
 
 void interrupt_dispatch(struct registers* regs)
