@@ -1,4 +1,7 @@
+#include <arch/cpu/registers.h>
 #include <arch/mm/mm.h>
+#include <kernel.h>
+#include <kernel/stacktrace.h>
 #include <lib/math.h>
 #include <mm/virtual.h>
 
@@ -24,4 +27,19 @@ void virtual_unmap(struct memory_context* context, addr_t virtual)
     if (!context)
         return;
     arch_virtual_unmap(context, virtual);
+}
+
+void virtual_fault(struct registers* __attribute__((unused)) registers,
+                   addr_t address, uint8_t reason)
+{
+    printk(ERROR, "PAGE FAULT\n");
+    printk(ERROR, "  Address: %p\n", address);
+    printk(ERROR, "  Present: %u\n", (reason & FAULT_PRESENT) ? 1 : 0);
+    printk(ERROR, "  Write: %u\n", (reason & FAULT_WRITE) ? 1 : 0);
+    printk(ERROR, "  User: %u\n", (reason & FAULT_USER) ? 1 : 0);
+    printk(ERROR, "  Reserved: %u\n", (reason & FAULT_RESERVED) ? 1 : 0);
+    printk(ERROR, "  Instruction fetch: %u\n", (reason & FAULT_IF) ? 1 : 0);
+    stacktrace();
+    for (;;)
+        __asm__("hlt");
 }

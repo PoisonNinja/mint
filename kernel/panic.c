@@ -42,6 +42,7 @@ _panic(const char *file, int line, const char *format, ...)
 {
     interrupt_disable();
     char buffer[PANIC_BUFFER_SIZE];
+    memset(buffer, 0, PANIC_BUFFER_SIZE);
     int r = sprintf(buffer, "Panic in file %s on line %d: ", file, line);
     console_write(buffer, r);
     memset(buffer, 0, r);

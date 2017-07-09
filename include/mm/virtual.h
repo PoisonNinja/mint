@@ -10,6 +10,12 @@
 #define PAGE_HUGE 0x20
 #define PAGE_COW 0x40
 
+#define FAULT_PRESENT 0x1
+#define FAULT_WRITE 0x2
+#define FAULT_USER 0x4
+#define FAULT_RESERVED 0x8
+#define FAULT_IF 0x10
+
 struct memory_context {
     addr_t page_table;
 };

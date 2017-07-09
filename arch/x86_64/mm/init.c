@@ -1,6 +1,7 @@
 #include <arch/mm/mm.h>
 #include <arch/mm/mmap.h>
 #include <boot/bootinfo.h>
+#include <cpu/exception.h>
 #include <kernel.h>
 #include <lib/math.h>
 #include <mm/heap.h>
@@ -146,9 +147,22 @@ static void x86_64_finalize_paging(struct memory_context *context)
     write_cr3(context->page_table);
 }
 
+extern int arch_virtual_fault(struct registers *, void *);
+static struct exception_handler page_fault_handler = {
+    .handler = &arch_virtual_fault,
+    .dev_name = "page fault",
+    .dev_id = &arch_virtual_fault,
+};
+
+static void x86_64_install_handler(void)
+{
+    exception_handler_register(14, &page_fault_handler);
+}
+
 void arch_mm_init(struct mint_bootinfo *bootinfo,
                   struct memory_context *context)
 {
+    x86_64_install_handler();
     x86_64_patch_pml4(context);
     physical_init(bootinfo->highest_mem, DMA_MAX);
     x86_64_fix_multiboot(bootinfo);
