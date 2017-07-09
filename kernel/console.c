@@ -30,6 +30,7 @@
  */
 
 #include <kernel/console.h>
+#include <lib/list.h>
 
 static struct console *console_list = NULL;
 

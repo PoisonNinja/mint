@@ -1,6 +1,7 @@
 #include <cpu/exception.h>
 #include <cpu/interrupt.h>
 #include <kernel.h>
+#include <lib/list.h>
 
 static struct exception_handler* exception_handlers[EXCEPTIONS_MAX];
 

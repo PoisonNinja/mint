@@ -31,6 +31,7 @@
 
 #include <kernel.h>
 #include <kernel/time/time.h>
+#include <lib/list.h>
 
 struct clocksource* clocksource_list = NULL;
 struct clocksource* current_clocksource = NULL;

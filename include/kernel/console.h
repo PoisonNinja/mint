@@ -31,7 +31,6 @@
 
 #pragma once
 
-#include <lib/list.h>
 #include <types.h>
 
 struct console {
