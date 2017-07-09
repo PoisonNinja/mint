@@ -63,6 +63,13 @@ static void x86_64_patch_pml4(struct memory_context *context)
 static void x86_64_fix_multiboot(struct mint_bootinfo *bootinfo)
 {
     addr_t kernel_start = ROUND_DOWN((addr_t)&__kernel_start, PAGE_SIZE);
+    /*
+     * Yes, this kmalloc(0) is intentional. It's a pretty cool trick to get
+     * the current location of the heap without actually allocating stuff.
+     * Of course, this works only because malloc (early_malloc at this stage)
+     * is a simple watermark allocator. Something more advanced may not
+     * work with this trick
+     */
     addr_t kernel_end = ROUND_UP((addr_t)kmalloc(0) - VMA_BASE, PAGE_SIZE);
     printk(INFO, "Kernel between %p and %p\n", kernel_start, kernel_end);
     for (struct mint_memory_region *region = bootinfo->memregions; region;
