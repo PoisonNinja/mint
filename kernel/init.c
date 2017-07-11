@@ -33,25 +33,24 @@
 #include <kernel/init.h>
 #include <types.h>
 
-extern uint64_t __initcall1_start;
-extern uint64_t __initcall2_start;
-extern uint64_t __initcall3_start;
-extern uint64_t __initcall4_start;
-extern uint64_t __initcall5_start;
-extern uint64_t __initcall6_start;
-extern uint64_t __initcall7_start;
-extern uint64_t __initcall_end;
+extern addr_t __initcall1_start[];
+extern addr_t __initcall2_start[];
+extern addr_t __initcall3_start[];
+extern addr_t __initcall4_start[];
+extern addr_t __initcall5_start[];
+extern addr_t __initcall6_start[];
+extern addr_t __initcall7_start[];
+extern addr_t __initcall_end[];
 
-static uint64_t *initcall_levels[8] = {
-    &__initcall1_start, &__initcall2_start, &__initcall3_start,
-    &__initcall4_start, &__initcall5_start, &__initcall6_start,
-    &__initcall7_start, &__initcall_end,
+static addr_t *initcall_levels[8] = {
+    __initcall1_start, __initcall2_start, __initcall3_start, __initcall4_start,
+    __initcall5_start, __initcall6_start, __initcall7_start, __initcall_end,
 };
 
 void do_initcall(int level)
 {
     printk(INFO, "Calling initcalls for level %d\n", level);
-    for (uint64_t *i = initcall_levels[level - 1]; i < initcall_levels[level];
+    for (addr_t *i = initcall_levels[level - 1]; i < initcall_levels[level];
          i++) {
         initcall_t fn = *(initcall_t *)i;
         fn();
