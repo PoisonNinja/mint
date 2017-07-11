@@ -29,3 +29,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <cpu/power.h>
+
+extern void arch_cpu_halt(void);
+
+void cpu_halt(void)
+{
+    arch_cpu_halt();
+}

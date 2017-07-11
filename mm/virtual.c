@@ -1,5 +1,6 @@
 #include <arch/cpu/registers.h>
 #include <arch/mm/mm.h>
+#include <cpu/power.h>
 #include <kernel.h>
 #include <kernel/stacktrace.h>
 #include <lib/math.h>
@@ -41,5 +42,5 @@ void virtual_fault(struct registers* __attribute__((unused)) registers,
     printk(ERROR, "  Instruction fetch: %u\n", (reason & FAULT_IF) ? 1 : 0);
     stacktrace();
     for (;;)
-        __asm__("hlt");
+        cpu_halt();
 }

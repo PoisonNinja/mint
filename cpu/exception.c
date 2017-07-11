@@ -1,5 +1,6 @@
 #include <cpu/exception.h>
 #include <cpu/interrupt.h>
+#include <cpu/power.h>
 #include <kernel.h>
 #include <lib/list.h>
 
@@ -28,10 +29,10 @@ void exception_dispatch(struct registers* regs)
                 handler->handler(regs, handler->dev_id);
         }
     } else {
-        printk(INFO, "Unhandled exception %d: %s\n", regs->int_no,
+        printk(ERROR, "Unhandled exception %d: %s\n", regs->int_no,
                arch_exception_translate(regs->int_no));
         interrupt_disable();
         for (;;)
-            __asm__("hlt");
+            cpu_halt();
     }
 }

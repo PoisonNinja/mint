@@ -30,6 +30,7 @@
  */
 
 #include <cpu/interrupt.h>
+#include <cpu/power.h>
 #include <kernel/console.h>
 #include <kernel/stacktrace.h>
 #include <lib/printf.h>
@@ -53,5 +54,5 @@ _panic(const char *file, int line, const char *format, ...)
     console_write(buffer, r);
     stacktrace();
     for (;;)
-        ;
+        cpu_halt();
 }

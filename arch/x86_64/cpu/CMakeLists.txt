@@ -6,4 +6,5 @@ target_sources(mint.kernel
     ${CMAKE_CURRENT_SOURCE_DIR}/idt.c
     ${CMAKE_CURRENT_SOURCE_DIR}/interrupt.c
     ${CMAKE_CURRENT_SOURCE_DIR}/isr.asm
+    ${CMAKE_CURRENT_SOURCE_DIR}/power.c
 )

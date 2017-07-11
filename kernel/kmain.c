@@ -31,6 +31,7 @@
 
 #include <boot/bootinfo.h>
 #include <cpu/interrupt.h>
+#include <cpu/power.h>
 #include <kernel.h>
 #include <kernel/init.h>
 #include <kernel/stacktrace.h>
@@ -60,5 +61,5 @@ void kmain(struct mint_bootinfo* bootinfo)
     do_initcall(LATE_INIT);
     stacktrace();
     for (;;)
-        ;
+        cpu_halt();
 }
