@@ -35,6 +35,8 @@
 #include <lib/printf.h>
 #include <string.h>
 
+#define PRINTK_MAX 1024
+
 static char* colors[] = {
     "\e[36m",  // Blue for debug
     "\e[32m",  // Green for info
@@ -42,24 +44,25 @@ static char* colors[] = {
     "\e[31m",  // Red for error
 };
 
+static char printk_buffer[PRINTK_MAX];
+
 int _printk(int level, const char* format, ...)
 {
     int r;
-    char buffer[1024];
     if (level < CONTINUE) {
-        memset(buffer, 0, 1024);
+        memset(printk_buffer, 0, PRINTK_MAX);
         time_t t = ktime_get();
         time_t sec = t / NSEC_PER_SEC;
         time_t nsec = t % NSEC_PER_SEC;
-        r = snprintf(buffer, 1024, "%s[%05lu.%09lu]%s ", colors[level], sec,
-                     nsec, "\e[39m");
-        console_write(buffer, r);
+        r = snprintf(printk_buffer, PRINTK_MAX, "%s[%05lu.%09lu]%s ",
+                     colors[level], sec, nsec, "\e[39m");
+        console_write(printk_buffer, r);
     }
-    memset(buffer, 0, 1024);
+    memset(printk_buffer, 0, PRINTK_MAX);
     va_list args;
     va_start(args, format);
-    r = vsnprintf(buffer, 1024, format, args);
+    r = vsnprintf(printk_buffer, PRINTK_MAX, format, args);
     va_end(args);
-    console_write(buffer, r);
+    console_write(printk_buffer, r);
     return r;
 }
