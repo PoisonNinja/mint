@@ -66,8 +66,9 @@ static void* __attribute__((malloc)) early_malloc(size_t size)
     // Make sure we don't overshoot the extent
     if (early_heap_watermark + size > early_heap_end) {
         printk(INFO, "early_malloc: Request too large :(\n");
+        return NULL;
     }
-    // Convert water into a void pointer to return
+    // Convert watermark into a void pointer to return
     void* ret = (void*)early_heap_watermark;
     early_heap_watermark += size;
     return ret;
