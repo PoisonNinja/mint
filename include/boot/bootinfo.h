@@ -39,9 +39,9 @@
 #define MEMORY_TYPE_BAD 0x5
 
 struct mint_memory_region {
-    uint64_t addr;
-    uint64_t size;
-    uint64_t type;
+    addr_t addr;
+    size_t size;
+    uint8_t type;
     struct mint_memory_region *next, *prev;
 };
 
