@@ -49,6 +49,10 @@ extern addr_t __kernel_end;
 static struct mint_memory_region fixup_regions[10];
 static uint8_t free_fixup_region = 0;
 
+static char *memory_type_strings[] = {
+    "Unknown", "Available", "Reserved",
+};
+
 /*
  * Intended for initial bringup. Based on seakernel initial mm bringup, but
  * rewritten to use structs instead of uint64_t. This uses large pages to
@@ -204,10 +208,13 @@ void arch_mm_init(struct mint_bootinfo *bootinfo,
     x86_64_patch_pml4(context);
     physical_init(bootinfo->highest_mem, DMA_MAX);
     x86_64_fix_multiboot(bootinfo);
+    printk(INFO, "%d memory regions:\n", bootinfo->num_memregions);
     for (struct mint_memory_region *region = bootinfo->memregions; region;
          region = region->next) {
-        printk(INFO, "  Start: %p. Size: %p. Type: 0x%X\n", region->addr,
-               region->size, region->type);
+        printk(
+            INFO, "  [%p - %p] Type: %s\n", region->addr,
+            region->addr + region->size,
+            (region->type < 3) ? memory_type_strings[region->type] : "Unknown");
         if (region->type == MEMORY_TYPE_AVAILABLE) {
             physical_free_region(region->addr, region->size);
         }
