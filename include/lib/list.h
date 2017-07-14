@@ -53,7 +53,7 @@
     do {                                    \
         if (!head) {                        \
             (element)->next = (element);    \
-            (element)->prev = (element)     \
+            (element)->prev = (element);    \
         } else {                            \
             (element)->next = (head);       \
             (element)->prev = (head)->prev; \
