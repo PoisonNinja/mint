@@ -7,6 +7,7 @@
 struct slab_cache {
     char name[SLAB_NAME_MAX];
     size_t objsize;
+    uint8_t step;
     uint8_t flags;
     struct slab *full_slabs, *partial_slabs, *empty_slabs;
 };
