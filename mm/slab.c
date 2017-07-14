@@ -52,16 +52,27 @@ void* slab_allocate(struct slab_cache* cache)
     }
 }
 
-struct slab_cache* slab_create()
+struct slab_cache* slab_create(char* name, size_t objsize, uint8_t flags)
 {
-    return NULL;
+    struct slab_cache* cache = slab_allocate(&slab_cache_cache);
+    strncpy(cache->name, name, SLAB_NAME_MAX);
+    cache->objsize = objsize;
+    cache->flags = flags;
+    // Actual slabs are lazily allocated to avoid memory waste
+    return cache;
 }
 
+/*
+ * slab_init
+ *
+ * Initialize the slab allocator system itself by initializing the
+ * slab_cache_cache struct so we can allocate slab_caches
+ */
 void slab_init()
 {
     memset(&slab_cache_cache, 0, sizeof(struct slab_cache));
+    // Basically same as slab_create
+    strncpy(slab_cache_cache.name, "slab_cache", SLAB_NAME_MAX);
     slab_cache_cache.objsize = PAGE_SIZE / POW_2(log_2(sizeof(struct slab)));
-    for (int i = 0; i < 0xF; i++) {
-        printk(INFO, "%p\n", slab_allocate(&slab_cache_cache));
-    }
+    slab_cache_cache.flags = 0;
 }

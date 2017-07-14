@@ -18,6 +18,7 @@ struct slab {
     uint8_t bitset[];
 };
 
-struct slab_cache* slab_create();
-
+extern void* slab_allocate(struct slab_cache* cache);
+extern struct slab_cache* slab_create(char* name, size_t objsize,
+                                      uint8_t flags);
 extern void slab_init();
