@@ -73,6 +73,6 @@ void slab_init()
     memset(&slab_cache_cache, 0, sizeof(struct slab_cache));
     // Basically same as slab_create
     strncpy(slab_cache_cache.name, "slab_cache", SLAB_NAME_MAX);
-    slab_cache_cache.objsize = PAGE_SIZE / POW_2(log_2(sizeof(struct slab)));
+    slab_cache_cache.objsize = POW_2(log_2(sizeof(struct slab_cache)));
     slab_cache_cache.flags = 0;
 }
