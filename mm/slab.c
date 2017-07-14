@@ -9,7 +9,8 @@
 
 static struct slab_cache slab_cache_cache;
 
-#define SLAB_ARENA_SIZE(cache, slab) (PAGE_SIZE - (addr_t)(slab)->base)
+#define SLAB_ARENA_SIZE(cache, slab) \
+    ((addr_t)slab + PAGE_SIZE - (addr_t)(slab)->base)
 #define SLAB_CACHE_MAX(cache, slab) \
     (SLAB_ARENA_SIZE(cache, slab) / (cache)->objsize)
 #define SLAB_BITSET_SIZE(cache, slab) \
