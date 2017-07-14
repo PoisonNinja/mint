@@ -19,6 +19,7 @@ static void* __slab_allocate_slab(struct slab_cache* cache, struct slab* slab)
 {
     size_t idx = bitset_first_unset(slab->bitset, SLAB_CACHE_MAX(cache, slab));
     bitset_set(slab->bitset, idx);
+    slab->used++;
     return (void*)((addr_t)slab->base + cache->objsize * idx);
 }
 
@@ -27,7 +28,7 @@ void* slab_allocate(struct slab_cache* cache)
     if (cache->partial_slabs) {
         struct slab* slab = cache->partial_slabs;
         void* ret = __slab_allocate_slab(cache, slab);
-        if (slab->used++ == SLAB_CACHE_MAX(cache, slab)) {
+        if (slab->used == SLAB_CACHE_MAX(cache, slab)) {
             LIST_REMOVE(cache->partial_slabs, slab);
             LIST_PREPEND(cache->full_slabs, slab);
         }
@@ -35,7 +36,6 @@ void* slab_allocate(struct slab_cache* cache)
     } else if (cache->empty_slabs) {
         struct slab* slab = cache->empty_slabs;
         void* ret = __slab_allocate_slab(cache, slab);
-        slab->used++;
         LIST_REMOVE(cache->empty_slabs, slab);
         LIST_PREPEND(cache->partial_slabs, slab);
         return ret;
@@ -46,7 +46,6 @@ void* slab_allocate(struct slab_cache* cache)
         slab->base = (void*)((addr_t)slab + sizeof(struct slab) +
                              SLAB_BITSET_SIZE(cache, slab));
         void* ret = __slab_allocate_slab(cache, slab);
-        slab->used++;
         LIST_PREPEND(cache->partial_slabs, slab);
         return ret;
     }
