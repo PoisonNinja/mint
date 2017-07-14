@@ -52,3 +52,12 @@ static inline void bitset_set_group(uint8_t* bitset, size_t start, size_t size)
         bitset_set(bitset, index);
     }
 }
+
+static inline size_t bitset_first_unset(uint8_t* bitset, size_t size)
+{
+    for (uint8_t j = 0; j < size; j++) {
+        if (!bitset_test(bitset, j))
+            return j;
+    }
+    return 0;
+}

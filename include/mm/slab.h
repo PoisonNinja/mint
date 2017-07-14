@@ -1,0 +1,23 @@
+#pragma once
+
+#include <types.h>
+
+#define SLAB_NAME_MAX 16
+
+struct slab_cache {
+    char name[SLAB_NAME_MAX];
+    size_t objsize;
+    uint8_t flags;
+    struct slab *full_slabs, *partial_slabs, *empty_slabs;
+};
+
+struct slab {
+    struct slab *next, *prev;
+    void* base;
+    uint16_t used;
+    uint8_t bitset[];
+};
+
+struct slab_cache* slab_create();
+
+extern void slab_init();
