@@ -13,7 +13,7 @@ static struct slab_cache slab_cache_cache;
 #define SLAB_CACHE_MAX(cache, slab) \
     (SLAB_ARENA_SIZE(cache, slab) / (cache)->objsize)
 #define SLAB_BITSET_SIZE(cache, slab) \
-    (BITSET_SIZE_CALC(SLAB_CACHE_MAX(cache, slab)))
+    (BITSET_SIZE_CALC(PAGE_SIZE / (cache)->objsize))
 
 static void* __slab_allocate_slab(struct slab_cache* cache, struct slab* slab)
 {
