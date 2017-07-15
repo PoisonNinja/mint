@@ -16,16 +16,6 @@ static struct slab_cache slab_cache_cache;
 #define SLAB_BITSET_SIZE(cache, slab) \
     (BITSET_SIZE_CALC(PAGE_SIZE / (cache)->objsize))
 
-static uint8_t __slab_calculate_step(size_t objsize)
-{
-    if (objsize <= PAGE_SIZE / 64)
-        return 0;
-    else if (objsize <= PAGE_SIZE / 32)
-        return 1;
-    else
-        return 2;
-}
-
 static void* __slab_allocate_slab(struct slab_cache* cache, struct slab* slab)
 {
     size_t idx = bitset_first_unset(slab->bitset, SLAB_CACHE_MAX(cache, slab));
@@ -67,12 +57,6 @@ void* slab_allocate(struct slab_cache* cache)
                              SLAB_BITSET_SIZE(cache, slab));
         void* ret = __slab_allocate_slab(cache, slab);
         LIST_PREPEND(cache->partial_slabs, slab);
-        for (int i = 0; i < cache->step; i++) {
-            struct slab* step_slab =
-                (void*)((addr_t)physical_alloc(PAGE_SIZE, 0) + PHYS_START);
-            memset(step_slab, 0, PAGE_SIZE);
-            LIST_PREPEND(cache->empty_slabs, step_slab);
-        }
         return ret;
     }
 }
@@ -96,7 +80,6 @@ struct slab_cache* slab_create(char* name, size_t objsize, uint8_t flags)
     struct slab_cache* cache = slab_allocate(&slab_cache_cache);
     strncpy(cache->name, name, SLAB_NAME_MAX);
     cache->objsize = objsize;
-    cache->step = __slab_calculate_step(objsize);
     cache->flags = flags;
     // Actual slabs are lazily allocated to avoid memory waste
     return cache;
@@ -114,6 +97,5 @@ void slab_init()
     // Basically same as slab_create
     strncpy(slab_cache_cache.name, "slab_cache", SLAB_NAME_MAX);
     slab_cache_cache.objsize = POW_2(log_2(sizeof(struct slab_cache)));
-    slab_cache_cache.step = __slab_calculate_step(sizeof(struct slab_cache));
     slab_cache_cache.flags = 0;
 }
