@@ -9,12 +9,16 @@
 
 static struct slab_cache slab_cache_cache;
 
+#define SLAB_MIN_OBJECT_PER_SLAB 8
+#define SLAB_CALC_ORDER(objsize) \
+    log_2(ROUND_UP((objsize)*SLAB_MIN_OBJECT_PER_SLAB, PAGE_SIZE))
+
 #define SLAB_ARENA_SIZE(cache, slab) \
-    ((addr_t)slab + PAGE_SIZE - (addr_t)(slab)->base)
+    ((addr_t)slab + POW_2((cache)->order) - (addr_t)(slab)->base)
 #define SLAB_CACHE_MAX(cache, slab) \
     (SLAB_ARENA_SIZE(cache, slab) / (cache)->objsize)
 #define SLAB_BITSET_SIZE(cache, slab) \
-    (BITSET_SIZE_CALC(PAGE_SIZE / (cache)->objsize))
+    (BITSET_SIZE_CALC(POW_2((cache)->order) / (cache)->objsize))
 
 static void* __slab_allocate_slab(struct slab_cache* cache, struct slab* slab)
 {
@@ -50,8 +54,9 @@ void* slab_allocate(struct slab_cache* cache)
         return ret;
     } else {
         struct slab* slab =
-            (void*)((addr_t)physical_alloc(PAGE_SIZE, 0) + PHYS_START);
-        memset(slab, 0, PAGE_SIZE);
+            (void*)((addr_t)physical_alloc(POW_2(cache->order), 0) +
+                    PHYS_START);
+        memset(slab, 0, POW_2(cache->order));
         slab->cache = cache;
         slab->base = (void*)((addr_t)slab + sizeof(struct slab) +
                              SLAB_BITSET_SIZE(cache, slab));
@@ -80,6 +85,7 @@ struct slab_cache* slab_create(char* name, size_t objsize, uint8_t flags)
     struct slab_cache* cache = slab_allocate(&slab_cache_cache);
     strncpy(cache->name, name, SLAB_NAME_MAX);
     cache->objsize = objsize;
+    cache->order = SLAB_CALC_ORDER(objsize);
     cache->flags = flags;
     // Actual slabs are lazily allocated to avoid memory waste
     return cache;
@@ -97,5 +103,6 @@ void slab_init()
     // Basically same as slab_create
     strncpy(slab_cache_cache.name, "slab_cache", SLAB_NAME_MAX);
     slab_cache_cache.objsize = POW_2(log_2(sizeof(struct slab_cache)));
+    slab_cache_cache.order = SLAB_CALC_ORDER(slab_cache_cache.objsize);
     slab_cache_cache.flags = 0;
 }
