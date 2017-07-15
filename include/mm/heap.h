@@ -42,3 +42,4 @@ extern uint8_t heap_status;
 extern void early_malloc_set_properties(addr_t start, addr_t extent);
 
 extern void* __attribute__((malloc)) kmalloc(size_t size);
+extern void* __attribute__((malloc)) kzalloc(size_t size);

@@ -81,12 +81,17 @@ void* __attribute__((malloc)) kmalloc(size_t size)
         return NULL;
     }
     if (heap_status == HEAP_EARLY) {
-        void* ptr = early_malloc(size);
-        if (ptr)
-            memset(ptr, 0, size);
-        return ptr;
+        return early_malloc(size);
     } else {
         // Not implemented
         return NULL;
     }
+}
+
+void* __attribute__((malloc)) kzalloc(size_t size)
+{
+    void* ptr = kmalloc(size);
+    if (ptr)
+        memset(ptr, 0, size);
+    return ptr;
 }

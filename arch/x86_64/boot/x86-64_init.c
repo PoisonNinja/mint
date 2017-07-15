@@ -70,8 +70,7 @@ void x86_64_init(uint32_t magic, struct multiboot_info *mboot)
      * Tell early_malloc where it can allocate memory from and the extent that
      * it can allocate to
      */
-    early_malloc_set_properties((uint64_t)&__kernel_end + VMA_BASE,
-                                0x100000);
+    early_malloc_set_properties((uint64_t)&__kernel_end + VMA_BASE, 0x100000);
     memset(&bootinfo, 0, sizeof(struct mint_bootinfo));
     uint32_t mmap = mboot->mmap_addr;
     while (mmap < mboot->mmap_addr + mboot->mmap_length) {
@@ -90,11 +89,11 @@ void x86_64_init(uint32_t magic, struct multiboot_info *mboot)
         if (memregion) {
             while (memregion->next)
                 memregion = memregion->next;
-            memregion->next = kmalloc(sizeof(struct mint_memory_region));
+            memregion->next = kzalloc(sizeof(struct mint_memory_region));
             memregion->next->prev = memregion;
             memregion = memregion->next;
         } else {
-            bootinfo.memregions = kmalloc(sizeof(struct mint_memory_region));
+            bootinfo.memregions = kzalloc(sizeof(struct mint_memory_region));
             memregion = bootinfo.memregions;
         }
         memregion->addr = tmp->addr;
