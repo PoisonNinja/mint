@@ -70,10 +70,15 @@ void* buddy_alloc(struct buddy* buddy, size_t size)
         return NULL;
     uint32_t original_order = order;
     if (!buddy->orders[order].free.size) {
-        while (order <= buddy->max_order) {
-            if (buddy->orders[order].free.size)
+        int found = 0;
+        while (order++ <= buddy->max_order) {
+            if (buddy->orders[order].free.size) {
+                found = 1;
                 break;
-            order++;
+            }
+        }
+        if (!found) {
+            return NULL;
         }
         void* addr = stack_pop(&buddy->orders[order].free);
         for (; order > original_order; order--) {
