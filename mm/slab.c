@@ -34,6 +34,14 @@ static void* __slab_allocate_slab(struct slab_cache* cache, struct slab* slab)
     return (void*)((addr_t)slab->base + cache->objsize * idx);
 }
 
+static void __slab_free_slab(struct slab_cache* cache, struct slab* slab,
+                             void* ptr)
+{
+    size_t idx = (ptr - slab->base) / cache->objsize;
+    bitset_unset(slab->bitset, idx);
+    slab->used--;
+}
+
 void* slab_allocate(struct slab_cache* cache)
 {
     if (cache->partial_slabs) {
@@ -54,6 +62,7 @@ void* slab_allocate(struct slab_cache* cache)
         struct slab* slab =
             (void*)((addr_t)physical_alloc(PAGE_SIZE, 0) + PHYS_START);
         memset(slab, 0, PAGE_SIZE);
+        slab->cache = cache;
         slab->base = (void*)((addr_t)slab + sizeof(struct slab) +
                              SLAB_BITSET_SIZE(cache, slab));
         void* ret = __slab_allocate_slab(cache, slab);
@@ -65,6 +74,20 @@ void* slab_allocate(struct slab_cache* cache)
             LIST_PREPEND(cache->empty_slabs, step_slab);
         }
         return ret;
+    }
+}
+
+void slab_free(void* ptr)
+{
+    struct slab* slab = (struct slab*)((addr_t)ptr & PAGE_MASK);
+    struct slab_cache* cache = slab->cache;
+    __slab_free_slab(cache, slab, ptr);
+    if (!slab->used) {
+        LIST_REMOVE(cache->partial_slabs, slab);
+        LIST_PREPEND(cache->empty_slabs, slab);
+    } else if (slab->used == SLAB_CACHE_MAX(cache, slab) - 1) {
+        LIST_REMOVE(cache->full_slabs, slab);
+        LIST_PREPEND(cache->partial_slabs, slab);
     }
 }
 

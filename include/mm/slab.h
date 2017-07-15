@@ -13,6 +13,7 @@ struct slab_cache {
 };
 
 struct slab {
+    struct slab_cache* cache;
     struct slab *next, *prev;
     void* base;
     uint16_t used;
@@ -20,6 +21,7 @@ struct slab {
 };
 
 extern void* slab_allocate(struct slab_cache* cache);
+extern void slab_free(void* ptr);
 extern struct slab_cache* slab_create(char* name, size_t objsize,
                                       uint8_t flags);
 extern void slab_init();
