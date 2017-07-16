@@ -30,10 +30,22 @@
  */
 
 #include <kernel.h>
+#include <lib/math.h>
 #include <mm/heap.h>
+#include <mm/slab.h>
 #include <string.h>
 
-uint8_t heap_status = HEAP_UNINITIALIZED;
+#define HEAP_UNINITIALIZED 0
+#define HEAP_EARLY 1
+#define HEAP_INITIALIZED 2
+
+static uint8_t heap_status = HEAP_UNINITIALIZED;
+
+#define KMALLOC_SLAB_MIN_ORDER 5   // 32 bytes
+#define KMALLOC_SLAB_MAX_ORDER 17  // 128 KiB
+
+static struct slab_cache*
+    kmalloc_caches[(KMALLOC_SLAB_MAX_ORDER - KMALLOC_SLAB_MIN_ORDER) + 1];
 
 // Variables for early heap
 static addr_t early_heap_start = 0;
@@ -94,4 +106,14 @@ void* __attribute__((malloc)) kzalloc(size_t size)
     if (ptr)
         memset(ptr, 0, size);
     return ptr;
+}
+
+void kmalloc_init(void)
+{
+    for (int order = KMALLOC_SLAB_MIN_ORDER; order <= KMALLOC_SLAB_MAX_ORDER;
+         order++) {
+        kmalloc_caches[order - KMALLOC_SLAB_MIN_ORDER] =
+            slab_create("kmalloc_cache", POW_2(order), 0);
+    }
+    heap_status = HEAP_INITIALIZED;
 }
