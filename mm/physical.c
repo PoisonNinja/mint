@@ -65,7 +65,6 @@ void* physical_alloc(size_t size, uint8_t flags)
     } else {
         ret = buddy_alloc(normal_region.buddy, size);
     }
-    memset(ret + PHYS_START, 0, size);
     return ret;
 }
 

@@ -179,6 +179,7 @@ static void x86_64_fix_multiboot(struct mint_bootinfo *bootinfo)
 static void x86_64_finalize_paging(struct memory_context *context)
 {
     struct page_table *pml4 = (struct page_table *)physical_alloc(0x1000, 0);
+    memset((void *)((addr_t)pml4 + PHYS_START), 0, sizeof(struct page_table));
     context->page_table = (addr_t)pml4;
     virtual_map(context, PHYS_START, 0, PHYS_END - PHYS_START,
                 PAGE_PRESENT | PAGE_WRITABLE | PAGE_HUGE);

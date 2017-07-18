@@ -33,11 +33,14 @@
 #include <arch/mm/mmap.h>
 #include <mm/physical.h>
 #include <mm/virtual.h>
+#include <string.h>
 
 static inline void* __virtual_get_address(struct page* page)
 {
     if (!page->present) {
-        return physical_alloc(0x1000, 0);
+        void* ptr = physical_alloc(0x1000, 0);
+        memset((void*)((addr_t)ptr + PHYS_START), 0, 0x1000);
+        return ptr;
     } else {
         return (void*)(page->address * 0x1000);
     }
