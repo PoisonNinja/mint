@@ -54,6 +54,8 @@ SECTIONS
         *(.initcall6)
         __initcall7_start = .;
         *(.initcall7)
+        __initcall8_start = .;
+        *(.initcall8)
         __initcall_end = .;
     }
 

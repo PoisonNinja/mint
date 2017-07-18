@@ -59,7 +59,7 @@ void kmain(struct mint_bootinfo* bootinfo)
     do_initcall(FS_INIT);
     do_initcall(DEVICE_INIT);
     do_initcall(LATE_INIT);
-    stacktrace();
+    do_initcall(TEST_INIT);
     for (;;)
         cpu_halt();
 }

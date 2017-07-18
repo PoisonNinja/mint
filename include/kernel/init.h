@@ -40,6 +40,7 @@ typedef int (*initcall_t)(void);
 #define FS_INIT 5
 #define DEVICE_INIT 6
 #define LATE_INIT 7
+#define TEST_INIT 8
 
 // clang-format off
 #define __define_initcall(fn, id)   \
@@ -54,6 +55,7 @@ typedef int (*initcall_t)(void);
 #define FS_INITCALL(fn) __define_initcall(fn, 5)
 #define DEVICE_INITCALL(fn) __define_initcall(fn, 6)
 #define LATE_INITCALL(fn) __define_initcall(fn, 7)
+#define TEST_INITCALL(fn) __define_initcall(fn, 8)
 
 extern void do_initcall(int);
 extern void setup_arch(void);

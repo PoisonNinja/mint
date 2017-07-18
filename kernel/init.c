@@ -40,11 +40,13 @@ extern addr_t __initcall4_start[];
 extern addr_t __initcall5_start[];
 extern addr_t __initcall6_start[];
 extern addr_t __initcall7_start[];
+extern addr_t __initcall8_start[];
 extern addr_t __initcall_end[];
 
-static addr_t *initcall_levels[8] = {
-    __initcall1_start, __initcall2_start, __initcall3_start, __initcall4_start,
-    __initcall5_start, __initcall6_start, __initcall7_start, __initcall_end,
+static addr_t *initcall_levels[9] = {
+    __initcall1_start, __initcall2_start, __initcall3_start,
+    __initcall4_start, __initcall5_start, __initcall6_start,
+    __initcall7_start, __initcall8_start, __initcall_end,
 };
 
 void do_initcall(int level)
