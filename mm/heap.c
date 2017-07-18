@@ -95,8 +95,23 @@ void* __attribute__((malloc)) kmalloc(size_t size)
     if (heap_status == HEAP_EARLY) {
         return early_malloc(size);
     } else {
-        // Not implemented
-        return NULL;
+        /*
+         * The real logic behind kmalloc is the slab allocator, so this is
+         * pretty barebones as we really only need to select the correct slab
+         * cache to allocate from.
+         *
+         * Use POW_2 instead of log_2 because the compiler can optimize
+         * the macro result into a constant
+         */
+        if (size > POW_2(KMALLOC_SLAB_MAX_ORDER)) {
+            printk(WARNING,
+                   "Attempted to allocate more memory than supported!\n");
+            return NULL;
+        }
+        uint8_t order = log_2(size);
+        if (order < KMALLOC_SLAB_MIN_ORDER)
+            order = KMALLOC_SLAB_MIN_ORDER;
+        return slab_allocate(kmalloc_caches[order - KMALLOC_SLAB_MIN_ORDER]);
     }
 }
 
