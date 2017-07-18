@@ -102,6 +102,7 @@ add_subdirectory(fs)
 add_subdirectory(kernel)
 add_subdirectory(lib)
 add_subdirectory(mm)
+add_subdirectory(tests)
 
 add_dependencies(mint.kernel arch-headers version-headers)
 
