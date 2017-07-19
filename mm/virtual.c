@@ -34,7 +34,6 @@
 #include <cpu/power.h>
 #include <kernel.h>
 #include <kernel/stacktrace.h>
-#include <lib/math.h>
 #include <mm/virtual.h>
 
 extern void arch_virtual_map(struct memory_context* context, addr_t virtual,
