@@ -39,15 +39,11 @@
 #include <kernel/version.h>
 #include <mm/mm.h>
 
-static char mint_banner[] =
-    "Mint version " UTS_RELEASE " (" MINT_COMPILE_BY "@" MINT_COMPILE_HOST
-    ") (" MINT_COMPILER ") " UTS_VERSION;
-
 extern void setup_arch(void);
 
 void kmain(struct mint_bootinfo* bootinfo)
 {
-    printk(INFO, "%s\n", mint_banner);
+    printk(INFO, "%s\n", OS_STRING);
     mm_init(bootinfo);
     setup_arch();
     time_init();

@@ -86,8 +86,7 @@ add_custom_target(
 
 add_custom_target(
     version-headers
-    COMMAND ${CMAKE_SOURCE_DIR}/tools/mkversion_h
-        ${CMAKE_SOURCE_DIR}/include/kernel/version.h
+    COMMAND ${CMAKE_SOURCE_DIR}/tools/version.sh
         ${MINT_VERSION}
         ${ARCH}
         ${CMAKE_C_COMPILER}
