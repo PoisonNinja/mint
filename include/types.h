@@ -36,3 +36,5 @@
 #include <stdint.h>
 
 #include <arch/types.h>
+
+typedef int32_t pid_t;
