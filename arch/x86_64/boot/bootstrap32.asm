@@ -188,9 +188,10 @@ bootstrap32:
     mov eax, pml4_base
     mov cr3, eax
 
-    ; Enable Long mode and SYSCALL / SYSRET instructions
+    ; Enable Long mode, SYSCALL / SYSRET instructions, and NX bit
     mov ecx, 0xC0000080
     rdmsr
+    bts eax, 11
     bts eax, 8
     bts eax, 0
     wrmsr

@@ -182,7 +182,7 @@ static void x86_64_finalize_paging(struct memory_context *context)
     memset((void *)((addr_t)pml4 + PHYS_START), 0, sizeof(struct page_table));
     context->page_table = (addr_t)pml4;
     virtual_map(context, PHYS_START, 0, PHYS_END - PHYS_START,
-                PAGE_PRESENT | PAGE_WRITABLE | PAGE_HUGE);
+                PAGE_PRESENT | PAGE_WRITABLE | PAGE_HUGE | PAGE_NX);
     virtual_map(context, KERNEL_START, KERNEL_PHYS, KERNEL_END - KERNEL_START,
                 PAGE_PRESENT | PAGE_WRITABLE);
     virtual_map(context, VGA_START, VGA_PHYS, VGA_END - VGA_START,
