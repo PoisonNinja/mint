@@ -70,3 +70,6 @@ struct filesystem {
     int (*umount)(struct superblock *);
     struct filesystem *next, *prev;
 };
+
+extern int filesystem_register(struct filesystem *fs);
+extern int filesystem_unregister(struct filesystem *fs);
