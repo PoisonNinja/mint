@@ -63,3 +63,9 @@ struct superblock {
     struct superblock_operations *s_ops;
     struct dentry *s_root;
 };
+
+struct filesystem {
+    const char *name;
+    int (*mount)(struct superblock *);
+    int (*umount)(struct superblock *);
+};
