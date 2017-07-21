@@ -68,4 +68,5 @@ struct filesystem {
     const char *name;
     int (*mount)(struct superblock *);
     int (*umount)(struct superblock *);
+    struct filesystem *next, *prev;
 };
