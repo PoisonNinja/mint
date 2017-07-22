@@ -1,5 +1,6 @@
 #pragma once
 
+#include <fs/fs.h>
 #include <mm/virtual.h>
 #include <tm/thread.h>
 #include <types.h>
@@ -9,9 +10,11 @@ struct process {
     uint32_t status;
     uint32_t flags;
     struct memory_context ctx;
+    struct inode *root, *cwd;
     // Process tree stuff
-    struct process* parent;
-    struct process* children;
+    struct process *parent, *children;
     // Threading
-    struct thread* threads;
+    struct thread *threads;
 };
+
+extern struct process *current_process;
