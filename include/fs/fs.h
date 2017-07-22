@@ -11,6 +11,8 @@ struct superblock;
 struct mountpoint;
 
 struct mountpoint {
+    struct inode *mp_inode;
+    struct superblock *mp_sb;
     struct mountpoint *next, *prev;
 };
 
@@ -31,6 +33,7 @@ struct inode {
     uint32_t i_flags;
     struct inode_operations *i_ops;
     struct superblock *i_sb;
+    struct mountpoint *i_mp;
 };
 
 struct dentry {
