@@ -48,4 +48,4 @@ extern char *strncpy(char *dest, const char *src, size_t n);
 extern size_t strlen(const char *str);
 extern char *strrchr(const char *str, int c);
 extern char *strstr(const char *haystack, const char *needle);
-extern char *strtok(char *str, const char *delim);
+extern char *strtok_r(char *str, const char *delim, char **lasts);
