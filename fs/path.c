@@ -7,6 +7,8 @@
 #include <string.h>
 #include <tm/process.h>
 
+struct inode* fs_root = NULL;
+
 static struct dentry* __path_resolve(struct inode* start, const char* path,
                                      uint32_t flags)
 {
@@ -28,12 +30,15 @@ struct dentry* path_resolve(const char* path, uint32_t flags)
     if (!path)
         return NULL;
     struct inode* inode = NULL;
-    if (*path == '/') {
-        // inode = current_process->root;
+    // if (*path == '/') {
+    //     inode = current_process->root;
+    //     path++;
+    // } else {
+    //     inode = current_process->cwd;
+    // }
+    if (*path == '/')
         path++;
-    } else {
-        // inode = current_process->cwd;
-    }
+    inode = fs_root;
     return __path_resolve(inode, path, flags);
 }
 
