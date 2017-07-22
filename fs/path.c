@@ -14,13 +14,11 @@ static struct dentry* __path_resolve(struct inode* start, const char* path,
     struct dentry* dentry = NULL;
     char* str = (char*)path;
     char* name;
-    while ((name = strtok_r(str, "/", &str))) {
+    while (inode && (name = strtok_r(str, "/", &str))) {
         dentry = dentry_lookup(inode, name);
         if (!dentry)
             return NULL;
-        // Continue searching
-        if (strchr(str, '/'))
-            inode = inode_resolve_dentry(dentry);
+        inode = inode_resolve_dentry(dentry);
     }
     return dentry;
 }
