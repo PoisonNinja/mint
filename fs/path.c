@@ -9,6 +9,15 @@
 
 struct inode* fs_root = NULL;
 
+static inline struct inode* path_resolve_mountpoint(struct inode* original)
+{
+    if (original->i_mp) {
+        return original->i_mp->mp_inode;
+    } else {
+        return original;
+    }
+}
+
 static struct dentry* __path_resolve(struct inode* start, const char* path,
                                      uint32_t flags)
 {
@@ -21,6 +30,7 @@ static struct dentry* __path_resolve(struct inode* start, const char* path,
         if (!dentry)
             return NULL;
         inode = inode_resolve_dentry(dentry);
+        inode = path_resolve_mountpoint(inode);
     }
     return dentry;
 }
@@ -44,6 +54,8 @@ struct dentry* path_resolve(const char* path, uint32_t flags)
 
 struct inode* path_resolve_inode(const char* path, uint32_t flags)
 {
+    if (!strcmp(path, "/"))
+        return fs_root;
     struct dentry* dentry = path_resolve(path, flags);
     if (!dentry)
         return NULL;

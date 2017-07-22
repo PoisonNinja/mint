@@ -1,8 +1,12 @@
 #include <fs/fs.h>
 #include <kernel/init.h>
 
+static int initfs_mount(struct superblock* sb)
+{
+}
+
 static struct filesystem initfs_filesystem = {
-    .name = "initfs",
+    .name = "initfs", .mount = initfs_mount,
 };
 
 static int init_initfs(void)

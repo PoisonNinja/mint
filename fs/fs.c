@@ -1,8 +1,10 @@
 #include <fs/fs.h>
+#include <fs/mount.h>
 #include <fs/path.h>
 #include <kernel.h>
 #include <kernel/init.h>
 #include <lib/list.h>
+#include <mm/heap.h>
 #include <string.h>
 
 static struct filesystem* fs_list = NULL;
@@ -44,3 +46,23 @@ static int filesystem_init(void)
     return 0;
 }
 SUBSYS_INITCALL(filesystem_init);
+
+extern struct inode* fs_root;
+
+static int rootfs_init(void)
+{
+    struct filesystem* fs = filesystem_get("initfs");
+    if (!fs) {
+        printk(WARNING, "WTF is this, no initfs?\n");
+        return 1;
+    }
+    struct superblock* sb = kmalloc(sizeof(struct superblock));
+    int r = 0;
+    if ((r = fs->mount(sb)) < 0) {
+        kfree(sb);
+        return r;
+    }
+    fs_root = sb->s_root;
+    return 0;
+}
+LATE_INITCALL(rootfs_init);
