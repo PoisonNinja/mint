@@ -16,7 +16,7 @@ struct mountpoint {
 
 struct inode_operations {
     int (*create)(struct inode *, struct dentry *, int);
-    struct dentry *(*lookup)(struct inode *, struct dentry *);
+    int (*lookup)(struct inode *, struct dentry *);
 };
 
 struct inode {
@@ -53,8 +53,6 @@ struct file {
 };
 
 struct superblock_operations {
-    struct inode *(*alloc_inode)(struct superblock *);
-    int (*destroy_inode)(struct inode *);
     void (*read_inode)(struct inode *);
     void (*write_inode)(struct inode *, int);
 };
