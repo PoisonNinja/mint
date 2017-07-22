@@ -38,4 +38,6 @@ extern void early_malloc_set_properties(addr_t start, addr_t extent);
 extern void* __attribute__((malloc)) kmalloc(size_t size);
 extern void* __attribute__((malloc)) kzalloc(size_t size);
 
+extern void kfree(void* ptr);
+
 extern void kmalloc_init(void);

@@ -123,6 +123,15 @@ void* __attribute__((malloc)) kzalloc(size_t size)
     return ptr;
 }
 
+void kfree(void* ptr)
+{
+    if (heap_status != HEAP_INITIALIZED) {
+        printk(WARNING, "You can't use kfree until the heap is initialized!\n");
+        return;
+    }
+    return slab_free(ptr);
+}
+
 void kmalloc_init(void)
 {
     for (int order = KMALLOC_SLAB_MIN_ORDER; order <= KMALLOC_SLAB_MAX_ORDER;
