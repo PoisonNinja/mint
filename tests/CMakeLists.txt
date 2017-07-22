@@ -3,4 +3,5 @@ target_sources(mint.kernel
     ${CMAKE_CURRENT_SOURCE_DIR}/tests.c
 )
 
+add_subdirectory(lib)
 add_subdirectory(mm)

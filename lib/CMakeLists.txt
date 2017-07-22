@@ -1,6 +1,8 @@
 target_sources(mint.kernel
     PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/buddy.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/hashmap.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/murmur.c
     ${CMAKE_CURRENT_SOURCE_DIR}/printf.c
     ${CMAKE_CURRENT_SOURCE_DIR}/stack.c
     ${CMAKE_CURRENT_SOURCE_DIR}/string.c
