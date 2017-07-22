@@ -5,19 +5,23 @@
 
 static struct slab_cache* inode_slab_cache = NULL;
 
-struct inode* inode_allocate(void)
+struct inode* inode_allocate(struct superblock* sb)
 {
-    struct inode* inode = slab_allocate(inode_slab_cache);
-    if (inode)
-        memset(inode, 0, sizeof(struct inode));
-    return inode;
+    if (sb->s_ops->alloc_inode) {
+        return sb->s_ops->alloc_inode(sb);
+    } else {
+        struct inode* inode = slab_allocate(inode_slab_cache);
+        if (inode)
+            memset(inode, 0, sizeof(struct inode));
+        return inode;
+    }
 }
 
 struct inode* inode_resolve_dentry(struct dentry* dentry)
 {
     if (!dentry)
         return NULL;
-    struct inode* inode = inode_allocate();
+    struct inode* inode = inode_allocate(dentry->d_sb);
     if (!inode)
         return NULL;
     inode->i_ino = dentry->d_ino;

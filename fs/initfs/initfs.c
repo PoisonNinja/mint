@@ -96,7 +96,7 @@ static int initfs_mount(struct superblock* sb)
     struct initfs_data* data = kmalloc(sizeof(struct initfs_data));
     sb->s_data = sb;
     sb->s_ops = &initfs_superblock_operations;
-    struct inode* root_inode = inode_allocate();
+    struct inode* root_inode = inode_allocate(sb);
     sb->s_root = root_inode;
     data->inodes[0] = kmalloc(sizeof(struct initfs_inode));
     struct initfs_inode* root = data->inodes[0];
