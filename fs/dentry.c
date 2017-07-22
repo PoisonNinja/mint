@@ -26,7 +26,7 @@ struct dentry* dentry_lookup(struct inode* inode, char* name)
     struct dentry* dentry = dentry_allocate();
     if (!dentry)
         return NULL;
-    strncpy(dentry->d_name, name, DIRENT_NAME_MAX);
+    strncpy(dentry->d_name, name, DENTRY_NAME_MAX);
     if (inode->i_ops->lookup(inode, dentry)) {
         return dentry;
     } else {

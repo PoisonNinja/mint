@@ -2,7 +2,7 @@
 
 #include <types.h>
 
-#define DIRENT_NAME_MAX 256
+#define DENTRY_NAME_MAX 256
 
 struct inode;
 struct dentry;
@@ -40,7 +40,7 @@ struct dentry {
     struct inode *d_parent;
     struct superblock *d_sb;
     ino_t d_ino;
-    char d_name[DIRENT_NAME_MAX];
+    char d_name[DENTRY_NAME_MAX];
 };
 
 struct file_operations {
@@ -56,13 +56,15 @@ struct file {
 };
 
 struct superblock_operations {
-    void (*read_inode)(struct inode *);
-    void (*write_inode)(struct inode *, int);
+    struct inode *(*alloc_inode)(struct superblock *);
+    int (*read_inode)(struct inode *);
+    int (*write_inode)(struct inode *);
 };
 
 struct superblock {
     struct superblock_operations *s_ops;
     struct inode *s_root;
+    void *s_data;
 };
 
 struct filesystem {
