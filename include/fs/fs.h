@@ -62,15 +62,15 @@ struct superblock_operations {
 
 struct superblock {
     struct superblock_operations *s_ops;
-    struct dentry *s_root;
+    struct inode *s_root;
 };
 
 struct filesystem {
     const char *name;
     int (*mount)(struct superblock *);
-    int (*umount)(struct superblock *);
     struct filesystem *next, *prev;
 };
 
 extern int filesystem_register(struct filesystem *fs);
 extern int filesystem_unregister(struct filesystem *fs);
+extern struct filesystem *filesystem_get(const char *name);

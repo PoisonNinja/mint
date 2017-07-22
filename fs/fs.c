@@ -3,6 +3,7 @@
 #include <kernel.h>
 #include <kernel/init.h>
 #include <lib/list.h>
+#include <string.h>
 
 static struct filesystem* fs_list = NULL;
 
@@ -18,6 +19,17 @@ int filesystem_unregister(struct filesystem* fs)
 {
     LIST_REMOVE(fs_list, fs);
     return 0;
+}
+
+struct filesystem* filesystem_get(const char* name)
+{
+    struct filesystem* fs;
+    LIST_FOR_EACH(fs_list, fs)
+    {
+        if (!strcmp(fs->name, name))
+            return fs;
+    }
+    return NULL;
 }
 
 extern void dentry_init(void);

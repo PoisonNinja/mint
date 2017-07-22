@@ -3,6 +3,7 @@ target_sources(mint.kernel
     ${CMAKE_CURRENT_SOURCE_DIR}/fs.c
     ${CMAKE_CURRENT_SOURCE_DIR}/dentry.c
     ${CMAKE_CURRENT_SOURCE_DIR}/inode.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/mount.c
     ${CMAKE_CURRENT_SOURCE_DIR}/path.c
 )
 
