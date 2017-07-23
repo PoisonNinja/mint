@@ -1,7 +1,8 @@
 #include <fs/dentry.h>
 #include <fs/fs.h>
 #include <fs/inode.h>
-#include <fs/path.h>
+#include <fs/open.h>
+#include <fs/stat.h>
 #include <kernel.h>
 #include <mm/heap.h>
 #include <string.h>
@@ -66,14 +67,16 @@ static struct dentry* __path_resolve_dentry(struct inode* start,
 }
 
 static struct inode* __path_resolve_create(struct inode* start,
-                                           const char* path)
+                                           const char* path, mode_t mode)
 {
     if (!start || !path)
         return NULL;
     char* dirpath = dirname(path);
     char* filename = basename(path);
-    struct inode* dir = path_resolve(dirpath, 0);
+    struct inode* dir = path_resolve(dirpath, 0, mode);
     if (!dir)
+        return NULL;
+    if (!S_ISDIR(dir->i_mode))
         return NULL;
     struct dentry* dentry = NULL;
     if ((dentry = dentry_lookup(dir, filename))) {
@@ -82,7 +85,7 @@ static struct inode* __path_resolve_create(struct inode* start,
     }
     dentry = kmalloc(sizeof(struct dentry));
     strncpy(dentry->d_name, filename, DENTRY_NAME_MAX);
-    return dir->i_ops->create(dir, dentry, 0);
+    return dir->i_ops->create(dir, dentry, mode);
 }
 
 struct dentry* path_resolve_dentry(const char* path, uint32_t flags)
@@ -102,7 +105,7 @@ struct dentry* path_resolve_dentry(const char* path, uint32_t flags)
     return __path_resolve_dentry(inode, path);
 }
 
-struct inode* path_resolve(const char* path, uint32_t flags)
+struct inode* path_resolve(const char* path, uint32_t flags, mode_t mode)
 {
     if (!strcmp(path, "/"))
         return fs_root;
@@ -117,7 +120,7 @@ struct inode* path_resolve(const char* path, uint32_t flags)
         path++;
     start = fs_root;
     if (flags & O_CREAT) {
-        return __path_resolve_create(start, path);
+        return __path_resolve_create(start, path, mode);
     } else {
         struct dentry* dentry = __path_resolve_dentry(start, path);
         if (!dentry)

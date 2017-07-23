@@ -1,6 +1,6 @@
 #include <fs/fs.h>
 #include <fs/mount.h>
-#include <fs/path.h>
+#include <fs/open.h>
 #include <kernel.h>
 #include <kernel/init.h>
 #include <lib/list.h>
@@ -42,7 +42,6 @@ static int filesystem_init(void)
     inode_init();
     // Initialize the dentry allocator
     dentry_init();
-    path_resolve("/foo/bar/baz/cat", 0);
     return 0;
 }
 SUBSYS_INITCALL(filesystem_init);
