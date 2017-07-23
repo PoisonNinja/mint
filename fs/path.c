@@ -1,7 +1,7 @@
 #include <fs/dentry.h>
 #include <fs/fs.h>
 #include <fs/inode.h>
-#include <fs/open.h>
+#include <fs/path.h>
 #include <fs/stat.h>
 #include <kernel.h>
 #include <mm/heap.h>

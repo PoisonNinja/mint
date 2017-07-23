@@ -1,7 +1,7 @@
 #include <errno.h>
 #include <fs/fs.h>
 #include <fs/mount.h>
-#include <fs/open.h>
+#include <fs/path.h>
 #include <kernel.h>
 #include <lib/list.h>
 #include <mm/heap.h>

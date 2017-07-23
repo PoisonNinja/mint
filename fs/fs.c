@@ -1,6 +1,6 @@
 #include <fs/fs.h>
 #include <fs/mount.h>
-#include <fs/open.h>
+#include <fs/path.h>
 #include <kernel.h>
 #include <kernel/init.h>
 #include <lib/list.h>

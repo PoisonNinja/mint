@@ -1,5 +1,5 @@
 #include <fs/file.h>
-#include <fs/open.h>
+#include <fs/path.h>
 #include <mm/slab.h>
 
 static struct slab_cache* file_slab_cache = NULL;
