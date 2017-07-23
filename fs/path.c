@@ -64,7 +64,8 @@ static inline struct inode* path_resolve_mountpoint(struct inode* original)
     }
 }
 
-static struct dentry* __path_resolve(struct inode* start, const char* path)
+static struct dentry* __path_resolve_dentry(struct inode* start,
+                                            const char* path)
 {
     if (!start || !path)
         return NULL;
@@ -89,7 +90,7 @@ static struct inode* __path_resolve_create(struct inode* start,
         return NULL;
     char* dirpath = dirname(path);
     char* filename = basename(path);
-    struct inode* dir = path_resolve_inode(dirpath, 0);
+    struct inode* dir = path_resolve(dirpath, 0);
     if (!dir)
         return NULL;
     struct dentry* dentry = NULL;
@@ -102,7 +103,7 @@ static struct inode* __path_resolve_create(struct inode* start,
     return dir->i_ops->create(dir, dentry, 0);
 }
 
-struct dentry* path_resolve(const char* path, uint32_t flags)
+struct dentry* path_resolve_dentry(const char* path, uint32_t flags)
 {
     if (!path)
         return NULL;
@@ -116,14 +117,24 @@ struct dentry* path_resolve(const char* path, uint32_t flags)
     if (*path == '/')
         path++;
     inode = fs_root;
-    return __path_resolve(inode, path);
+    return __path_resolve_dentry(inode, path);
 }
 
-struct inode* path_resolve_inode(const char* path, uint32_t flags)
+struct inode* path_resolve(const char* path, uint32_t flags)
 {
     if (!strcmp(path, "/"))
         return fs_root;
-    struct dentry* dentry = path_resolve(path, flags);
+    struct inode* start = NULL;
+    // if (*path == '/') {
+    //     inode = current_process->root;
+    //     path++;
+    // } else {
+    //     inode = current_process->cwd;
+    // }
+    if (*path == '/')
+        path++;
+    start = fs_root;
+    struct dentry* dentry = __path_resolve_dentry(start, path);
     if (!dentry)
         return NULL;
     struct inode* inode = inode_resolve_dentry(dentry);
