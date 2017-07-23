@@ -27,11 +27,11 @@ struct dentry* dentry_lookup(struct inode* inode, char* name)
     if (!dentry)
         return NULL;
     strncpy(dentry->d_name, name, DENTRY_NAME_MAX);
-    if (inode->i_ops->lookup(inode, dentry) >= 0) {
-        return dentry;
-    } else {
+    if (inode->i_ops->lookup(inode, dentry) < 0) {
         dentry_free(dentry);
         return NULL;
+    } else {
+        return dentry;
     }
 }
 
