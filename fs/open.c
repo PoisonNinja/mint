@@ -9,49 +9,31 @@
 
 struct inode* fs_root = NULL;
 
-static char* dirname(const char* path)
+char* dirname(char* path)
 {
-    char* newpath;
-    char* slash;
-    int length; /* Length of result, not including NUL.  */
-
-    slash = strrchr(path, '/');
-    if (slash == 0) {
-        /* File is in the current directory.  */
-        path = "";
-        length = 0;
-    } else {
-        /* Remove any trailing slashes from the result.
-        while (slash > path && *slash == '/')
-        --slash; */
-
-        length = slash - path + 1;
+    char* p;
+    if (path == NULL || *path == '\0')
+        return "/";
+    p = path + strlen(path) - 1;
+    while (*p == '/') {
+        if (p == path)
+            return path;
+        *p-- = '\0';
     }
-    newpath = (char*)kmalloc(length + 1);
-    if (newpath == 0)
-        return 0;
-    strncpy(newpath, path, length);
-    newpath[length] = 0;
-    return newpath;
+    while (p >= path && *p != '/')
+        p--;
+    return p < path ? "/" : p == path ? "/" : (*p = '\0', path);
 }
 
-static char* basename(char const* name)
+static char* basename(const char* name)
 {
-    char const* base = name;
-    int all_slashes = 1;
-    char const* p;
+    const char* base = name;
 
-    for (p = name; *p; p++) {
-        if (*p == '/')
-            base = p + 1;
-        else
-            all_slashes = 0;
+    while (*name) {
+        if (*name++ == '/') {
+            base = name;
+        }
     }
-
-    /* If NAME is all slashes, arrange to return `/'.  */
-    if (*base == '\0' && *p == '/' && all_slashes)
-        --base;
-
     return (char*)base;
 }
 
@@ -134,9 +116,13 @@ struct inode* path_resolve(const char* path, uint32_t flags)
     if (*path == '/')
         path++;
     start = fs_root;
-    struct dentry* dentry = __path_resolve_dentry(start, path);
-    if (!dentry)
-        return NULL;
-    struct inode* inode = inode_resolve_dentry(dentry);
-    return inode;
+    if (flags & O_CREAT) {
+        return __path_resolve_create(start, path);
+    } else {
+        struct dentry* dentry = __path_resolve_dentry(start, path);
+        if (!dentry)
+            return NULL;
+        struct inode* inode = inode_resolve_dentry(dentry);
+        return inode;
+    }
 }
