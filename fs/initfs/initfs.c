@@ -30,6 +30,19 @@ struct initfs_data {
     ino_t next;
 };
 
+struct inode* initfs_create(struct inode* parent, struct dentry* entry,
+                            int flags)
+{
+    struct initfs_data* data = (struct initfs_data*)parent->i_sb->s_data;
+    struct initfs_inode* rnode = kzalloc(sizeof(struct initfs_inode));
+    struct inode* inode = kmalloc(sizeof(struct inode));
+    rnode->i_ino = data->next++;
+    inode->i_ino = rnode->i_ino;
+    entry->d_ino = inode->i_ino;
+    data->inodes[rnode->i_ino] = rnode;
+    return inode;
+}
+
 static int initfs_lookup(struct inode* root, struct dentry* entry)
 {
     struct initfs_data* data = (struct initfs_data*)root->i_sb->s_data;
@@ -51,7 +64,7 @@ static int initfs_lookup(struct inode* root, struct dentry* entry)
 }
 
 static struct inode_operations initfs_inode_operations = {
-    .lookup = &initfs_lookup,
+    .create = &initfs_create, .lookup = &initfs_lookup,
 };
 
 static int initfs_write_inode(struct inode* node)
