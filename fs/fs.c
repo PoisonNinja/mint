@@ -36,12 +36,15 @@ struct filesystem* filesystem_get(const char* name)
 
 extern void dentry_init(void);
 extern void inode_init(void);
+extern void file_init(void);
 static int filesystem_init(void)
 {
     // Initialize the inode allocator
     inode_init();
     // Initialize the dentry allocator
     dentry_init();
+    // Initialize the file allocator
+    file_init();
     return 0;
 }
 SUBSYS_INITCALL(filesystem_init);

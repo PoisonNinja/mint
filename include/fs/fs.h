@@ -53,18 +53,6 @@ struct dentry {
     char d_name[DENTRY_NAME_MAX];
 };
 
-struct file_operations {
-    int (*read)(struct inode *, struct file *, char *, int);
-    int (*write)(struct inode *, struct file *, const char *, int);
-};
-
-struct file {
-    struct inode *f_inode;
-    struct dentry *f_dentry;
-    off_t f_off;
-    struct file_operations *f_ops;
-};
-
 struct superblock_operations {
     struct inode *(*alloc_inode)(struct superblock *);
     int (*read_inode)(struct inode *);

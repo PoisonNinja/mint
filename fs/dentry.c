@@ -14,9 +14,8 @@ struct dentry* dentry_allocate(void)
 
 void dentry_free(struct dentry* dentry)
 {
-    if (!dentry)
-        return;
-    slab_free(dentry);
+    if (dentry)
+        slab_free(dentry);
 }
 
 struct dentry* dentry_lookup(struct inode* inode, char* name)
