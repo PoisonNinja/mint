@@ -30,16 +30,20 @@ struct initfs_data {
     ino_t next;
 };
 
-struct inode* initfs_create(struct inode* parent, struct dentry* entry,
+struct inode* initfs_create(struct inode* parent, struct dentry* dentry,
                             int flags)
 {
     struct initfs_data* data = (struct initfs_data*)parent->i_sb->s_data;
     struct initfs_inode* rnode = kzalloc(sizeof(struct initfs_inode));
     struct inode* inode = kmalloc(sizeof(struct inode));
+    struct initfs_dirent* dir = kmalloc(sizeof(struct initfs_dirent));
     rnode->i_ino = data->next++;
     inode->i_ino = rnode->i_ino;
-    entry->d_ino = inode->i_ino;
+    dentry->d_ino = inode->i_ino;
+    dir->d_ino = inode->i_ino;
+    strncpy(dir->d_name, dentry->d_name, DENTRY_NAME_MAX);
     data->inodes[rnode->i_ino] = rnode;
+    LIST_PREPEND(rnode->i_entries, dir);
     return inode;
 }
 
