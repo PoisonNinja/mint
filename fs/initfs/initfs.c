@@ -1,6 +1,7 @@
 #include <errno.h>
 #include <fs/fs.h>
 #include <fs/inode.h>
+#include <fs/stat.h>
 #include <kernel/init.h>
 #include <lib/list.h>
 #include <mm/heap.h>
@@ -114,12 +115,15 @@ static int initfs_mount(struct superblock* sb)
     sb->s_data = data;
     sb->s_ops = &initfs_superblock_operations;
     struct inode* root_inode = inode_allocate(sb);
+    root_inode->i_ino = 0;
     root_inode->i_ops = &initfs_inode_operations;
     root_inode->i_sb = sb;
+    root_inode->i_mode = S_IFDIR;
     sb->s_root = root_inode;
     data->inodes[0] = kmalloc(sizeof(struct initfs_inode));
     struct initfs_inode* root = data->inodes[0];
     root->i_ino = 0;
+    root->i_mode = S_IFDIR;
     return 0;
 }
 
