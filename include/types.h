@@ -39,6 +39,8 @@
 
 typedef int32_t pid_t;
 
+typedef int64_t ssize_t;
+
 typedef uint16_t nlink_t;
 typedef uint32_t mode_t;
 typedef uint32_t uid_t;
