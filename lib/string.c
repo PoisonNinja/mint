@@ -29,6 +29,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <mm/heap.h>
 #include <string.h>
 
 void *memchr(const void *str, int c, size_t n)
@@ -160,6 +161,14 @@ size_t strlen(const char *str)
     while (*str++ != '\0')
         n++;
     return n;
+}
+
+char *strdup(const char *str)
+{
+    size_t size = strlen(str);
+    char *ret = kmalloc(size + 1);
+    strncpy(ret, str, size);
+    return ret;
 }
 
 char *strrchr(const char *str, int c)
