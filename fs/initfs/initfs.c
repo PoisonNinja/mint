@@ -32,6 +32,8 @@ struct initfs_data {
     ino_t next;
 };
 
+static struct inode* initfs_allocate(struct superblock* sb);
+
 static ssize_t initfs_read(struct file* file, uint8_t* buffer, size_t size)
 {
     struct initfs_data* data = (struct initfs_data*)file->f_inode->i_sb->s_data;
@@ -46,8 +48,6 @@ static ssize_t initfs_read(struct file* file, uint8_t* buffer, size_t size)
     memcpy(buffer, rnode->i_data, total);
     return total;
 }
-
-#include <kernel.h>
 
 static ssize_t initfs_write(struct file* file, uint8_t* buffer, size_t size)
 {
@@ -75,20 +75,15 @@ static struct file_operations initfs_file_operations = {
     .read = &initfs_read, .write = &initfs_write,
 };
 
-static struct inode_operations initfs_inode_operations;
-
 struct inode* initfs_create(struct inode* parent, struct dentry* dentry,
                             int flags)
 {
     struct initfs_data* data = (struct initfs_data*)parent->i_sb->s_data;
     struct initfs_inode* rnode = kzalloc(sizeof(struct initfs_inode));
-    struct inode* inode = kmalloc(sizeof(struct inode));
+    struct inode* inode = initfs_allocate(parent->i_sb);
     struct initfs_dirent* dir = kmalloc(sizeof(struct initfs_dirent));
     rnode->i_ino = data->next++;
     inode->i_ino = rnode->i_ino;
-    inode->i_ops = &initfs_inode_operations;
-    inode->i_fops = &initfs_file_operations;
-    inode->i_sb = parent->i_sb;
     dentry->d_ino = inode->i_ino;
     dir->d_ino = inode->i_ino;
     strncpy(dir->d_name, dentry->d_name, DENTRY_NAME_MAX);
@@ -164,11 +159,8 @@ static int initfs_mount(struct superblock* sb)
     struct initfs_data* data = kmalloc(sizeof(struct initfs_data));
     sb->s_data = data;
     sb->s_ops = &initfs_superblock_operations;
-    struct inode* root_inode = inode_allocate(sb);
+    struct inode* root_inode = initfs_allocate(sb);
     root_inode->i_ino = 0;
-    root_inode->i_ops = &initfs_inode_operations;
-    root_inode->i_fops = &initfs_file_operations;
-    root_inode->i_sb = sb;
     root_inode->i_mode = S_IFDIR;
     sb->s_root = root_inode;
     data->inodes[0] = kmalloc(sizeof(struct initfs_inode));
@@ -181,6 +173,15 @@ static int initfs_mount(struct superblock* sb)
 static struct filesystem initfs_filesystem = {
     .name = "initfs", .mount = initfs_mount,
 };
+
+static struct inode* initfs_allocate(struct superblock* sb)
+{
+    struct inode* inode = inode_allocate(sb);
+    inode->i_ops = &initfs_inode_operations;
+    inode->i_fops = &initfs_file_operations;
+    inode->i_sb = sb;
+    return inode;
+}
 
 static int init_initfs(void)
 {
