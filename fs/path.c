@@ -87,7 +87,16 @@ static struct inode* __path_resolve_create(struct inode* start,
         return NULL;
     char* dirpath = dirname(path);
     char* filename = basename(path);
-    struct inode* dir = __path_resolve(start, dirpath, 0, NULL);
+    /*
+     * Get the directory inode using path_resolve. Notice that we're not
+     * using __path_resolve because path_resolve does some special
+     * processing for "/", which __path_resolve can't handle.
+     *
+     * So, we call path_resolve, passing in the directory path and a copy
+     * of the original flags, excluding O_CREATE because I don't want
+     * to accidentally create the directory too.
+     */
+    struct inode* dir = path_resolve(dirpath, 0, (flags & ~O_CREAT), NULL);
     if (!dir)
         return NULL;
     if (!S_ISDIR(dir->i_mode))
