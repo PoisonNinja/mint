@@ -33,7 +33,7 @@
 #include <kernel.h>
 #include <string.h>
 
-#define NUM_ENTRIES 3
+#define NUM_ENTRIES 5
 
 static struct gdt_entry gdt_entries[NUM_ENTRIES];
 static struct gdt_descriptor gdt_ptr;
@@ -59,6 +59,8 @@ void gdt_init(void)
     gdt_set_entry(&gdt_entries[0], 0, 0, 0, 0);
     gdt_set_entry(&gdt_entries[1], 0, 0xFFFFF, 0x9A, 0x0A);
     gdt_set_entry(&gdt_entries[2], 0, 0xFFFFF, 0x92, 0x0A);
+    gdt_set_entry(&gdt_entries[3], 0, 0xFFFFF, 0xFA, 0x0A);
+    gdt_set_entry(&gdt_entries[4], 0, 0xFFFFF, 0xF2, 0x0A);
     gdt_ptr.limit = sizeof(struct gdt_entry) * NUM_ENTRIES - 1;
     gdt_ptr.offset = (uint64_t)gdt_entries;
     gdt_load((uint64_t)&gdt_ptr);
