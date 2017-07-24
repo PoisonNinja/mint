@@ -42,6 +42,7 @@ struct inode {
     time_t i_ctime;
     uint32_t i_flags;
     struct inode_operations *i_ops;
+    struct file_operations *i_fops;
     struct superblock *i_sb;
     struct mountpoint *i_mp;
 };

@@ -1,4 +1,5 @@
 #include <errno.h>
+#include <fs/file.h>
 #include <fs/fs.h>
 #include <fs/inode.h>
 #include <fs/stat.h>
@@ -31,6 +32,51 @@ struct initfs_data {
     ino_t next;
 };
 
+static ssize_t initfs_read(struct file* file, uint8_t* buffer, size_t size)
+{
+    struct initfs_data* data = (struct initfs_data*)file->f_inode->i_sb->s_data;
+    if (!data)
+        return -EIO;
+    struct initfs_inode* rnode = data->inodes[file->f_inode->i_ino];
+    if (!rnode)
+        return -EIO;
+    ssize_t total = size + file->f_off;
+    if ((size_t)total > rnode->i_size)
+        total = rnode->i_size - file->f_off;
+    memcpy(buffer, rnode->i_data, total);
+    return total;
+}
+
+#include <kernel.h>
+
+static ssize_t initfs_write(struct file* file, uint8_t* buffer, size_t size)
+{
+    struct initfs_data* data = (struct initfs_data*)file->f_inode->i_sb->s_data;
+    if (!data)
+        return -EIO;
+    struct initfs_inode* rnode = data->inodes[file->f_inode->i_ino];
+    if (!rnode)
+        return -EIO;
+    ssize_t total = size + file->f_off;
+    void* new = kmalloc(total);
+    if (rnode->i_data) {
+        memcpy(new, rnode->i_data, rnode->i_size);
+        kfree(rnode->i_data);
+    }
+    rnode->i_data = new;
+    void* tmp = rnode->i_data + file->f_off;
+    memcpy(tmp, buffer, size);
+    rnode->i_size += size;
+    file->f_inode->i_size += size;
+    return size;
+}
+
+static struct file_operations initfs_file_operations = {
+    .read = &initfs_read, .write = &initfs_write,
+};
+
+static struct inode_operations initfs_inode_operations;
+
 struct inode* initfs_create(struct inode* parent, struct dentry* dentry,
                             int flags)
 {
@@ -40,6 +86,9 @@ struct inode* initfs_create(struct inode* parent, struct dentry* dentry,
     struct initfs_dirent* dir = kmalloc(sizeof(struct initfs_dirent));
     rnode->i_ino = data->next++;
     inode->i_ino = rnode->i_ino;
+    inode->i_ops = &initfs_inode_operations;
+    inode->i_fops = &initfs_file_operations;
+    inode->i_sb = parent->i_sb;
     dentry->d_ino = inode->i_ino;
     dir->d_ino = inode->i_ino;
     strncpy(dir->d_name, dentry->d_name, DENTRY_NAME_MAX);
@@ -102,6 +151,7 @@ static int initfs_read_inode(struct inode* node)
     node->i_gid = inode->i_gid;
     node->i_size = inode->i_size;
     node->i_ops = &initfs_inode_operations;
+    node->i_fops = &initfs_file_operations;
     return 0;
 }
 
@@ -117,6 +167,7 @@ static int initfs_mount(struct superblock* sb)
     struct inode* root_inode = inode_allocate(sb);
     root_inode->i_ino = 0;
     root_inode->i_ops = &initfs_inode_operations;
+    root_inode->i_fops = &initfs_file_operations;
     root_inode->i_sb = sb;
     root_inode->i_mode = S_IFDIR;
     sb->s_root = root_inode;
