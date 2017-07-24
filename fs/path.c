@@ -10,8 +10,9 @@
 
 struct inode* fs_root = NULL;
 
-char* dirname(char* path)
+char* dirname(const char* original)
 {
+    char* path = strdup(original);
     char* p;
     if (path == NULL || *path == '\0')
         return "/";
