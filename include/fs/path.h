@@ -15,5 +15,5 @@
  *
  * Returns the inode if found or created (if O_CREAT is used)
  */
-extern struct inode *path_resolve(const char *path, uint32_t flags, mode_t mode,
+extern struct inode *path_resolve(const char *path, int flags, mode_t mode,
                                   struct dentry **dentry);

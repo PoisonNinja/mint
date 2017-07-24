@@ -48,7 +48,7 @@ static inline struct inode* path_resolve_mountpoint(struct inode* original)
 }
 
 static struct dentry* __path_resolve_dentry(struct inode* start,
-                                            const char* path)
+                                            const char* path, int flags)
 {
     if (!start || !path)
         return NULL;
@@ -67,9 +67,9 @@ static struct dentry* __path_resolve_dentry(struct inode* start,
 }
 
 static struct inode* __path_resolve(struct inode* start, const char* path,
-                                    struct dentry** dentry)
+                                    int flags, struct dentry** dentry)
 {
-    struct dentry* fdentry = __path_resolve_dentry(start, path);
+    struct dentry* fdentry = __path_resolve_dentry(start, path, flags);
     if (!fdentry)
         return NULL;
     struct inode* inode = inode_resolve_dentry(fdentry);
@@ -79,8 +79,8 @@ static struct inode* __path_resolve(struct inode* start, const char* path,
 }
 
 static struct inode* __path_resolve_create(struct inode* start,
-                                           const char* path, mode_t mode,
-                                           struct dentry** dentry)
+                                           const char* path, int flags,
+                                           mode_t mode, struct dentry** dentry)
 {
     if (!start || !path)
         return NULL;
@@ -100,10 +100,10 @@ static struct inode* __path_resolve_create(struct inode* start,
     strncpy(new->d_name, filename, DENTRY_NAME_MAX);
     if (dentry)
         *dentry = new;
-    return dir->i_ops->create(dir, new, mode);
+    return dir->i_ops->create(dir, new, flags, mode);
 }
 
-struct inode* path_resolve(const char* path, uint32_t flags, mode_t mode,
+struct inode* path_resolve(const char* path, int flags, mode_t mode,
                            struct dentry** dentry)
 {
     if (!strcmp(path, "/"))
@@ -119,8 +119,8 @@ struct inode* path_resolve(const char* path, uint32_t flags, mode_t mode,
         path++;
     start = fs_root;
     if (flags & O_CREAT) {
-        return __path_resolve_create(start, path, mode, dentry);
+        return __path_resolve_create(start, path, flags, mode, dentry);
     } else {
-        return __path_resolve(start, path, dentry);
+        return __path_resolve(start, path, flags, dentry);
     }
 }

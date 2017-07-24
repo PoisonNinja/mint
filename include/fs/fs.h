@@ -27,7 +27,7 @@ struct mountpoint {
 };
 
 struct inode_operations {
-    struct inode *(*create)(struct inode *, struct dentry *, int);
+    struct inode *(*create)(struct inode *, struct dentry *, int, mode_t);
     int (*lookup)(struct inode *, struct dentry *);
 };
 
