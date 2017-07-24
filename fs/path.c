@@ -86,7 +86,7 @@ static struct inode* __path_resolve_create(struct inode* start,
         return NULL;
     char* dirpath = dirname(path);
     char* filename = basename(path);
-    struct inode* dir = path_resolve(dirpath, 0, mode, NULL);
+    struct inode* dir = __path_resolve(start, dirpath, 0, NULL);
     if (!dir)
         return NULL;
     if (!S_ISDIR(dir->i_mode))
