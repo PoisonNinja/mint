@@ -146,12 +146,11 @@ char *strcpy(char *dest, const char *src)
 
 char *strncpy(char *dest, const char *src, size_t n)
 {
-    while (n-- && *src) {
+    while ((n-- > 0) && *src) {
         *dest++ = *src++;
     }
-    while (n--) {
-        *dest++ = 0;
-    }
+    while (n-- > 0)
+        *dest = '\0';
     return dest;
 }
 
