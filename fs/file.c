@@ -22,6 +22,8 @@ void file_free(struct file* file)
 
 ssize_t file_pread(struct file* file, uint8_t* buffer, size_t size)
 {
+    if (!file || !buffer)
+        return -EIO;
     if (file->f_ops->read)
         return file->f_ops->read(file, buffer, size);
     else
@@ -30,7 +32,7 @@ ssize_t file_pread(struct file* file, uint8_t* buffer, size_t size)
 
 ssize_t file_read(struct file* file, uint8_t* buffer, size_t size)
 {
-    if (!file)
+    if (!file || !buffer)
         return -EIO;
     ssize_t ret = file_pread(file, buffer, size);
     if (ret > 0)
@@ -40,6 +42,8 @@ ssize_t file_read(struct file* file, uint8_t* buffer, size_t size)
 
 ssize_t file_pwrite(struct file* file, uint8_t* buffer, size_t size)
 {
+    if (!file || !buffer)
+        return -EIO;
     if (file->f_ops->write)
         return file->f_ops->write(file, buffer, size);
     else
@@ -48,7 +52,7 @@ ssize_t file_pwrite(struct file* file, uint8_t* buffer, size_t size)
 
 ssize_t file_write(struct file* file, uint8_t* buffer, size_t size)
 {
-    if (!file)
+    if (!file || !buffer)
         return -EIO;
     ssize_t ret = file_pwrite(file, buffer, size);
     if (ret > 0)
