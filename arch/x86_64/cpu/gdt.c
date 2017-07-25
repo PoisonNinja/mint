@@ -39,6 +39,7 @@ static struct gdt_entry gdt_entries[NUM_ENTRIES];
 static struct gdt_descriptor gdt_ptr;
 
 extern void gdt_load(uint64_t);
+extern void tss_flush(void);
 
 static void gdt_set_entry(struct gdt_entry *entry, uint32_t base,
                           uint32_t limit, uint8_t access, uint8_t flags)
@@ -52,24 +53,10 @@ static void gdt_set_entry(struct gdt_entry *entry, uint32_t base,
     entry->base_high = (base >> 24) & 0xFF;
 }
 
-void gdt_init(void)
-{
-    memset(&gdt_entries, 0, sizeof(struct gdt_entry) * NUM_ENTRIES);
-    memset(&gdt_ptr, 0, sizeof(struct gdt_descriptor));
-    gdt_set_entry(&gdt_entries[0], 0, 0, 0, 0);
-    gdt_set_entry(&gdt_entries[1], 0, 0xFFFFF, 0x9A, 0x0A);
-    gdt_set_entry(&gdt_entries[2], 0, 0xFFFFF, 0x92, 0x0A);
-    gdt_set_entry(&gdt_entries[3], 0, 0xFFFFF, 0xFA, 0x0A);
-    gdt_set_entry(&gdt_entries[4], 0, 0xFFFFF, 0xF2, 0x0A);
-    gdt_ptr.limit = sizeof(struct gdt_entry) * NUM_ENTRIES - 1;
-    gdt_ptr.offset = (uint64_t)gdt_entries;
-    gdt_load((uint64_t)&gdt_ptr);
-}
-
 struct tss_entry tss_entry;
 
-void write_tss(struct gdt_entry *gdt, struct gdt_entry *gdt2,
-               struct tss_entry *tss, uint16_t ss0, addr_t esp0)
+static void write_tss(struct gdt_entry *gdt, struct gdt_entry *gdt2,
+                      struct tss_entry *tss, uint16_t ss0, addr_t esp0)
 {
     uint64_t base = (uint64_t)tss;
     uint32_t limit = sizeof(struct tss_entry);
@@ -82,10 +69,18 @@ void write_tss(struct gdt_entry *gdt, struct gdt_entry *gdt2,
     tss->ss = tss->ds = tss->es = tss->fs = tss->gs = 0x13;
 }
 
-extern void tss_flush(void);
-
-void tss_init(void)
+void gdt_init(void)
 {
+    memset(&gdt_entries, 0, sizeof(struct gdt_entry) * NUM_ENTRIES);
+    memset(&gdt_ptr, 0, sizeof(struct gdt_descriptor));
+    gdt_set_entry(&gdt_entries[0], 0, 0, 0, 0);
+    gdt_set_entry(&gdt_entries[1], 0, 0xFFFFF, 0x9A, 0x0A);
+    gdt_set_entry(&gdt_entries[2], 0, 0xFFFFF, 0x92, 0x0A);
+    gdt_set_entry(&gdt_entries[3], 0, 0xFFFFF, 0xFA, 0x0A);
+    gdt_set_entry(&gdt_entries[4], 0, 0xFFFFF, 0xF2, 0x0A);
     write_tss(&gdt_entries[5], &gdt_entries[6], &tss_entry, 0x10, 0x0);
+    gdt_ptr.limit = sizeof(struct gdt_entry) * NUM_ENTRIES - 1;
+    gdt_ptr.offset = (uint64_t)gdt_entries;
+    gdt_load((uint64_t)&gdt_ptr);
     tss_flush();
 }
