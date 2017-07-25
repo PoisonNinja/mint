@@ -6,4 +6,5 @@
 struct thread {
     struct process* process;
     struct registers* registers;
+    addr_t kernel_stack;
 };

@@ -33,14 +33,14 @@
 #include <kernel.h>
 #include <string.h>
 
-#define NUM_ENTRIES 5
+#define NUM_ENTRIES 7
 
 static struct gdt_entry gdt_entries[NUM_ENTRIES];
 static struct gdt_descriptor gdt_ptr;
 
 extern void gdt_load(uint64_t);
 
-static void gdt_set_entry(struct gdt_entry* entry, uint32_t base,
+static void gdt_set_entry(struct gdt_entry *entry, uint32_t base,
                           uint32_t limit, uint8_t access, uint8_t flags)
 {
     entry->limit_low = limit & 0xFFFF;
@@ -64,4 +64,28 @@ void gdt_init(void)
     gdt_ptr.limit = sizeof(struct gdt_entry) * NUM_ENTRIES - 1;
     gdt_ptr.offset = (uint64_t)gdt_entries;
     gdt_load((uint64_t)&gdt_ptr);
+}
+
+struct tss_entry tss_entry;
+
+void write_tss(struct gdt_entry *gdt, struct gdt_entry *gdt2,
+               struct tss_entry *tss, uint16_t ss0, addr_t esp0)
+{
+    uint64_t base = (uint64_t)tss;
+    uint32_t limit = sizeof(struct tss_entry);
+    gdt_set_entry(gdt, base, limit, 0xE9, 0);
+    gdt_set_entry(gdt2, (base >> 48) & 0xFFFF, (base >> 32) & 0xFFFF, 0, 0);
+    memset(tss, 0, sizeof(struct tss_entry));
+    tss->ss0 = ss0;    // Set the kernel stack segment.
+    tss->esp0 = esp0;  // Set the kernel stack pointer.
+    tss->cs = 0x0B;
+    tss->ss = tss->ds = tss->es = tss->fs = tss->gs = 0x13;
+}
+
+extern void tss_flush(void);
+
+void tss_init(void)
+{
+    write_tss(&gdt_entries[5], &gdt_entries[6], &tss_entry, 0x10, 0x0);
+    tss_flush();
 }

@@ -45,6 +45,7 @@ extern void kmain(struct mint_bootinfo *);
 
 extern void gdt_init(void);
 extern void idt_init(void);
+extern void tss_init(void);
 
 static struct mint_bootinfo bootinfo;
 
@@ -66,6 +67,7 @@ void x86_64_init(uint32_t magic, struct multiboot_info *mboot)
     cpu_print_information(cpu_get_information(0));
     gdt_init();
     idt_init();
+    tss_init();
     /*
      * Tell early_malloc where it can allocate memory from and the extent that
      * it can allocate to
