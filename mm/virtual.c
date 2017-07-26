@@ -60,6 +60,14 @@ void virtual_unmap(struct memory_context* context, addr_t virtual)
     arch_virtual_unmap(context, virtual);
 }
 
+extern void arch_virtual_clone(struct memory_context* original,
+                               struct memory_context* new);
+
+void virtual_clone(struct memory_context* original, struct memory_context* new)
+{
+    return arch_virtual_clone(original, new);
+}
+
 void virtual_fault(struct registers* __attribute__((unused)) registers,
                    addr_t address, uint8_t reason)
 {
