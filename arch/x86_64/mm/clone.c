@@ -23,8 +23,9 @@ void __copy_pd_entry(struct page_table* new_pd, struct page_table* old_pd)
                 struct page_table* new_pt = physical_alloc(0x1000, 0);
                 new_pd->pages[i].address = (addr_t)new_pt / 0x1000;
                 __copy_pt_entry(
-                    new_pt,
-                    (struct page_table*)(old_pd->pages[i].address * 0x1000));
+                    (struct page_table*)((addr_t)new_pt + PHYS_START),
+                    (struct page_table*)(old_pd->pages[i].address * 0x1000 +
+                                         PHYS_START));
             }
         }
     }
@@ -39,8 +40,9 @@ void __copy_pdpt_entry(struct page_table* new_pdpt, struct page_table* old_pdpt)
                    sizeof(struct page));
             new_pdpt->pages[i].address = (addr_t)new_pd / 0x1000;
             __copy_pd_entry(
-                new_pd,
-                (struct page_table*)(old_pdpt->pages[i].address * 0x1000));
+                (struct page_table*)((addr_t)new_pd + PHYS_START),
+                (struct page_table*)(old_pdpt->pages[i].address * 0x1000 +
+                                     PHYS_START));
         }
     }
 }
@@ -65,8 +67,9 @@ void arch_virtual_clone(struct memory_context* original,
                        sizeof(struct page));
                 pml4->pages[i].address = (addr_t)new_pdpt / 0x1000;
                 __copy_pdpt_entry(
-                    new_pdpt,
-                    (struct page_table*)(old_pml4->pages[i].address * 0x1000));
+                    (struct page_table*)((addr_t)new_pdpt + PHYS_START),
+                    (struct page_table*)(old_pml4->pages[i].address * 0x1000 +
+                                         PHYS_START));
             }
         }
     }
