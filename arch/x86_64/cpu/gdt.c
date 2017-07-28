@@ -55,7 +55,7 @@ static void gdt_set_entry(struct gdt_entry *entry, uint32_t base,
 
 struct tss_entry tss_entry;
 
-static void write_tss(struct gdt_entry *gdt, struct gdt_entry *gdt2,
+static void tss_write(struct gdt_entry *gdt, struct gdt_entry *gdt2,
                       struct tss_entry *tss, uint16_t ss0, addr_t esp0)
 {
     uint64_t base = (uint64_t)tss;
@@ -69,6 +69,11 @@ static void write_tss(struct gdt_entry *gdt, struct gdt_entry *gdt2,
     tss->ss = tss->ds = tss->es = tss->fs = tss->gs = 0x13;
 }
 
+void tss_set_stack(addr_t stack)
+{
+    tss_entry.esp0 = stack;
+}
+
 void gdt_init(void)
 {
     memset(&gdt_entries, 0, sizeof(struct gdt_entry) * NUM_ENTRIES);
@@ -78,7 +83,7 @@ void gdt_init(void)
     gdt_set_entry(&gdt_entries[2], 0, 0xFFFFF, 0x92, 0x0A);
     gdt_set_entry(&gdt_entries[3], 0, 0xFFFFF, 0xFA, 0x0A);
     gdt_set_entry(&gdt_entries[4], 0, 0xFFFFF, 0xF2, 0x0A);
-    write_tss(&gdt_entries[5], &gdt_entries[6], &tss_entry, 0x10, 0x0);
+    tss_write(&gdt_entries[5], &gdt_entries[6], &tss_entry, 0x10, 0x0);
     gdt_ptr.limit = sizeof(struct gdt_entry) * NUM_ENTRIES - 1;
     gdt_ptr.offset = (uint64_t)gdt_entries;
     gdt_load((uint64_t)&gdt_ptr);
