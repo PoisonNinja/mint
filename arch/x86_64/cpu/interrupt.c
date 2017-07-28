@@ -77,14 +77,14 @@ void arch_interrupt_enable(void)
     __asm__("sti");
 }
 
-extern void exception_dispatch(struct registers*);
-void x86_64_exception_handler(struct registers* regs)
+extern void exception_dispatch(struct interrupt_ctx*);
+void x86_64_exception_handler(struct interrupt_ctx* regs)
 {
     exception_dispatch(regs);
 }
 
-extern void interrupt_dispatch(struct registers*);
-void x86_64_interrupt_handler(struct registers* regs)
+extern void interrupt_dispatch(struct interrupt_ctx*);
+void x86_64_interrupt_handler(struct interrupt_ctx* regs)
 {
     regs->int_no -= 32;  // Translate IRQ into 0 based
     interrupt_dispatch(regs);

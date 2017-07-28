@@ -190,7 +190,7 @@ static void x86_64_finalize_paging(struct memory_context *context)
     write_cr3(context->page_table);
 }
 
-extern int arch_virtual_fault(struct registers *, void *);
+extern int arch_virtual_fault(struct interrupt_ctx *, void *);
 static struct exception_handler page_fault_handler = {
     .handler = &arch_virtual_fault,
     .dev_name = "page fault",

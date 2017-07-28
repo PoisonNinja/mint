@@ -37,7 +37,7 @@
 
 #define INTEL_8253_IRQ 0
 
-static int intel_8253_handler(struct registers* regs __attribute__((unused)),
+static int intel_8253_handler(struct interrupt_ctx* regs __attribute__((unused)),
                               void* dev_id __attribute__((unused)))
 {
     // Call the generic tick handler

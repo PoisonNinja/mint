@@ -7,7 +7,7 @@
 
 struct thread {
     struct process* process;
-    struct registers* registers;
+    struct interrupt_ctx* registers;
     addr_t kernel_stack;
     struct thread *next, *prev;
 };

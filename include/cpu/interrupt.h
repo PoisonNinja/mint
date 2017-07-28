@@ -35,9 +35,9 @@
 
 #include <arch/cpu/registers.h>
 
-struct registers;
+struct interrupt_ctx;
 
-typedef int (*irq_handler_t)(struct registers *, void *);
+typedef int (*irq_handler_t)(struct interrupt_ctx *, void *);
 
 struct interrupt_handler {
     irq_handler_t handler;

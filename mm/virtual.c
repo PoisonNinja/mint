@@ -68,7 +68,7 @@ void virtual_clone(struct memory_context* original, struct memory_context* new)
     return arch_virtual_clone(original, new);
 }
 
-void virtual_fault(struct registers* __attribute__((unused)) registers,
+void virtual_fault(struct interrupt_ctx* __attribute__((unused)) registers,
                    addr_t address, uint8_t reason)
 {
     printk(ERROR, "PAGE FAULT\n");

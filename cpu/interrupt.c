@@ -67,7 +67,7 @@ void interrupt_handler_unregister(int interrupt_number,
     LIST_REMOVE(interrupt_handlers[interrupt_number], handler);
 }
 
-void interrupt_dispatch(struct registers* regs)
+void interrupt_dispatch(struct interrupt_ctx* regs)
 {
     if (interrupt_handlers[regs->int_no]) {
         struct interrupt_handler* handler = NULL;

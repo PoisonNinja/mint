@@ -50,7 +50,7 @@ void exception_handler_unregister(int exception_number,
 }
 
 extern char* arch_exception_translate(int);
-void exception_dispatch(struct registers* regs)
+void exception_dispatch(struct interrupt_ctx* regs)
 {
     if (exception_handlers[regs->int_no]) {
         struct exception_handler* handler = NULL;
