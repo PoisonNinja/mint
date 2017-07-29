@@ -11,6 +11,8 @@ static int test_file(void)
     ASSERT("Opening non-existent file should fail", !file);
     file = file_open("/test", O_CREAT, S_IFDIR);
     ASSERT("Opening with O_CREAT creates file", file);
+    file = file_open("/test", 0, 0);
+    ASSERT("Opening file again without O_CREAT succeeds", file);
     ssize_t string_len = strlen("Hello world!") + 1;
     ASSERT(
         "Writing to file succeeds",
