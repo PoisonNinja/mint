@@ -32,17 +32,17 @@
 #include <cpu/interrupt.h>
 #include <drivers/irqchip/irqchip.h>
 #include <kernel.h>
-#include <lib/list.h>
 
 static struct interrupt_controller* interrupt_controller = NULL;
-static struct interrupt_controller* interrupt_controllers = NULL;
+static struct list_element interrupt_controllers =
+    LIST_COMPILE_INIT(interrupt_controllers);
 static uint32_t irq_mask = 0;
 
 static struct interrupt_controller* find_interrupt_controller(
     uint32_t controller)
 {
     struct interrupt_controller* node = NULL;
-    LIST_FOR_EACH(interrupt_controllers, node)
+    list_for_each(&interrupt_controllers, list, node)
     {
         if (node->identifier == controller)
             return node;
@@ -52,7 +52,7 @@ static struct interrupt_controller* find_interrupt_controller(
 
 int interrupt_controller_register(struct interrupt_controller* controller)
 {
-    LIST_APPEND(interrupt_controllers, controller);
+    list_add(&interrupt_controllers, &controller->list);
     return 0;
 }
 
@@ -60,7 +60,7 @@ int interrupt_controller_unregister(struct interrupt_controller* controller)
 {
     if (interrupt_controller == controller)
         interrupt_controller = NULL;
-    LIST_REMOVE(interrupt_controllers, controller);
+    list_add(&interrupt_controllers, &controller->list);
     return 0;
 }
 

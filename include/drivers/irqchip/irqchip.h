@@ -31,6 +31,7 @@
 
 #pragma once
 
+#include <lib/list.h>
 #include <types.h>
 
 #define IC_NONE 0
@@ -50,7 +51,7 @@ struct interrupt_controller {
     int (*mask)(int);
     int (*unmask)(int);
     int (*ack)(int);
-    struct interrupt_controller *next, *prev;
+    struct list_element list;
 };
 
 extern int interrupt_controller_register(
