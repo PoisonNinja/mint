@@ -5,6 +5,8 @@
 #include <tm/thread.h>
 #include <types.h>
 
+#define current_process ((current_thread)->process)
+
 #define MAX_FD 128
 
 struct files_table {
@@ -25,5 +27,3 @@ struct process {
     // Threading
     struct thread *threads;
 };
-
-extern struct process *current_process;

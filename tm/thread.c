@@ -1,6 +1,8 @@
 #include <tm/process.h>
 #include <tm/thread.h>
 
+struct thread* current_thread;
+
 extern void arch_thread_set_stack(addr_t stack);
 
 void thread_set_stack(addr_t stack)
