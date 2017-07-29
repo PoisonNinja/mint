@@ -3,11 +3,15 @@
 #include <tm/process.h>
 #include <tm/thread.h>
 
+// A per-CPU struct to represent all runnable tasks
 struct runqueue {
-    struct thread* current_thread;
-    struct thread* thread_queue;
+    struct thread* current;
+    struct thread* runnable;
+    size_t num_threads;
 };
 
-extern struct runqueue* runqueue_create(void);
-void runqueue_insert(struct runqueue* queue, struct thread* thread);
-void runqueue_remove(struct runqueue* queue, struct thread* thread);
+extern void sched_init(void);
+
+extern void runqueue_insert(struct runqueue* rq, struct thread* thread);
+extern void runqueue_remove(struct runqueue* rq, struct thread* thread);
+extern struct thread* runqueue_next(struct runqueue* rq);

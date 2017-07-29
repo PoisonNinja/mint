@@ -15,3 +15,5 @@ struct thread {
 
 extern void thread_switch(struct interrupt_ctx* ctx, struct thread* current,
                           struct thread* next);
+
+extern void sched_init(void);

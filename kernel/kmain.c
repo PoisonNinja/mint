@@ -38,7 +38,7 @@
 #include <kernel/time/time.h>
 #include <kernel/version.h>
 #include <mm/mm.h>
-#include <tm/task.h>
+#include <tm/sched.h>
 
 extern void setup_arch(void);
 
@@ -48,7 +48,7 @@ void kmain(struct mint_bootinfo* bootinfo)
     mm_init(bootinfo);
     setup_arch();
     time_init();
-    task_init();
+    sched_init();
     interrupt_enable();
     do_initcall(EARLY_INIT);
     do_initcall(CORE_INIT);
