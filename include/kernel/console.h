@@ -31,12 +31,13 @@
 
 #pragma once
 
+#include <lib/list.h>
 #include <types.h>
 
 struct console {
     const char *name;
     int (*write)(const char *, size_t);
-    struct console *next, *prev;
+    struct list_element list;
 };
 
 extern void console_register(struct console *console);

@@ -3,30 +3,29 @@
 #include <fs/path.h>
 #include <kernel.h>
 #include <kernel/init.h>
-#include <lib/list.h>
 #include <mm/heap.h>
 #include <string.h>
 
-static struct filesystem* fs_list = NULL;
+static struct list_element fs_list = LIST_COMPILE_INIT(fs_list);
 
 int filesystem_register(struct filesystem* fs)
 {
     printk(INFO, "fs: Adding filesystem %s with data structure at %p\n",
            fs->name, fs);
-    LIST_PREPEND(fs_list, fs);
+    list_add(&fs_list, &fs->list);
     return 0;
 }
 
 int filesystem_unregister(struct filesystem* fs)
 {
-    LIST_REMOVE(fs_list, fs);
+    list_delete(&fs->list);
     return 0;
 }
 
 struct filesystem* filesystem_get(const char* name)
 {
-    struct filesystem* fs;
-    LIST_FOR_EACH(fs_list, fs)
+    struct filesystem* fs = NULL;
+    list_for_each(&fs_list, list, fs)
     {
         if (!strcmp(fs->name, name))
             return fs;

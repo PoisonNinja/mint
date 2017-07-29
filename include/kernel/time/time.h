@@ -31,6 +31,7 @@
 
 #pragma once
 
+#include <lib/list.h>
 #include <types.h>
 
 #define HZ 1000
@@ -51,7 +52,7 @@ struct clocksource {
     void (*enable)(void);
     uint32_t rating;
     uint32_t frequency;
-    struct clocksource *next, *prev;
+    struct list_element list;
 };
 
 extern void clocksource_calculate(uint32_t* mult, uint32_t* shift,

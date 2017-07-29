@@ -2,7 +2,6 @@
 #include <arch/mm/mmap.h>
 #include <kernel.h>
 #include <lib/bitset.h>
-#include <lib/list.h>
 #include <mm/physical.h>
 #include <mm/slab.h>
 #include <string.h>
@@ -38,19 +37,21 @@ static void __slab_free_slab(struct slab_cache* cache, struct slab* slab,
 
 void* slab_allocate(struct slab_cache* cache)
 {
-    if (cache->partial_slabs) {
-        struct slab* slab = cache->partial_slabs;
+    if (!list_empty(&cache->partial_slabs)) {
+        struct slab* slab =
+            list_first_entry(&cache->partial_slabs, struct slab, list);
         void* ret = __slab_allocate_slab(cache, slab);
         if (slab->used == SLAB_CACHE_MAX(cache, slab)) {
-            LIST_REMOVE(cache->partial_slabs, slab);
-            LIST_PREPEND(cache->full_slabs, slab);
+            list_delete(&slab->list);
+            list_add(&cache->full_slabs, &slab->list);
         }
         return ret;
-    } else if (cache->empty_slabs) {
-        struct slab* slab = cache->empty_slabs;
+    } else if (!list_empty(&cache->empty_slabs)) {
+        struct slab* slab =
+            list_first_entry(&cache->empty_slabs, struct slab, list);
         void* ret = __slab_allocate_slab(cache, slab);
-        LIST_REMOVE(cache->empty_slabs, slab);
-        LIST_PREPEND(cache->partial_slabs, slab);
+        list_delete(&slab->list);
+        list_add(&cache->partial_slabs, &slab->list);
         return ret;
     } else {
         struct slab* slab =
@@ -61,7 +62,7 @@ void* slab_allocate(struct slab_cache* cache)
         slab->base = (void*)((addr_t)slab + sizeof(struct slab) +
                              SLAB_BITSET_SIZE(cache, slab));
         void* ret = __slab_allocate_slab(cache, slab);
-        LIST_PREPEND(cache->partial_slabs, slab);
+        list_add(&cache->partial_slabs, &slab->list);
         return ret;
     }
 }
@@ -72,11 +73,11 @@ void slab_free(void* ptr)
     struct slab_cache* cache = slab->cache;
     __slab_free_slab(cache, slab, ptr);
     if (!slab->used) {
-        LIST_REMOVE(cache->partial_slabs, slab);
-        LIST_PREPEND(cache->empty_slabs, slab);
+        list_delete(&slab->list);
+        list_add(&cache->empty_slabs, &slab->list);
     } else if (slab->used == SLAB_CACHE_MAX(cache, slab) - 1) {
-        LIST_REMOVE(cache->full_slabs, slab);
-        LIST_PREPEND(cache->partial_slabs, slab);
+        list_delete(&slab->list);
+        list_add(&cache->partial_slabs, &slab->list);
     }
 }
 
@@ -87,6 +88,9 @@ struct slab_cache* slab_create(char* name, size_t objsize, uint8_t flags)
     cache->objsize = objsize;
     cache->order = SLAB_CALC_ORDER(objsize);
     cache->flags = flags;
+    list_runtime_init(&cache->full_slabs);
+    list_runtime_init(&cache->partial_slabs);
+    list_runtime_init(&cache->empty_slabs);
     // Actual slabs are lazily allocated to avoid memory waste
     return cache;
 }
@@ -105,4 +109,7 @@ void slab_init()
     slab_cache_cache.objsize = POW_2(log_2(sizeof(struct slab_cache)));
     slab_cache_cache.order = SLAB_CALC_ORDER(slab_cache_cache.objsize);
     slab_cache_cache.flags = 0;
+    list_runtime_init(&slab_cache_cache.full_slabs);
+    list_runtime_init(&slab_cache_cache.partial_slabs);
+    list_runtime_init(&slab_cache_cache.empty_slabs);
 }

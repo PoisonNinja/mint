@@ -31,16 +31,15 @@
 
 #include <kernel.h>
 #include <kernel/time/time.h>
-#include <lib/list.h>
 
-struct clocksource* clocksource_list = NULL;
+struct list_element clocksource_list = LIST_COMPILE_INIT(clocksource_list);
 struct clocksource* current_clocksource = NULL;
 
 void clocksource_select()
 {
     struct clocksource* cs = NULL;
     int cs_changed = 0;
-    LIST_FOR_EACH(clocksource_list, cs)
+    list_for_each(&clocksource_list, list, cs)
     {
         if (current_clocksource) {
             if (cs->rating > current_clocksource->rating)
@@ -60,7 +59,7 @@ void clocksource_select()
 
 void clocksource_register(struct clocksource* cs)
 {
-    LIST_APPEND(clocksource_list, cs);
+    list_add(&clocksource_list, &cs->list);
     printk(INFO, "clocksource: Registered clocksource %s with rating %d\n",
            cs->name, cs->rating);
     clocksource_select();

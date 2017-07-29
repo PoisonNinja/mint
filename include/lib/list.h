@@ -39,9 +39,6 @@
         (type *)((char *)__mptr - offsetof(type, member)); \
     })
 
-/*
- * Next generation list library code, unstable currently.
- */
 struct list_element {
     struct list_element *next, *prev;
 };
@@ -50,6 +47,12 @@ struct list_element {
     {                                 \
         .next = &list, .prev = &list, \
     }
+
+static inline void list_runtime_init(struct list_element *list)
+{
+    list->next = list;
+    list->prev = list;
+}
 
 static inline void list_add(struct list_element *list,
                             struct list_element *element)
@@ -82,55 +85,10 @@ static inline int list_empty(struct list_element *list)
     return list->next == list;
 }
 
+#define list_first_entry(list, type, member) \
+    containerof((list)->next, type, member)
+
 #define list_for_each(list, member, pos)                          \
     for ((pos) = containerof((list)->next, typeof(*pos), member); \
          &(pos)->member != (list);                                \
          pos = containerof((pos)->member.next, typeof(*pos), member))
-
-/*
- * Stable API list library code
- */
-
-#define LIST_FOR_EACH(head, element)    \
-    for ((element) = (head); (element); \
-         (element) = (((element)->next == (head)) ? NULL : (element)->next))
-
-#define LIST_APPEND(head, element)          \
-    do {                                    \
-        if (!head) {                        \
-            (element)->next = (element);    \
-            (element)->prev = (element);    \
-            (head) = (element);             \
-        } else {                            \
-            (element)->next = (head);       \
-            (element)->prev = (head)->prev; \
-            (head)->prev->next = (element); \
-            (head)->prev = (element);       \
-        }                                   \
-    } while (0)
-
-#define LIST_PREPEND(head, element)         \
-    do {                                    \
-        if (!head) {                        \
-            (element)->next = (element);    \
-            (element)->prev = (element);    \
-        } else {                            \
-            (element)->next = (head);       \
-            (element)->prev = (head)->prev; \
-            (head)->prev->next = (element); \
-            (head)->prev = (element);       \
-        }                                   \
-        (head) = (element);                 \
-    } while (0)
-
-#define LIST_REMOVE(head, element)                                 \
-    do {                                                           \
-        if ((head) == (element) && (element)->next == (element)) { \
-            (head) = NULL;                                         \
-        } else {                                                   \
-            (element)->next->prev = (element)->prev;               \
-            (element)->prev->next = (element)->next;               \
-            (element)->next = (element);                           \
-            (element)->prev = (element);                           \
-        }                                                          \
-    } while (0)

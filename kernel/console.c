@@ -30,24 +30,23 @@
  */
 
 #include <kernel/console.h>
-#include <lib/list.h>
 
-static struct console *console_list = NULL;
+static struct list_element console_list = LIST_COMPILE_INIT(console_list);
 
 void console_register(struct console *console)
 {
-    LIST_APPEND(console_list, console);
+    list_add(&console_list, &console->list);
 }
 
 void console_unregister(struct console *console)
 {
-    LIST_REMOVE(console_list, console);
+    list_delete(&console->list);
 }
 
 void console_write(const char *message, size_t length)
 {
-    struct console *current;
-    LIST_FOR_EACH(console_list, current)
+    struct console *current = NULL;
+    list_for_each(&console_list, list, current)
     {
         if (current->write)
             current->write(message, length);

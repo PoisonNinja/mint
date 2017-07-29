@@ -1,5 +1,6 @@
 #pragma once
 
+#include <lib/list.h>
 #include <types.h>
 
 #define SLAB_NAME_MAX 16
@@ -9,12 +10,12 @@ struct slab_cache {
     size_t objsize;
     uint32_t order;
     uint8_t flags;
-    struct slab *full_slabs, *partial_slabs, *empty_slabs;
+    struct list_element full_slabs, partial_slabs, empty_slabs;
 };
 
 struct slab {
     struct slab_cache* cache;
-    struct slab *next, *prev;
+    struct list_element list;
     void* base;
     uint16_t used;
     uint8_t bitset[];

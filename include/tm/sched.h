@@ -1,12 +1,13 @@
 #pragma once
 
+#include <lib/list.h>
 #include <tm/process.h>
 #include <tm/thread.h>
 
 // A per-CPU struct to represent all runnable tasks
 struct runqueue {
     struct thread* current;
-    struct thread* runnable;
+    struct list_element runnable;
     size_t num_threads;
 };
 

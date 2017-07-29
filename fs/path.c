@@ -41,8 +41,10 @@ static char* basename(const char* name)
 
 static inline struct inode* path_resolve_mountpoint(struct inode* original)
 {
-    if (original->i_mp) {
-        return original->i_mp->mp_inode;
+    if (!list_empty(&original->i_mp)) {
+        struct mountpoint* mp =
+            list_first_entry(&original->i_mp, struct mountpoint, list);
+        return mp->mp_inode;
     } else {
         return original;
     }

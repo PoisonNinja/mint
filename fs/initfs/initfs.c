@@ -13,7 +13,7 @@
 struct initfs_dirent {
     char d_name[DENTRY_NAME_MAX];
     ino_t d_ino;
-    struct initfs_dirent *next, *prev;
+    struct list_element list;
 };
 
 struct initfs_inode {
@@ -24,7 +24,7 @@ struct initfs_inode {
     size_t i_size;
     nlink_t i_nlink;
     void* i_data;
-    struct initfs_dirent* i_entries;
+    struct list_element i_entries;
 };
 
 struct initfs_data {
@@ -75,6 +75,8 @@ static struct file_operations initfs_file_operations = {
     .read = &initfs_read, .write = &initfs_write,
 };
 
+#include <kernel.h>
+
 struct inode* initfs_create(struct inode* parent, struct dentry* dentry,
                             int flags, mode_t mode)
 {
@@ -83,6 +85,7 @@ struct inode* initfs_create(struct inode* parent, struct dentry* dentry,
     struct inode* inode = initfs_allocate(parent->i_sb);
     struct initfs_dirent* dir = kmalloc(sizeof(struct initfs_dirent));
     rnode->i_ino = data->next++;
+    list_runtime_init(&rnode->i_entries);
     inode->i_ino = rnode->i_ino;
     inode->i_mode = mode;
     dentry->d_ino = inode->i_ino;
@@ -90,7 +93,7 @@ struct inode* initfs_create(struct inode* parent, struct dentry* dentry,
     strncpy(dir->d_name, dentry->d_name, DENTRY_NAME_MAX);
     data->inodes[rnode->i_ino] = rnode;
     rnode->i_mode = mode;
-    LIST_PREPEND(rnode->i_entries, dir);
+    list_add(&rnode->i_entries, &dir->list);
     return inode;
 }
 
@@ -103,7 +106,7 @@ static int initfs_lookup(struct inode* root, struct dentry* entry)
     if (!rnode)
         return -EIO;
     struct initfs_dirent* rdirent = NULL;
-    LIST_FOR_EACH(rnode->i_entries, rdirent)
+    list_for_each(&rnode->i_entries, list, rdirent)
     {
         if (!strcmp(rdirent->d_name, entry->d_name)) {
             entry->d_ino = rdirent->d_ino;
@@ -169,6 +172,7 @@ static int initfs_mount(struct superblock* sb)
     struct initfs_inode* root = data->inodes[0];
     root->i_ino = 0;
     root->i_mode = S_IFDIR;
+    list_runtime_init(&root->i_entries);
     return 0;
 }
 

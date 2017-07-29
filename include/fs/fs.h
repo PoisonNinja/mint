@@ -1,5 +1,6 @@
 #pragma once
 
+#include <lib/list.h>
 #include <types.h>
 
 #define O_RDONLY 0x0000
@@ -23,7 +24,7 @@ struct mountpoint;
 struct mountpoint {
     struct inode *mp_inode;
     struct superblock *mp_sb;
-    struct mountpoint *next, *prev;
+    struct list_element list;
 };
 
 struct inode_operations {
@@ -44,7 +45,7 @@ struct inode {
     struct inode_operations *i_ops;
     struct file_operations *i_fops;
     struct superblock *i_sb;
-    struct mountpoint *i_mp;
+    struct list_element i_mp;
 };
 
 struct dentry {
@@ -69,7 +70,7 @@ struct superblock {
 struct filesystem {
     const char *name;
     int (*mount)(struct superblock *);
-    struct filesystem *next, *prev;
+    struct list_element list;
 };
 
 extern int filesystem_register(struct filesystem *fs);

@@ -2,6 +2,7 @@
 
 #include <arch/cpu/registers.h>
 #include <arch/tm/thread.h>
+#include <lib/list.h>
 #include <tm/process.h>
 
 #define STACK_SIZE 0x4000
@@ -10,7 +11,7 @@ struct thread {
     struct process* process;
     struct registers* registers;
     addr_t kernel_stack;
-    struct thread *next, *prev;
+    struct list_element runqueue_list;
 };
 
 extern struct thread* current_thread;

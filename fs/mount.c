@@ -30,6 +30,6 @@ int mount_fs(const char* special, const char* mountpoint, const char* name,
         kfree(sb);
         return -ENOENT;
     }
-    LIST_PREPEND(mountpoint_inode->i_mp, mp);
+    list_add(&mountpoint_inode->i_mp, &mp->list);
     return 0;
 }
