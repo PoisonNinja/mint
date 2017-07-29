@@ -33,7 +33,50 @@
 #include <cpu/interrupt.h>
 #include <cpu/power.h>
 #include <kernel.h>
-#include <lib/list.h>
+
+#define LIST_FOR_EACH(head, element)    \
+    for ((element) = (head); (element); \
+         (element) = (((element)->next == (head)) ? NULL : (element)->next))
+
+#define LIST_APPEND(head, element)          \
+    do {                                    \
+        if (!head) {                        \
+            (element)->next = (element);    \
+            (element)->prev = (element);    \
+            (head) = (element);             \
+        } else {                            \
+            (element)->next = (head);       \
+            (element)->prev = (head)->prev; \
+            (head)->prev->next = (element); \
+            (head)->prev = (element);       \
+        }                                   \
+    } while (0)
+
+#define LIST_PREPEND(head, element)         \
+    do {                                    \
+        if (!head) {                        \
+            (element)->next = (element);    \
+            (element)->prev = (element);    \
+        } else {                            \
+            (element)->next = (head);       \
+            (element)->prev = (head)->prev; \
+            (head)->prev->next = (element); \
+            (head)->prev = (element);       \
+        }                                   \
+        (head) = (element);                 \
+    } while (0)
+
+#define LIST_REMOVE(head, element)                                 \
+    do {                                                           \
+        if ((head) == (element) && (element)->next == (element)) { \
+            (head) = NULL;                                         \
+        } else {                                                   \
+            (element)->next->prev = (element)->prev;               \
+            (element)->prev->next = (element)->next;               \
+            (element)->next = (element);                           \
+            (element)->prev = (element);                           \
+        }                                                          \
+    } while (0)
 
 static struct exception_handler* exception_handlers[EXCEPTIONS_MAX];
 
