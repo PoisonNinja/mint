@@ -39,7 +39,7 @@
 extern void arch_mm_init(struct mint_bootinfo* bootinfo,
                          struct memory_context* context);
 
-struct memory_context kernel_context;
+extern struct memory_context kernel_context;
 
 void mm_init(struct mint_bootinfo* bootinfo)
 {

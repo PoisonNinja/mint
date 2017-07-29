@@ -36,6 +36,8 @@
 #include <kernel/stacktrace.h>
 #include <mm/virtual.h>
 
+struct memory_context kernel_context;
+
 extern void arch_virtual_map(struct memory_context* context, addr_t virtual,
                              addr_t physical, uint8_t flags);
 
