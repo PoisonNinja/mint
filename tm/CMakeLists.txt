@@ -4,5 +4,3 @@ target_sources(mint.kernel
     ${CMAKE_CURRENT_SOURCE_DIR}/sched.c
     ${CMAKE_CURRENT_SOURCE_DIR}/thread.c
 )
-
-add_subdirectory(schedulers)
