@@ -1,5 +1,6 @@
 #include <fs/fs.h>
 #include <fs/inode.h>
+#include <lib/list.h>
 #include <mm/slab.h>
 #include <string.h>
 
@@ -11,8 +12,10 @@ struct inode* inode_allocate(struct superblock* sb)
         return sb->s_ops->alloc_inode(sb);
     } else {
         struct inode* inode = slab_allocate(inode_slab_cache);
-        if (inode)
+        if (inode) {
             memset(inode, 0, sizeof(struct inode));
+            list_runtime_init(&inode->i_mp);
+        }
         return inode;
     }
 }

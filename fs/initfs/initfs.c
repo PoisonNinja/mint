@@ -75,8 +75,6 @@ static struct file_operations initfs_file_operations = {
     .read = &initfs_read, .write = &initfs_write,
 };
 
-#include <kernel.h>
-
 struct inode* initfs_create(struct inode* parent, struct dentry* dentry,
                             int flags, mode_t mode)
 {
