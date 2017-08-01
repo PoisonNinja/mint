@@ -18,11 +18,20 @@ void runqueue_insert(struct runqueue* rq, struct thread* thread)
 
 void runqueue_remove(struct runqueue* rq, struct thread* thread)
 {
+    if (rq->current == thread) {
+        rq->current = NULL;
+    }
     list_delete(&thread->runqueue_list);
     rq->num_threads--;
 }
 
 struct thread* runqueue_next(struct runqueue* rq)
 {
-    return NULL;
+    if (rq->current) {
+        rq->current = list_next_entry(rq->current, runqueue_list);
+    } else {
+        rq->current =
+            list_first_entry(&rq->runnable, struct thread, runqueue_list);
+    }
+    return rq->current;
 }

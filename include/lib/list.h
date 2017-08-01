@@ -88,6 +88,9 @@ static inline int list_empty(struct list_element *list)
 #define list_first_entry(list, type, member) \
     containerof((list)->next, type, member)
 
+#define list_next_entry(pos, member) \
+    containerof((pos)->member.next, typeof(*(pos)), member)
+
 #define list_for_each(list, member, pos)                          \
     for ((pos) = containerof((list)->next, typeof(*pos), member); \
          &(pos)->member != (list);                                \
