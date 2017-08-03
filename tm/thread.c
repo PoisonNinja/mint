@@ -1,3 +1,4 @@
+#include <mm/heap.h>
 #include <tm/process.h>
 #include <tm/thread.h>
 
@@ -19,4 +20,9 @@ void thread_switch(struct interrupt_ctx* ctx, struct thread* current,
     current_thread = next;
     thread_set_stack(next->kernel_stack);
     return arch_thread_switch(ctx, current, next);
+}
+
+struct thread* kthread_create(int (*fn)(void* data), void* data)
+{
+    struct thread* kthread = kzalloc(sizeof(struct thread));
 }

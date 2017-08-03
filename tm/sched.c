@@ -4,21 +4,20 @@
 #include <string.h>
 #include <tm/sched.h>
 
-struct runqueue rq;
+static struct runqueue rq;
 
 extern void process_init(void);
+
+extern struct process* kernel_process;
 
 void sched_init(void)
 {
     process_init();
     memset(&rq, 0, sizeof(struct runqueue));
     list_runtime_init(&rq.runnable);
-    struct process* kernel_process = process_allocate();
-    kernel_process->ctx.page_table = kernel_context.page_table;
     struct thread* kinit = kzalloc(sizeof(struct thread));
     list_add(&kernel_process->threads, &kinit->process_list);
     kinit->process = kernel_process;
-    process_add(kernel_process);
     sched_add(kinit);
     current_thread = kinit;
 }

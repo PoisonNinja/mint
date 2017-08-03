@@ -5,11 +5,7 @@
 #include <tm/process.h>
 
 static struct hashmap* process_hashmap = NULL;
-
-void process_init(void)
-{
-    process_hashmap = hashmap_create(1000);
-}
+struct process* kernel_process = NULL;
 
 struct process* process_allocate(void)
 {
@@ -23,4 +19,12 @@ struct process* process_allocate(void)
 void process_add(struct process* process)
 {
     hashmap_set(process_hashmap, &process->pid, sizeof(process->pid), process);
+}
+
+void process_init(void)
+{
+    process_hashmap = hashmap_create(1000);
+    kernel_process = process_allocate();
+    kernel_process->ctx.page_table = kernel_context.page_table;
+    process_add(kernel_process);
 }
