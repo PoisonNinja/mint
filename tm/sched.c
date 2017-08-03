@@ -16,7 +16,6 @@ void sched_init(void)
     struct process* kernel_process = process_allocate();
     kernel_process->ctx.page_table = kernel_context.page_table;
     struct thread* kinit = kzalloc(sizeof(struct thread));
-    struct thread* kidle = kzalloc(sizeof(struct thread));
     list_add(&kernel_process->threads, &kinit->process_list);
     kinit->process = kernel_process;
     process_add(kernel_process);
