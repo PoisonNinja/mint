@@ -30,9 +30,11 @@
  */
 
 #include <kernel/time/time.h>
+#include <tm/sched.h>
 
-void tick_handler(void)
+void tick_handler(struct interrupt_ctx* ctx)
 {
     jiffy_increase();
     time_update();
+    sched_tick(ctx);
 }

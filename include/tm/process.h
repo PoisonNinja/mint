@@ -1,6 +1,7 @@
 #pragma once
 
 #include <fs/fs.h>
+#include <lib/list.h>
 #include <mm/virtual.h>
 #include <tm/thread.h>
 #include <types.h>
@@ -25,5 +26,8 @@ struct process {
     // Process tree stuff
     struct process *parent, *children;
     // Threading
-    struct thread *threads;
+    struct list_element threads;
 };
+
+extern struct process *process_allocate(void);
+extern void process_add(struct process *process);

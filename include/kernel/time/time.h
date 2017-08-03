@@ -82,6 +82,8 @@ extern void time_update(void);
 extern void time_update_clocksource(struct clocksource* cs);
 extern void time_init(void);
 
-extern void tick_handler(void);
+struct interrupt_ctx;
+
+extern void tick_handler(struct interrupt_ctx* ctx);
 
 extern time_t ktime_get(void);

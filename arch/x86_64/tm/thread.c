@@ -1,4 +1,5 @@
 #include <arch/mm/mm.h>
+#include <kernel.h>
 #include <tm/thread.h>
 
 extern void tss_set_stack(addr_t stack);
@@ -10,7 +11,7 @@ void arch_thread_set_stack(addr_t stack)
 
 void arch_save_context(struct interrupt_ctx* ctx, struct thread* thread)
 {
-    struct registers* registers = thread->registers;
+    struct registers* registers = &thread->registers;
     registers->rax = ctx->rax;
     registers->rbx = ctx->rbx;
     registers->rcx = ctx->rcx;
@@ -30,7 +31,7 @@ void arch_save_context(struct interrupt_ctx* ctx, struct thread* thread)
 
 void arch_load_context(struct interrupt_ctx* ctx, struct thread* thread)
 {
-    struct registers* registers = thread->registers;
+    struct registers* registers = &thread->registers;
     ctx->rax = registers->rax;
     ctx->rbx = registers->rbx;
     ctx->rcx = registers->rcx;
@@ -51,7 +52,8 @@ void arch_load_context(struct interrupt_ctx* ctx, struct thread* thread)
 void arch_thread_switch(struct interrupt_ctx* ctx, struct thread* current,
                         struct thread* next)
 {
-    arch_save_context(ctx, current);
+    if (current)
+        arch_save_context(ctx, current);
     /*
      * Retrieve and set the next address space. This is safe as long nothing
      * is corrupted, because the kernel is mapped into every address space
@@ -61,5 +63,5 @@ void arch_thread_switch(struct interrupt_ctx* ctx, struct thread* current,
     if (!pml4)
         return;
     write_cr3(pml4);
-    return arch_load_context(ctx, next);
+    arch_load_context(ctx, next);
 }

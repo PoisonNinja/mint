@@ -9,14 +9,13 @@
 
 struct thread {
     struct process* process;
-    struct registers* registers;
+    struct registers registers;
     addr_t kernel_stack;
     struct list_element runqueue_list;
+    struct list_element process_list;
 };
 
 extern struct thread* current_thread;
 
 extern void thread_switch(struct interrupt_ctx* ctx, struct thread* current,
                           struct thread* next);
-
-extern void sched_init(void);

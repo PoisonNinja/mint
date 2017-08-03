@@ -11,7 +11,11 @@ struct runqueue {
     size_t num_threads;
 };
 
+struct interrupt_ctx;
+
 extern void sched_init(void);
+extern void sched_add(struct thread* thread);
+extern void sched_tick(struct interrupt_ctx* ctx);
 
 extern void runqueue_insert(struct runqueue* rq, struct thread* thread);
 extern void runqueue_remove(struct runqueue* rq, struct thread* thread);
