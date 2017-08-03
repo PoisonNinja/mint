@@ -73,6 +73,9 @@ struct filesystem {
     struct list_element list;
 };
 
+extern void filesystem_init(void);
+extern void rootfs_init(void);
+
 extern int filesystem_register(struct filesystem *fs);
 extern int filesystem_unregister(struct filesystem *fs);
 extern struct filesystem *filesystem_get(const char *name);

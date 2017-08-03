@@ -32,6 +32,7 @@
 #include <boot/bootinfo.h>
 #include <cpu/interrupt.h>
 #include <cpu/power.h>
+#include <fs/fs.h>
 #include <kernel.h>
 #include <kernel/init.h>
 #include <kernel/stacktrace.h>
@@ -42,14 +43,8 @@
 
 extern void setup_arch(void);
 
-void kmain(struct mint_bootinfo* bootinfo)
+void do_initcalls(void)
 {
-    printk(INFO, "%s\n", OS_STRING);
-    mm_init(bootinfo);
-    setup_arch();
-    time_init();
-    sched_init();
-    interrupt_enable();
     do_initcall(EARLY_INIT);
     do_initcall(CORE_INIT);
     do_initcall(ARCH_INIT);
@@ -57,6 +52,19 @@ void kmain(struct mint_bootinfo* bootinfo)
     do_initcall(FS_INIT);
     do_initcall(DEVICE_INIT);
     do_initcall(LATE_INIT);
+}
+
+void kmain(struct mint_bootinfo* bootinfo)
+{
+    printk(INFO, "%s\n", OS_STRING);
+    mm_init(bootinfo);
+    setup_arch();
+    time_init();
+    sched_init();
+    filesystem_init();
+    interrupt_enable();
+    do_initcalls();
+    rootfs_init();
     do_initcall(TEST_INIT);
     for (;;)
         cpu_halt();

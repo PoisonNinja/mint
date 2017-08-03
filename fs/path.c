@@ -118,18 +118,21 @@ static struct inode* __path_resolve_create(struct inode* start,
 struct inode* path_resolve(const char* path, int flags, mode_t mode,
                            struct dentry** dentry)
 {
-    if (!strcmp(path, "/"))
-        return fs_root;
     struct inode* start = NULL;
-    // if (*path == '/') {
-    //     inode = current_process->root;
-    //     path++;
-    // } else {
-    //     inode = current_process->cwd;
-    // }
-    if (*path == '/')
+    if (*path == '/') {
+        /*
+         * A quick check to see if the entire path only consists of /. Instead
+         * of using strlen which can get really bad performance (O(n)) for
+         * longer strings, we simply check if the next character is a NULL
+         * terminator.
+         */
+        if (*(path + 1) == '\0')
+            return current_process->root;
+        start = current_process->root;
         path++;
-    start = fs_root;
+    } else {
+        start = current_process->cwd;
+    }
     if (flags & O_CREAT) {
         return __path_resolve_create(start, path, flags, mode, dentry);
     } else {
