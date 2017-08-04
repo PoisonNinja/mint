@@ -7,6 +7,7 @@
 // A per-CPU struct to represent all runnable tasks
 struct runqueue {
     struct thread* current;
+    struct thread* idle;
     struct list_element runnable;
     size_t num_threads;
 };

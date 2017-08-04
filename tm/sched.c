@@ -10,6 +10,12 @@ extern void process_init(void);
 
 extern struct process* kernel_process;
 
+static void kidle(void)
+{
+    while (1)
+        __asm__("hlt");
+}
+
 void sched_init(void)
 {
     process_init();
@@ -19,6 +25,8 @@ void sched_init(void)
     process_add_thread(kernel_process, kinit);
     sched_add(kinit);
     current_thread = kinit;
+    struct thread* kidlet = kthread_create(kidle, NULL);
+    rq.idle = kidlet;
 }
 
 void sched_add(struct thread* thread)
@@ -55,14 +63,18 @@ void runqueue_remove(struct runqueue* rq, struct thread* thread)
 
 struct thread* runqueue_next(struct runqueue* rq)
 {
-    if (rq->current) {
-        rq->current = list_next_entry(rq->current, runqueue_list);
-        if (&rq->current->runqueue_list == &rq->runnable) {
-            rq->current = list_next_entry(rq->current, runqueue_list);
-        }
+    if (list_empty(&rq->runnable)) {
+        rq->current = rq->idle;
     } else {
-        rq->current =
-            list_first_entry(&rq->runnable, struct thread, runqueue_list);
+        if (rq->current) {
+            rq->current = list_next_entry(rq->current, runqueue_list);
+            if (&rq->current->runqueue_list == &rq->runnable) {
+                rq->current = list_next_entry(rq->current, runqueue_list);
+            }
+        } else {
+            rq->current =
+                list_first_entry(&rq->runnable, struct thread, runqueue_list);
+        }
     }
     return rq->current;
 }
