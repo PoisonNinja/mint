@@ -65,3 +65,16 @@ void arch_thread_switch(struct interrupt_ctx* ctx, struct thread* current,
     write_cr3(pml4);
     arch_load_context(ctx, next);
 }
+
+extern void __attribute__((noreturn)) kthread_exit(void);
+
+void arch_kthread_setup_registers(struct thread* kthread,
+                                  void (*fn)(void* data), void* arg,
+                                  addr_t stack, size_t stack_size)
+{
+    addr_t* stack_array = (addr_t*)stack + stack_size;
+    stack_array[-1] = (addr_t)&kthread_exit;
+    kthread->registers.rip = (addr_t)fn;
+    kthread->registers.rsp = (addr_t)(stack_array - 1);
+    kthread->kernel_stack = stack + stack_size;
+}

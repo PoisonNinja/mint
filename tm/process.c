@@ -21,6 +21,19 @@ void process_add(struct process* process)
     hashmap_set(process_hashmap, &process->pid, sizeof(process->pid), process);
 }
 
+void process_add_thread(struct process* process, struct thread* thread)
+{
+    thread->process = process;
+    list_add(&process->threads, &thread->process_list);
+}
+
+void process_remove_thread(struct process* __attribute__((unused)) process,
+                           struct thread* thread)
+{
+    thread->process = NULL;
+    list_delete(&thread->process_list);
+}
+
 void process_init(void)
 {
     process_hashmap = hashmap_create(1000);

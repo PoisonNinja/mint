@@ -19,3 +19,4 @@ extern struct thread* current_thread;
 
 extern void thread_switch(struct interrupt_ctx* ctx, struct thread* current,
                           struct thread* next);
+extern struct thread* kthread_create(void (*fn)(void* data), void* data);

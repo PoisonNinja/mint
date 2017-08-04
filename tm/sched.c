@@ -16,8 +16,7 @@ void sched_init(void)
     memset(&rq, 0, sizeof(struct runqueue));
     list_runtime_init(&rq.runnable);
     struct thread* kinit = kzalloc(sizeof(struct thread));
-    list_add(&kernel_process->threads, &kinit->process_list);
-    kinit->process = kernel_process;
+    process_add_thread(kernel_process, kinit);
     sched_add(kinit);
     current_thread = kinit;
 }
@@ -25,6 +24,13 @@ void sched_init(void)
 void sched_add(struct thread* thread)
 {
     runqueue_insert(&rq, thread);
+}
+
+void sched_remove(struct thread* thread)
+{
+    if (thread == current_thread)
+        current_thread = NULL;
+    runqueue_remove(&rq, thread);
 }
 
 void sched_tick(struct interrupt_ctx* ctx)
@@ -41,9 +47,8 @@ void runqueue_insert(struct runqueue* rq, struct thread* thread)
 
 void runqueue_remove(struct runqueue* rq, struct thread* thread)
 {
-    if (rq->current == thread) {
+    if (thread == rq->current)
         rq->current = NULL;
-    }
     list_delete(&thread->runqueue_list);
     rq->num_threads--;
 }

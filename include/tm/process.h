@@ -31,3 +31,7 @@ struct process {
 
 extern struct process *process_allocate(void);
 extern void process_add(struct process *process);
+extern void process_add_thread(struct process *process, struct thread *thread);
+extern void process_remove_thread(struct process *__attribute__((unused))
+                                  process,
+                                  struct thread *thread);
