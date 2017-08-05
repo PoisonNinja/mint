@@ -21,7 +21,7 @@ void sched_init(void)
     process_init();
     memset(&rq, 0, sizeof(struct runqueue));
     list_runtime_init(&rq.runnable);
-    struct thread* kinit = kzalloc(sizeof(struct thread));
+    struct thread* kinit = thread_allocate();
     process_add_thread(kernel_process, kinit);
     sched_add(kinit);
     current_thread = kinit;

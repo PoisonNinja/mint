@@ -66,8 +66,6 @@ void arch_thread_switch(struct interrupt_ctx* ctx, struct thread* current,
     arch_load_context(ctx, next);
 }
 
-extern void __attribute__((noreturn)) kthread_exit(void);
-
 void arch_kthread_setup_registers(struct thread* kthread,
                                   void (*fn)(void* data), void* arg,
                                   addr_t stack, size_t stack_size)

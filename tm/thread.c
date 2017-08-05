@@ -3,12 +3,25 @@
 #include <tm/sched.h>
 #include <tm/thread.h>
 
-#include <kernel.h>
+static tid_t next_tid = 0;
 
 struct thread* current_thread;
 extern struct process* kernel_process;
 
 extern void arch_thread_set_stack(addr_t stack);
+
+tid_t thread_get_available_tid(void)
+{
+    return next_tid++;
+}
+
+struct thread* thread_allocate(void)
+{
+    struct thread* thread = kzalloc(sizeof(struct thread));
+    if (thread)
+        thread->tid = thread_get_available_tid();
+    return thread;
+}
 
 void thread_set_stack(addr_t stack)
 {
@@ -42,7 +55,7 @@ extern void arch_kthread_setup_registers(struct thread* kthread,
 
 struct thread* kthread_create(void (*fn)(void* data), void* data)
 {
-    struct thread* kthread = kzalloc(sizeof(struct thread));
+    struct thread* kthread = thread_allocate();
     process_add_thread(kernel_process, kthread);
     addr_t stack = (addr_t)kmalloc(0x1000);
     arch_kthread_setup_registers(kthread, fn, data, stack, 0x1000);

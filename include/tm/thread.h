@@ -8,6 +8,7 @@
 #define STACK_SIZE 0x4000
 
 struct thread {
+    tid_t tid;
     struct process* process;
     struct registers registers;
     addr_t kernel_stack;
@@ -19,4 +20,7 @@ extern struct thread* current_thread;
 
 extern void thread_switch(struct interrupt_ctx* ctx, struct thread* current,
                           struct thread* next);
+extern void __attribute__((noreturn)) kthread_exit(void);
 extern struct thread* kthread_create(void (*fn)(void* data), void* data);
+extern tid_t thread_get_available_tid(void);
+extern struct thread* thread_allocate(void);
