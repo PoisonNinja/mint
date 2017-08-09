@@ -32,6 +32,7 @@
 #include <boot/bootinfo.h>
 #include <cpu/interrupt.h>
 #include <cpu/power.h>
+#include <drivers/pci/pci.h>
 #include <fs/fs.h>
 #include <kernel.h>
 #include <kernel/init.h>
@@ -62,6 +63,7 @@ void kmain(struct mint_bootinfo* bootinfo)
     time_init();
     sched_init();
     filesystem_init();
+    pci_init();
     interrupt_enable();
     do_initcalls();
     rootfs_init();
