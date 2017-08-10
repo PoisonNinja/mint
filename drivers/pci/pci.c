@@ -7,11 +7,50 @@
 static struct list_element pci_driver_list = LIST_COMPILE_INIT(pci_driver_list);
 static struct list_element pci_device_list = LIST_COMPILE_INIT(pci_device_list);
 
+struct pci_device* pci_driver_match_device(struct pci_driver* driver)
+{
+    if (!driver || !driver->filter)
+        return NULL;
+    struct pci_device_filter* filter = driver->filter;
+    struct pci_device* device = NULL;
+    list_for_each(&pci_device_list, list, device)
+    {
+        if (filter->vendor_id && filter->device_id && !filter->class &&
+            !filter->subclass) {
+            if (device->header->vendor_id == filter->vendor_id &&
+                device->header->device_id == filter->device_id) {
+                return device;
+            }
+        } else if (!filter->vendor_id && !filter->device_id && filter->class &&
+                   filter->subclass) {
+            if (device->header->class == filter->class &&
+                device->header->subclass == filter->subclass) {
+                return device;
+            }
+        } else if (filter->vendor_id && filter->device_id && filter->class &&
+                   filter->subclass) {
+            if (device->header->vendor_id == filter->vendor_id &&
+                device->header->device_id == filter->device_id &&
+                device->header->class == filter->class &&
+                device->header->subclass == filter->subclass) {
+                return device;
+            }
+        } else {
+            return NULL;
+        }
+    }
+    return NULL;
+}
+
 int pci_driver_register(struct pci_driver* driver)
 {
     if (!driver->name || !driver->filter || !driver->probe)
         return 1;
     list_add(&pci_driver_list, &driver->list);
+    struct pci_device* device = pci_driver_match_device(driver);
+    if (device) {
+        driver->probe(device);
+    }
     return 0;
 }
 

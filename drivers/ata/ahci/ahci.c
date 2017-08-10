@@ -5,6 +5,7 @@
 
 static int ahci_probe(struct pci_device* device)
 {
+    printk(INFO, "AHCI: Initializing device...\n");
 }
 
 static struct pci_device_filter ahci_device_filter = {
