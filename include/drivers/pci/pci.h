@@ -75,7 +75,7 @@ struct pci_device_filter {
 struct pci_driver {
     const char* name;
     struct pci_device_filter* filter;
-    int (*probe)(struct pci_device*, struct pci_device_filter*);
+    int (*probe)(struct pci_device*);
     struct list_element list;
 };
 
