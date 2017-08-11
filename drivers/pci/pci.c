@@ -72,12 +72,6 @@ void pci_write_dword(const uint16_t bus, const uint16_t dev,
 
 static void pci_dump_header(struct pci_header* header)
 {
-    /*
-     * Early versions used a binary tree search to search for this, but the
-     * performance improvement ratio to complexity is not worth it. Looping
-     * through is only slower by a couple milliseconds total, so we do
-     * a simple loop. However, we can optimize this slightly.
-     */
     PCI_VENTABLE pci_vendor = {
         .VenShort = "Unknown", .VenFull = "Unknown",
     };
