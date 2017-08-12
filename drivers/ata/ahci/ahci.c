@@ -56,6 +56,26 @@
 #include <mm/heap.h>
 #include <string.h>
 
+/*
+ * Copies a AHCI string into a char buffer
+ *
+ * Necessary because for some reason ATA devices according to Section 3.3.10
+ * "ATA string convention" in the ATA command set states that each pair of
+ * bytes are swapped. Also, they aren't NULL terminated, so we need to do this
+ * manually.
+ *
+ * In essence, this behaves like memcpy but it automatically swaps the bytes
+ * and inserts a NULL terminator for you.
+ */
+static inline void ahci_string_copy(char* target, char* source, size_t length)
+{
+    for (size_t i = 0; i < length; i += 2) {
+        target[i] = source[i + 1];
+        target[i + 1] = source[i];
+    }
+    target[length] = '\0';
+}
+
 static struct ahci_device* ports[32];
 
 static void ahci_start_command(volatile struct hba_port* port)
@@ -86,15 +106,15 @@ static int ahci_free_command_slot(volatile struct hba_port* port)
     return -1;
 }
 
-static void ahci_send_command(struct ahci_device* device, uint8_t command,
-                              size_t size, uint8_t write)
+static void* ahci_send_command(struct ahci_device* device, uint8_t command,
+                               size_t size, uint8_t write)
 {
     struct hba_port* port =
         (struct hba_port*)((addr_t)&device->hba->ports[device->port_no]);
     int slot = ahci_free_command_slot(port);
     if (slot < 0) {
         AHCI_LOG(WARNING, "Failed to send command\n");
-        return;
+        return NULL;
     }
     struct hba_command_header* header =
         (struct hba_command_header*)device->command_base;
@@ -120,6 +140,7 @@ static void ahci_send_command(struct ahci_device* device, uint8_t command,
     fis->command = command;
     fis->c = 1;
     port->command_issue = 1 << slot;
+    return (void*)(dma + PHYS_START);
 }
 
 static void ahci_initialize_port(struct ahci_device* device)
@@ -176,9 +197,26 @@ static void ahci_detect_ports(struct hba_memory* abar)
                     kzalloc(sizeof(struct ahci_device));
                 device->port_no = i;
                 device->hba = abar;
+                device->port =
+                    (struct hba_port*)((addr_t)&abar->ports[device->port_no]);
                 ports[i] = device;
                 ahci_initialize_port(ports[i]);
-                ahci_send_command(device, ATA_CMD_IDENTIFY, 512, 0);
+                void* buffer =
+                    ahci_send_command(device, ATA_CMD_IDENTIFY, 512, 0);
+                uint32_t timeout = 1000000;
+                while (--timeout) {
+                    if (!((device->port->sata_active |
+                           device->port->command_issue) &
+                          1))
+                        break;
+                }
+                uint16_t* identify = (uint16_t*)buffer;
+                char model[41];
+                char serial[21];
+                ahci_string_copy(serial, (char*)(&identify[10]), 20);
+                ahci_string_copy(model, (char*)(&identify[27]), 40);
+                AHCI_LOG(INFO, "Serial: %s\n", serial);
+                AHCI_LOG(INFO, "Model: %s\n", model);
             }
         }
         pi >>= 1;

@@ -339,5 +339,6 @@ struct hba_command_table {
 struct ahci_device {
     uint32_t port_no;
     struct hba_memory* hba;
+    struct hba_port* port;
     addr_t fis_base, command_base;
 };
