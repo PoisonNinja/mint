@@ -37,6 +37,69 @@ typedef enum {
 #define ATA_CMD_FLUSH_CACHE_EXT 0xEA   /**< FLUSH CACHE EXT. */
 #define ATA_CMD_IDENTIFY 0xEC          /**< IDENTIFY DEVICE. */
 
+/** Bits in the Port x Interrupt Enable register. */
+#define PXIE_DHRE (1 << 0)  /**< Device to Host Register Enable. */
+#define PXIE_PSE (1 << 1)   /**< PIO Setup FIS Enable. */
+#define PXIE_DSE (1 << 2)   /**< DMA Setup FIS Enable. */
+#define PXIE_SDBE (1 << 3)  /**< Set Device Bits Enable. */
+#define PXIE_UFE (1 << 4)   /**< Unknown FIS Enable. */
+#define PXIE_DPE (1 << 5)   /**< Descriptor Processed Enable. */
+#define PXIE_PCE (1 << 6)   /**< Port Connect Change Enable. */
+#define PXIE_DMPE (1 << 7)  /**< Device Mechanical Presence Enable. */
+#define PXIE_PRCE (1 << 22) /**< PhyRdy Change Enable. */
+#define PXIE_IPME (1 << 23) /**< Incorrect Port Multiplier Enable. */
+#define PXIE_OFE (1 << 24)  /**< Overflow Enable. */
+#define PXIE_INFE (1 << 26) /**< Interface Non-Fatal Error Enable. */
+#define PXIE_IFE (1 << 27)  /**< Interface Fatal Error Enable. */
+#define PXIE_HBDE (1 << 28) /**< Host Bus Data Error Enable. */
+#define PXIE_HBFE (1 << 29) /**< Host Bus Fatal Error Enable. */
+#define PXIE_TFEE (1 << 30) /**< Task File Error Enable. */
+#define PXIE_CPDE (1 << 31) /**< Cold Port Detect Enable. */
+
+#define PORT_INTR_ERROR                                                   \
+    (PXIE_UFE | PXIE_PCE | PXIE_PRCE | PXIE_IPME | PXIE_OFE | PXIE_INFE | \
+     PXIE_IFE | PXIE_HBDE | PXIE_HBFE | PXIE_TFEE)
+
+static const uint32_t PXCMD_ST = 1 << 0;  /* 0x00000001 */
+static const uint32_t PXCMD_SUD = 1 << 1; /* 0x00000002 */
+static const uint32_t PXCMD_POD = 1 << 2; /* 0x00000004 */
+static const uint32_t PXCMD_CLO = 1 << 3; /* 0x00000008 */
+static const uint32_t PXCMD_FRE = 1 << 4; /* 0x00000010 */
+static inline uint32_t PXCMD_CSS(uint32_t val)
+{
+    return (val >> 8) % 32;
+}
+static const uint32_t PXCMD_MPSS = 1 << 13;  /* 0x00002000 */
+static const uint32_t PXCMD_FR = 1 << 14;    /* 0x00004000 */
+static const uint32_t PXCMD_CR = 1 << 15;    /* 0x00008000 */
+static const uint32_t PXCMD_CPS = 1 << 16;   /* 0x00010000 */
+static const uint32_t PXCMD_PMA = 1 << 17;   /* 0x00020000 */
+static const uint32_t PXCMD_HPCP = 1 << 18;  /* 0x00040000 */
+static const uint32_t PXCMD_MPSP = 1 << 19;  /* 0x00080000 */
+static const uint32_t PXCMD_CPD = 1 << 20;   /* 0x00100000 */
+static const uint32_t PXCMD_ESP = 1 << 21;   /* 0x00200000 */
+static const uint32_t PXCMD_FBSCP = 1 << 22; /* 0x00400000 */
+static const uint32_t PXCMD_APSTE = 1 << 23; /* 0x00800000 */
+static const uint32_t PXCMD_ATAPI = 1 << 24; /* 0x01000000 */
+static const uint32_t PXCMD_DLAE = 1 << 25;  /* 0x02000000 */
+static const uint32_t PXCMD_ALPE = 1 << 26;  /* 0x04000000 */
+static const uint32_t PXCMD_ASP = 1 << 27;   /* 0x08000000 */
+static inline uint32_t PXCMD_ICC(uint32_t val)
+{
+    return (val >> 28) % 16;
+}
+
+#define AHCI_TYPE_NULL 0x0
+#define AHCI_TYPE_SATA 0x00000101
+#define AHCI_TYPE_ATAPI 0xEB140101
+#define AHCI_TYPE_SEMB 0xC33C0101
+#define AHCI_TYPE_PM 0x96690101
+
+static const uint32_t GHC_AE = 1U << 31;
+static const uint32_t GHC_MRSM = 1U << 2;
+static const uint32_t GHC_IE = 1U << 1;
+static const uint32_t GHC_HR = 1U << 0;
+
 struct fis_reg_host_to_device {
     uint8_t type;
     uint8_t pmport : 4;
@@ -230,13 +293,3 @@ struct ahci_device {
     struct hba_memory* hba;
     addr_t fis_base, command_base;
 };
-
-#define HBA_GHC_AHCI_ENABLE 0x80000000
-#define HBA_GHC_INTERRUPT_ENABLE 0x00000002
-#define HBA_GHC_RESET 0x00000001
-
-#define AHCI_TYPE_NULL 0x0
-#define AHCI_TYPE_SATA 0x00000101
-#define AHCI_TYPE_ATAPI 0xEB140101
-#define AHCI_TYPE_SEMB 0xC33C0101
-#define AHCI_TYPE_PM 0x96690101

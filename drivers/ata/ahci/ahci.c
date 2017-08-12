@@ -1,4 +1,5 @@
 #include <arch/mm/mmap.h>
+#include <cpu/interrupt.h>
 #include <drivers/ata/ahci/ahci.h>
 #include <drivers/pci/pci.h>
 #include <kernel.h>
@@ -11,17 +12,17 @@ static struct ahci_device* ports[32];
 
 static void ahci_start_command(volatile struct hba_port* port)
 {
-    while (port->command & (1 << 15))
+    while (port->command & PXCMD_CR)
         ;
-    port->command |= (1 << 4);
-    port->command |= 1;
+    port->command |= PXCMD_FRE;
+    port->command |= PXCMD_ST;
 }
 
 static void ahci_stop_command(volatile struct hba_port* port)
 {
-    port->command &= ~1;
-    port->command &= ~(1 << 4);
-    while ((port->command & (1 << 14)) || (port->command & (1 << 15)))
+    port->command &= ~PXCMD_ST;
+    port->command &= ~PXCMD_FRE;
+    while ((port->command & PXCMD_CR) || (port->command & PXCMD_FR))
         ;
 }
 
@@ -100,6 +101,8 @@ static void ahci_initialize_port(struct ahci_device* device)
     device->fis_base = fis_base + PHYS_START;
     device->command_base = command_list_base + PHYS_START;
     ahci_start_command(port);
+    port->interrupt_enable =
+        PXIE_DHRE | PXIE_PSE | PXIE_DSE | PXIE_SDBE | PXIE_DPE;
 }
 
 static int ahci_check_type(volatile struct hba_port* port)
@@ -134,6 +137,25 @@ static void ahci_detect_ports(struct hba_memory* abar)
     }
 }
 
+static int ahci_interrupt(struct interrupt_ctx* ctx, void* dev_id)
+{
+    struct hba_memory* abar = (struct hba_memory*)dev_id;
+    for (uint32_t i = 0; i < 32; i++) {
+        if (abar->interrupt_status & (1 << i)) {
+            AHCI_LOG(DEBUG, "Received interrupt from port %u!\n", i);
+            abar->ports[i].interrupt_status = ~0;
+            abar->interrupt_status = (1 << i);
+        }
+    }
+    return 0;
+}
+
+static struct interrupt_handler ahci_interrupt_handler = {
+    .handler = ahci_interrupt,
+    .dev_name = "ahci",
+    .dev_id = &ahci_interrupt_handler,
+};
+
 static int ahci_probe(struct pci_device* device)
 {
     struct hba_memory* abar =
@@ -153,6 +175,13 @@ static int ahci_probe(struct pci_device* device)
     } else {
         AHCI_LOG(INFO, "BIOS handoff not supported. Skipping...\n");
     }
+    AHCI_LOG(INFO, "Interrupt line is %u\n",
+             device->header->header00.interrupt_line);
+    ahci_interrupt_handler.dev_id = abar;
+    interrupt_handler_register(device->header->header00.interrupt_line,
+                               &ahci_interrupt_handler);
+    abar->global_host_control |= GHC_AE;
+    abar->global_host_control |= GHC_IE;
     ahci_detect_ports(abar);
     return 0;
 }
