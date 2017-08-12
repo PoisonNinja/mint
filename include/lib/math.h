@@ -44,6 +44,11 @@
 #define ROUND_DOWN(x, y) ((x) - ((x) % (y)))
 #define ROUND_UP(x, y) (ROUND_DOWN((x), (y)) + (y))
 
+// Upper and lower bits
+#define LOWER_32(x) ((x)&0xFFFFFFFF)
+#define UPPER_32(x) (((x) >> 32) & 0xFFFFFFFF)
+#define MERGE_64(x, y) (((uint64_t)(x) << 32) | (y))
+
 // 2 ^ power
 #define POW_2(power) (1 << (power))
 

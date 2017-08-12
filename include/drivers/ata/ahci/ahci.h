@@ -16,8 +16,29 @@ typedef enum {
     FIS_TYPE_DEV_BITS = 0xA1,   // Set device bits FIS - device to host
 } FIS_TYPE;
 
+#define ATA_STATUS_ERR (1 << 0)  /* Error. */
+#define ATA_STATUS_DRQ (1 << 3)  /* Data Request. */
+#define ATA_STATUS_DF (1 << 5)   /* Device Fault. */
+#define ATA_STATUS_DRDY (1 << 6) /* Device Ready. */
+#define ATA_STATUS_BSY (1 << 7)  /* Busy. */
+
+/** ATA Commands. */
+#define ATA_CMD_READ_DMA 0xC8          /**< READ DMA. */
+#define ATA_CMD_READ_DMA_EXT 0x25      /**< READ DMA EXT. */
+#define ATA_CMD_READ_SECTORS 0x20      /**< READ SECTORS. */
+#define ATA_CMD_READ_SECTORS_EXT 0x24  /**< READ SECTORS EXT. */
+#define ATA_CMD_WRITE_DMA 0xCA         /**< WRITE DMA. */
+#define ATA_CMD_WRITE_DMA_EXT 0x35     /**< WRITE DMA EXT. */
+#define ATA_CMD_WRITE_SECTORS 0x30     /**< WRITE SECTORS. */
+#define ATA_CMD_WRITE_SECTORS_EXT 0x34 /**< WRITE SECTORS EXT. */
+#define ATA_CMD_PACKET 0xA0            /**< PACKET. */
+#define ATA_CMD_IDENTIFY_PACKET 0xA1   /**< IDENTIFY PACKET DEVICE. */
+#define ATA_CMD_FLUSH_CACHE 0xE7       /**< FLUSH CACHE. */
+#define ATA_CMD_FLUSH_CACHE_EXT 0xEA   /**< FLUSH CACHE EXT. */
+#define ATA_CMD_IDENTIFY 0xEC          /**< IDENTIFY DEVICE. */
+
 struct fis_reg_host_to_device {
-    uint8_t fis_type;
+    uint8_t type;
     uint8_t pmport : 4;
     uint8_t reserved_0 : 3;
     uint8_t c : 1;
@@ -40,7 +61,7 @@ struct fis_reg_host_to_device {
 } __attribute__((packed));
 
 struct fis_reg_device_to_host {
-    uint8_t fis_type;
+    uint8_t type;
     uint8_t pmport : 4;
     uint8_t reserved_0 : 2;
     uint8_t interrupt : 1;
@@ -62,7 +83,7 @@ struct fis_reg_device_to_host {
 } __attribute__((packed));
 
 struct fis_data {
-    uint8_t fis_type;
+    uint8_t type;
     uint8_t pmport : 4;
     uint8_t reserved_0 : 4;
     uint8_t reserved_1[2];
@@ -70,7 +91,7 @@ struct fis_data {
 } __attribute__((packed));
 
 struct fis_pio_setup {
-    uint8_t fis_type;
+    uint8_t type;
     uint8_t pmport : 4;
     uint8_t reserved_0 : 1;
     uint8_t direction : 1;
@@ -95,7 +116,7 @@ struct fis_pio_setup {
 } __attribute__((packed));
 
 struct fis_dma_setup {
-    uint8_t fis_type;
+    uint8_t type;
     uint8_t pmport : 4;
     uint8_t reserved_0 : 1;
     uint8_t direction : 1;
@@ -110,7 +131,7 @@ struct fis_dma_setup {
 } __attribute__((packed));
 
 struct fis_dev_bits {
-    volatile uint8_t fis_type;
+    volatile uint8_t type;
     volatile uint8_t pmport : 4;
     volatile uint8_t reserved0 : 2;
     volatile uint8_t interrupt : 1;
@@ -207,6 +228,7 @@ struct hba_command_table {
 struct ahci_device {
     uint32_t port_no;
     struct hba_memory* hba;
+    addr_t fis_base, command_base;
 };
 
 #define HBA_GHC_AHCI_ENABLE 0x80000000

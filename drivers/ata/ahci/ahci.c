@@ -3,7 +3,9 @@
 #include <drivers/pci/pci.h>
 #include <kernel.h>
 #include <kernel/init.h>
+#include <lib/math.h>
 #include <mm/heap.h>
+#include <string.h>
 
 static struct ahci_device* ports[32];
 
@@ -23,11 +25,58 @@ static void ahci_stop_command(volatile struct hba_port* port)
         ;
 }
 
+static int ahci_free_command_slot(volatile struct hba_port* port)
+{
+    uint32_t slots = (port->sata_active | port->command_issue);
+    for (int i = 0; i < 32; i++) {
+        if ((slots & 1) == 0)
+            return i;
+        slots >>= 1;
+    }
+    AHCI_LOG(WARNING, "Cannot find free command list entry\n");
+    return -1;
+}
+
+static void ahci_send_command(struct ahci_device* device, uint8_t command,
+                              size_t size, uint8_t write)
+{
+    struct hba_port* port =
+        (struct hba_port*)((addr_t)&device->hba->ports[device->port_no]);
+    int slot = ahci_free_command_slot(port);
+    if (slot < 0) {
+        AHCI_LOG(WARNING, "Failed to send command\n");
+        return;
+    }
+    struct hba_command_header* header =
+        (struct hba_command_header*)device->command_base;
+    header += slot;
+    header->fis_length = sizeof(struct fis_reg_host_to_device) / 4;
+    header->write = write ? 1 : 0;
+    header->prdt_len = 1;
+    struct hba_command_table* table =
+        (struct hba_command_table*)((addr_t)MERGE_64(
+                                        header->command_table_base_high,
+                                        header->command_table_base_low) +
+                                    PHYS_START);
+    struct hba_prdt_entry* entry =
+        (struct hba_prdt_entry*)(&table->prdt_entries[0]);
+    addr_t dma = (addr_t)kmalloc(0x1000) - PHYS_START;
+    entry->data_base_low = LOWER_32(dma);
+    entry->data_base_high = UPPER_32(dma);
+    entry->byte_count = size - 1;
+    struct fis_reg_host_to_device* fis =
+        (struct fis_reg_host_to_device*)table->command_fis;
+    memset(fis, 0, sizeof(struct fis_reg_host_to_device));
+    fis->type = FIS_TYPE_REG_H2D;
+    fis->command = command;
+    fis->c = 1;
+    port->command_issue = 1 << slot;
+}
+
 static void ahci_initialize_port(struct ahci_device* device)
 {
     struct hba_port* port =
         (struct hba_port*)((addr_t)&device->hba->ports[device->port_no]);
-    AHCI_LOG(INFO, "%p\n", port);
     ahci_stop_command(port);
     addr_t command_list_base = (addr_t)kzalloc(0x2000) - PHYS_START;
     addr_t fis_base = (addr_t)kzalloc(0x1000) - PHYS_START;
@@ -48,6 +97,8 @@ static void ahci_initialize_port(struct ahci_device* device)
     port->command_list_base_high = (command_list_base >> 32) & 0xFFFFFFFF;
     port->fis_base_low = fis_base & 0xFFFFFFFF;
     port->fis_base_high = (fis_base >> 32) & 0xFFFFFFFF;
+    device->fis_base = fis_base + PHYS_START;
+    device->command_base = command_list_base + PHYS_START;
     ahci_start_command(port);
 }
 
@@ -76,6 +127,7 @@ static void ahci_detect_ports(struct hba_memory* abar)
                 device->hba = abar;
                 ports[i] = device;
                 ahci_initialize_port(ports[i]);
+                ahci_send_command(device, ATA_CMD_IDENTIFY, 512, 0);
             }
         }
         pi >>= 1;
