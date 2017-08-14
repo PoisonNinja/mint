@@ -94,7 +94,7 @@ static void ahci_stop_command(volatile struct hba_port* port)
         ;
 }
 
-static int ahci_free_command_slot(volatile struct hba_port* port)
+static int ahci_get_command_slot(volatile struct hba_port* port)
 {
     uint32_t slots = (port->sata_active | port->command_issue);
     for (int i = 0; i < 32; i++) {
@@ -111,7 +111,7 @@ static void* ahci_send_command(struct ahci_device* device, uint8_t command,
 {
     struct hba_port* port =
         (struct hba_port*)((addr_t)&device->hba->ports[device->port_no]);
-    int slot = ahci_free_command_slot(port);
+    int slot = ahci_get_command_slot(port);
     if (slot < 0) {
         AHCI_LOG(WARNING, "Failed to send command\n");
         return NULL;
