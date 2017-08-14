@@ -74,10 +74,10 @@ static ssize_t initfs_read(struct file* file, uint8_t* buffer, size_t size,
     struct initfs_inode* rnode = data->inodes[file->f_inode->i_ino];
     if (!rnode)
         return -EIO;
-    ssize_t total = size + file->f_off;
+    ssize_t total = size + offset;
     if ((size_t)total > rnode->i_size)
-        total = rnode->i_size - file->f_off;
-    memcpy(buffer, rnode->i_data, total);
+        total = rnode->i_size - offset;
+    memcpy(buffer, rnode->i_data + offset, total);
     return total;
 }
 
@@ -90,14 +90,14 @@ static ssize_t initfs_write(struct file* file, uint8_t* buffer, size_t size,
     struct initfs_inode* rnode = data->inodes[file->f_inode->i_ino];
     if (!rnode)
         return -EIO;
-    ssize_t total = size + file->f_off;
+    ssize_t total = size + offset;
     void* new = kmalloc(total);
     if (rnode->i_data) {
         memcpy(new, rnode->i_data, rnode->i_size);
         kfree(rnode->i_data);
     }
     rnode->i_data = new;
-    void* tmp = rnode->i_data + file->f_off;
+    void* tmp = rnode->i_data + offset;
     memcpy(tmp, buffer, size);
     rnode->i_size += size;
     file->f_inode->i_size += size;
