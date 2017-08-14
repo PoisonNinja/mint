@@ -65,7 +65,8 @@ struct initfs_data {
 
 static struct inode* initfs_allocate(struct superblock* sb);
 
-static ssize_t initfs_read(struct file* file, uint8_t* buffer, size_t size)
+static ssize_t initfs_read(struct file* file, uint8_t* buffer, size_t size,
+                           off_t offset)
 {
     struct initfs_data* data = (struct initfs_data*)file->f_inode->i_sb->s_data;
     if (!data)
@@ -80,7 +81,8 @@ static ssize_t initfs_read(struct file* file, uint8_t* buffer, size_t size)
     return total;
 }
 
-static ssize_t initfs_write(struct file* file, uint8_t* buffer, size_t size)
+static ssize_t initfs_write(struct file* file, uint8_t* buffer, size_t size,
+                            off_t offset)
 {
     struct initfs_data* data = (struct initfs_data*)file->f_inode->i_sb->s_data;
     if (!data)

@@ -34,8 +34,8 @@
 #include <fs/fs.h>
 
 struct file_operations {
-    ssize_t (*read)(struct file *, uint8_t *, size_t);
-    ssize_t (*write)(struct file *, uint8_t *, size_t);
+    ssize_t (*read)(struct file *, uint8_t *, size_t, off_t);
+    ssize_t (*write)(struct file *, uint8_t *, size_t, off_t);
 };
 
 struct file {

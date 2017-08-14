@@ -56,7 +56,7 @@ ssize_t file_pread(struct file* file, uint8_t* buffer, size_t size)
     if (!file || !buffer)
         return -EIO;
     if (file->f_ops->read)
-        return file->f_ops->read(file, buffer, size);
+        return file->f_ops->read(file, buffer, size, file->f_off);
     else
         return -EIO;
 }
@@ -76,7 +76,7 @@ ssize_t file_pwrite(struct file* file, uint8_t* buffer, size_t size)
     if (!file || !buffer)
         return -EIO;
     if (file->f_ops->write)
-        return file->f_ops->write(file, buffer, size);
+        return file->f_ops->write(file, buffer, size, file->f_off);
     else
         return -EIO;
 }
