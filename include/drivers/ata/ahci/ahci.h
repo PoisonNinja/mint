@@ -381,3 +381,18 @@ struct ahci_device {
     addr_t fis_base, command_base;
     uint16_t identify[256];
 };
+
+static inline uint32_t ahci_get_lba28_capacity(uint16_t* identify)
+{
+    uint32_t lba_cap = identify[ATA_LBA28_CAPACITY + 1];
+    return lba_cap << 16 | identify[ATA_LBA28_CAPACITY];
+}
+
+static inline uint64_t ahci_get_lba48_capacity(uint16_t* identify)
+{
+    uint64_t lba48_cap = identify[ATA_LBA48_CAPACITY + 3];
+    return ((lba48_cap << 16 | identify[ATA_LBA48_CAPACITY + 2]) << 16 |
+            identify[ATA_LBA48_CAPACITY + 1])
+               << 16 |
+           identify[ATA_LBA48_CAPACITY];
+}
