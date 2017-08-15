@@ -336,9 +336,48 @@ struct hba_command_table {
     struct hba_prdt_entry prdt_entries[1];
 } __attribute__((packed));
 
+/*
+ * ATA identify response data, per the ATA spec at
+ * http://www.t13.org/Documents/UploadedDocuments/docs2009/d2015r1a-ATAATAPI_Command_Set_-_2_ACS-2.pdf
+ *
+ * TODO: Move this to generic ATA header
+ */
+enum ahci_identify {
+    ATA_GENERAL_CONFIGURATION = 0,
+    ATA_SPECIFIC_CONFIGURATION = 2,
+    ATA_SERIAL_NUMBER = 10,
+    ATA_FIRMWARE_REVISION = 23,
+    ATA_MODEL_NUMBER = 27,
+    ATA_TRUSTED_COMPUTING = 48,
+    ATA_CAPABILITY = 49,
+    ATA_FIELD_VALID = 53,
+    ATA_MULTIPLE_SECTOR = 59,
+    ATA_LBA28_CAPACITY = 60,
+    ATA_MULTIWORD_MODES = 63,
+    ATA_PIO_MODES = 64,
+    ATA_MAJOR_VERSION = 80,
+    ATA_MINOR_VERSION = 81,
+    ATA_COMMANDSET_1 = 82,
+    ATA_COMMANDSET_2 = 83,
+    ATA_COMMANDSET_EXTENDED = 84,
+    ATA_CFS_ENABLE_1 = 85,
+    ATA_CFS_ENABLE_2 = 86,
+    ATA_CFS_DEFAULT = 87,
+    ATA_UDMA_MODES = 88,
+    ATA_HW_RESET = 93,
+    ATA_ACOUSTIC = 94,
+    ATA_LBA48_CAPACITY = 100,
+    ATA_REMOVABLE = 127,
+    ATA_SECURITY_STATUS = 128,
+    ATA_CFA_POWER_MODE = 160,
+    ATA_MEDIA_SERIAL_NUMBER = 176,
+    ATA_INTEGRITY = 255,
+};
+
 struct ahci_device {
     uint32_t port_no;
     struct hba_memory* hba;
     struct hba_port* port;
     addr_t fis_base, command_base;
+    uint16_t identify[256];
 };

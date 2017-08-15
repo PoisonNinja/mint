@@ -210,13 +210,27 @@ static void ahci_detect_ports(struct hba_memory* abar)
                           1))
                         break;
                 }
-                uint16_t* identify = (uint16_t*)buffer;
+                memcpy(device->identify, (uint16_t*)buffer, 512);
                 char model[41];
                 char serial[21];
-                ahci_string_copy(serial, (char*)(&identify[10]), 20);
-                ahci_string_copy(model, (char*)(&identify[27]), 40);
+                ahci_string_copy(
+                    serial, (char*)(&device->identify[ATA_SERIAL_NUMBER]), 20);
+                ahci_string_copy(
+                    model, (char*)(&device->identify[ATA_MODEL_NUMBER]), 40);
                 AHCI_LOG(INFO, "Serial: %s\n", serial);
                 AHCI_LOG(INFO, "Model: %s\n", model);
+                uint32_t lba_cap = device->identify[ATA_LBA28_CAPACITY + 1];
+                lba_cap <<= 16;
+                lba_cap |= device->identify[ATA_LBA28_CAPACITY];
+                AHCI_LOG(INFO, "LBA28 max addressable: %X\n", lba_cap);
+                uint64_t lba48_cap = device->identify[ATA_LBA48_CAPACITY + 3];
+                lba48_cap <<= 16;
+                lba48_cap |= device->identify[ATA_LBA48_CAPACITY + 2];
+                lba48_cap <<= 16;
+                lba48_cap |= device->identify[ATA_LBA48_CAPACITY + 1];
+                lba48_cap <<= 16;
+                lba48_cap |= device->identify[ATA_LBA48_CAPACITY];
+                AHCI_LOG(INFO, "LBA48 max addressable: %llX\n", lba48_cap);
             }
         }
         pi >>= 1;
