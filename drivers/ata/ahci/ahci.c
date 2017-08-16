@@ -107,7 +107,7 @@ static int ahci_get_command_slot(volatile struct hba_port* port)
 }
 
 static void* ahci_send_command(struct ahci_device* device, uint8_t command,
-                               size_t size, uint8_t write)
+                               size_t size, uint8_t write, uint64_t lba)
 {
     struct hba_port* port =
         (struct hba_port*)((addr_t)&device->hba->ports[device->port_no]);
@@ -129,7 +129,7 @@ static void* ahci_send_command(struct ahci_device* device, uint8_t command,
                                     PHYS_START);
     struct hba_prdt_entry* entry =
         (struct hba_prdt_entry*)(&table->prdt_entries[0]);
-    addr_t dma = (addr_t)kmalloc(0x1000) - PHYS_START;
+    addr_t dma = (addr_t)kmalloc(size) - PHYS_START;
     entry->data_base_low = LOWER_32(dma);
     entry->data_base_high = UPPER_32(dma);
     entry->byte_count = size - 1;
@@ -139,8 +139,33 @@ static void* ahci_send_command(struct ahci_device* device, uint8_t command,
     fis->type = FIS_TYPE_REG_H2D;
     fis->command = command;
     fis->c = 1;
+    if (lba) {
+        if (ahci_get_lba48_capacity(device->identify) > 0) {
+            fis->count_low = size & 0xFF;
+            fis->count_high = (size >> 8) & 0xFF;
+            fis->lba0 = lba & 0xFF;
+            fis->lba1 = (lba >> 8) & 0xFF;
+            fis->lba2 = (lba >> 16) & 0xFF;
+            fis->lba3 = (lba >> 24) & 0xFF;
+            fis->lba4 = (lba >> 32) & 0xFF;
+            fis->lba5 = (lba >> 40) & 0xFF;
+            fis->device = (1 << 6);
+        } else {
+            fis->count_low = size & 0xFF;
+            fis->lba0 = lba & 0xFF;
+            fis->lba1 = (lba >> 8) & 0xFF;
+            fis->lba2 = (lba >> 16) & 0xFF;
+            fis->device = (1 << 6) | ((lba >> 24) & 0xF);
+        }
+    }
     port->command_issue = 1 << slot;
     return (void*)(dma + PHYS_START);
+}
+
+static ssize_t ahci_read(struct ahci_device* device, uint8_t* buffer,
+                         size_t size, off_t offset)
+{
+    return -1;
 }
 
 static void ahci_initialize_port(struct ahci_device* device)
@@ -202,7 +227,7 @@ static void ahci_detect_ports(struct hba_memory* abar)
                 ports[i] = device;
                 ahci_initialize_port(ports[i]);
                 void* buffer =
-                    ahci_send_command(device, ATA_CMD_IDENTIFY, 512, 0);
+                    ahci_send_command(device, ATA_CMD_IDENTIFY, 512, 0, 0);
                 uint32_t timeout = 1000000;
                 while (--timeout) {
                     if (!((device->port->sata_active |
