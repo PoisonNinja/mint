@@ -106,15 +106,16 @@ static int ahci_get_command_slot(volatile struct hba_port* port)
     return -1;
 }
 
-static void* ahci_send_command(struct ahci_device* device, uint8_t command,
-                               size_t size, uint8_t write, uint64_t lba)
+static void ahci_send_command(struct ahci_device* device, uint8_t command,
+                              size_t size, uint8_t write, uint64_t lba,
+                              void* buffer)
 {
     struct hba_port* port =
         (struct hba_port*)((addr_t)&device->hba->ports[device->port_no]);
     int slot = ahci_get_command_slot(port);
     if (slot < 0) {
         AHCI_LOG(WARNING, "Failed to send command\n");
-        return NULL;
+        return;
     }
     struct hba_command_header* header =
         (struct hba_command_header*)device->command_base;
@@ -129,9 +130,8 @@ static void* ahci_send_command(struct ahci_device* device, uint8_t command,
                                     PHYS_START);
     struct hba_prdt_entry* entry =
         (struct hba_prdt_entry*)(&table->prdt_entries[0]);
-    addr_t dma = (addr_t)kmalloc(size) - PHYS_START;
-    entry->data_base_low = LOWER_32(dma);
-    entry->data_base_high = UPPER_32(dma);
+    entry->data_base_low = LOWER_32((addr_t)buffer);
+    entry->data_base_high = UPPER_32((addr_t)buffer);
     entry->byte_count = size - 1;
     struct fis_reg_host_to_device* fis =
         (struct fis_reg_host_to_device*)table->command_fis;
@@ -159,7 +159,6 @@ static void* ahci_send_command(struct ahci_device* device, uint8_t command,
         }
     }
     port->command_issue = 1 << slot;
-    return (void*)(dma + PHYS_START);
 }
 
 static ssize_t ahci_read(struct ahci_device* device, uint8_t* buffer,
@@ -226,8 +225,13 @@ static void ahci_detect_ports(struct hba_memory* abar)
                     (struct hba_port*)((addr_t)&abar->ports[device->port_no]);
                 ports[i] = device;
                 ahci_initialize_port(ports[i]);
-                void* buffer =
-                    ahci_send_command(device, ATA_CMD_IDENTIFY, 512, 0, 0);
+                void* buffer = kmalloc(512);
+                if (!buffer) {
+                    AHCI_LOG(ERROR, "Failed to allocate memory for IDENTIFY\n");
+                    continue;
+                }
+                ahci_send_command(device, ATA_CMD_IDENTIFY, 512, 0, 0,
+                                  (void*)((addr_t)buffer - PHYS_START));
                 uint32_t timeout = 1000000;
                 while (--timeout) {
                     if (!((device->port->sata_active |
