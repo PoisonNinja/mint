@@ -165,7 +165,7 @@ struct fis_reg_host_to_device {
     uint8_t feature_high;
 
     uint8_t count_low;
-    uint8_t count_higj;
+    uint8_t count_high;
     uint8_t icc;
     uint8_t control;
     uint8_t reserved_1[4];
