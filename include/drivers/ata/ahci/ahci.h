@@ -148,6 +148,9 @@ static const uint32_t GHC_MRSM = 1U << 2;
 static const uint32_t GHC_IE = 1U << 1;
 static const uint32_t GHC_HR = 1U << 0;
 
+#define AHCI_PRDT_MAX_MEMORY 0x1000
+#define AHCI_BLOCK_SIZE 512
+
 struct fis_reg_host_to_device {
     uint8_t type;
     uint8_t pmport : 4;

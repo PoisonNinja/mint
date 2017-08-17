@@ -124,7 +124,7 @@ static void ahci_send_command(struct ahci_device* device, uint8_t command,
     header += slot;
     header->fis_length = sizeof(struct fis_reg_host_to_device) / 4;
     header->write = write ? 1 : 0;
-    header->prdt_len = ((size - 1) / 0x1000) + 1;
+    header->prdt_len = ((size - 1) / AHCI_PRDT_MAX_MEMORY) + 1;
     struct hba_command_table* table =
         (struct hba_command_table*)((addr_t)MERGE_64(
                                         header->command_table_base_high,
@@ -137,8 +137,9 @@ static void ahci_send_command(struct ahci_device* device, uint8_t command,
             (struct hba_prdt_entry*)(&table->prdt_entries[index]);
         entry->data_base_low = LOWER_32((addr_t)buffer);
         entry->data_base_high = UPPER_32((addr_t)buffer);
-        entry->byte_count =
-            (to_write <= 0x1000) ? (to_write - 1) : (0x1000 - 1);
+        entry->byte_count = (to_write <= AHCI_PRDT_MAX_MEMORY) ?
+                                (to_write - 1) :
+                                (AHCI_PRDT_MAX_MEMORY - 1);
         to_write -= entry->byte_count + 1;
         index++;
         buffer += entry->byte_count + 1;
@@ -149,7 +150,7 @@ static void ahci_send_command(struct ahci_device* device, uint8_t command,
     fis->type = FIS_TYPE_REG_H2D;
     fis->command = command;
     fis->c = 1;
-    size_t num_blocks = (size + 511) / 512;
+    size_t num_blocks = (size + AHCI_BLOCK_SIZE - 1) / AHCI_BLOCK_SIZE;
     // if (lba) {
     if (ahci_get_lba48_capacity(device->identify) > 0) {
         fis->count_low = num_blocks & 0xFF;
@@ -187,7 +188,7 @@ static ssize_t ahci_read(struct ahci_device* device, uint8_t* buffer,
 {
     void* dma = kmalloc(size);
     while (size) {
-        uint64_t block_index = offset / 512;
+        uint64_t block_index = offset / AHCI_BLOCK_SIZE;
         // TODO: Select cmd based on LBA size
         ahci_send_command(device, ATA_CMD_READ_DMA_EXT, size, 0, block_index,
                           (void*)((addr_t)dma - PHYS_START));
