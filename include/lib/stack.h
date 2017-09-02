@@ -35,7 +35,6 @@
 
 struct stack_item {
     void* data;
-    struct stack_item *next, *prev;
 };
 
 struct stack {
