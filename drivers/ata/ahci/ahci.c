@@ -262,8 +262,10 @@ static void ahci_detect_ports(struct hba_memory* abar)
                     AHCI_LOG(ERROR, "Failed to allocate memory for IDENTIFY\n");
                     continue;
                 }
+                AHCI_LOG(INFO, "Sending IDENTIFY command to device...\n");
                 ahci_send_command(device, ATA_CMD_IDENTIFY, 512, 0, 0,
                                   (void*)((addr_t)buffer - PHYS_START));
+                // Can't use ahci_await_completion here
                 uint32_t timeout = 1000000;
                 while (--timeout) {
                     if (!((device->port->sata_active |
@@ -340,11 +342,16 @@ static int ahci_probe(struct pci_device* device)
 }
 
 static struct pci_device_filter ahci_device_filter = {
-    .vendor_id = 0, .device_id = 0, .class = 1, .subclass = 6,
+    .vendor_id = 0,
+    .device_id = 0,
+    .class = 1,
+    .subclass = 6,
 };
 
 static struct pci_driver ahci_driver = {
-    .name = "ahci", .filter = &ahci_device_filter, .probe = ahci_probe,
+    .name = "ahci",
+    .filter = &ahci_device_filter,
+    .probe = ahci_probe,
 };
 
 static int init_ahci(void)
