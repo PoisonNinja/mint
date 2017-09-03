@@ -36,22 +36,10 @@
 
 static volatile addr_t* phys_page = (addr_t*)PHYS_MAP;
 
-void stack_map(addr_t physical)
+static inline void stack_map(addr_t physical)
 {
-    struct page_table* pml4 =
-        (struct page_table*)(kernel_context.page_table + PHYS_START);
-    struct page_table* pml3 =
-        (struct page_table*)(pml4->pages[PML4_INDEX(PHYS_MAP)].address *
-                                 0x1000 +
-                             PHYS_START);
-    struct page_table* pml2 =
-        (struct page_table*)(pml3->pages[PDPT_INDEX(PHYS_MAP)].address *
-                                 0x1000 +
-                             PHYS_START);
-    struct page_table* pml1 =
-        (struct page_table*)(pml2->pages[PD_INDEX(PHYS_MAP)].address * 0x1000 +
-                             PHYS_START);
-    pml1->pages[PT_INDEX(PHYS_MAP)].address = physical / 0x1000;
+    return virtual_map(&kernel_context, PHYS_MAP, physical, 0x1000,
+                       PAGE_PRESENT | PAGE_WRITABLE);
 }
 
 void stack_init(struct stack* stack)
