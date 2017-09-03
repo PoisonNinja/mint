@@ -43,7 +43,7 @@ void stack_init(struct stack* stack, void* storage)
 size_t stack_push(struct stack* stack, addr_t data)
 {
     *stack->top = data;
-    stack->top += sizeof(addr_t);
+    stack->top++;
     stack->size++;
     return stack->size;
 }
@@ -51,8 +51,8 @@ size_t stack_push(struct stack* stack, addr_t data)
 addr_t stack_pop(struct stack* stack)
 {
     if (stack->size == 0)
-        return NULL;
-    stack->top -= sizeof(addr_t);
+        return 0;
+    stack->top--;
     stack->size--;
     return *stack->top;
 }

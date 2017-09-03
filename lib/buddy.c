@@ -81,7 +81,7 @@ void* buddy_alloc(struct buddy* buddy, size_t size)
         if (!found) {
             return NULL;
         }
-        void* addr = stack_pop(&buddy->orders[order].free);
+        void* addr = (void*)stack_pop(&buddy->orders[order].free);
         for (; order > original_order; order--) {
             bitset_set(buddy->orders[order].bitset,
                        BUDDY_INDEX((addr_t)addr - buddy->base, order));
@@ -92,7 +92,7 @@ void* buddy_alloc(struct buddy* buddy, size_t size)
         }
         return addr;
     } else {
-        void* addr = stack_pop(&buddy->orders[order].free);
+        void* addr = (void*)stack_pop(&buddy->orders[order].free);
         bitset_set(buddy->orders[order].bitset,
                    BUDDY_INDEX((addr_t)addr - buddy->base, order));
         return addr;
@@ -109,7 +109,7 @@ void buddy_free(struct buddy* buddy, void* addr, size_t size)
         if (bitset_test(buddy->orders[order].bitset,
                         BUDDY_INDEX(buddy_addr - buddy->base, order)) ||
             order == buddy->max_order) {
-            stack_push(&buddy->orders[order].free, addr);
+            stack_push(&buddy->orders[order].free, (addr_t)addr);
             break;
         }
     }
