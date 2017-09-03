@@ -33,15 +33,12 @@
 
 #include <types.h>
 
-struct stack_item {
-    void* data;
-};
-
 struct stack {
     size_t size;
-    struct stack_item* top;
+    addr_t* storage;
+    addr_t* top;
 };
 
-extern void stack_init(struct stack* stack);
-extern size_t stack_push(struct stack* stack, struct stack_item* item);
-extern void* stack_pop(struct stack* stack);
+extern void stack_init(struct stack* stack, void* storage);
+extern size_t stack_push(struct stack* stack, addr_t data);
+extern addr_t stack_pop(struct stack* stack);

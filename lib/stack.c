@@ -31,14 +31,28 @@
 
 #include <lib/stack.h>
 
-void stack_init(struct stack* stack)
+#include <kernel.h>
+
+void stack_init(struct stack* stack, void* storage)
 {
+    stack->size = 0;
+    stack->storage = storage;
+    stack->top = storage;
 }
 
-size_t stack_push(struct stack* stack, struct stack_item* item)
+size_t stack_push(struct stack* stack, addr_t data)
 {
+    *stack->top = data;
+    stack->top += sizeof(addr_t);
+    stack->size++;
+    return stack->size;
 }
 
-void* stack_pop(struct stack* stack)
+addr_t stack_pop(struct stack* stack)
 {
+    if (stack->size == 0)
+        return NULL;
+    stack->top -= sizeof(addr_t);
+    stack->size--;
+    return *stack->top;
 }
