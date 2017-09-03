@@ -29,6 +29,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <kernel.h>
 #include <lib/bitset.h>
 #include <lib/buddy.h>
 #include <lib/math.h>
@@ -51,8 +52,7 @@ struct buddy* buddy_init(addr_t base, addr_t virtual_base, size_t size,
     buddy->min_order = min;
     buddy->max_order = max;
     for (int i = min; i <= max; i++) {
-        void* test = kmalloc(0x1000);
-        stack_init(&buddy->orders[i].free, test);
+        stack_init(&buddy->orders[i].free);
         size_t space = BITSET_SIZE_CALC(size / POW_2(i));
         buddy->orders[i].bitset = kmalloc(space);
         memset(buddy->orders[i].bitset, BITSET_FULL, space);
@@ -84,9 +84,9 @@ void* buddy_alloc(struct buddy* buddy, size_t size)
         void* addr = (void*)stack_pop(&buddy->orders[order].free);
         for (; order > original_order; order--) {
             bitset_set(buddy->orders[order].bitset,
-                       BUDDY_INDEX((addr_t)addr - buddy->base, order));
+                       BUDDY_INDEX((addr_t)addr, order));
             bitset_set(buddy->orders[order - 1].bitset,
-                       BUDDY_INDEX((addr_t)addr - buddy->base, order - 1));
+                       BUDDY_INDEX((addr_t)addr, order - 1));
             stack_push(&buddy->orders[order - 1].free,
                        BUDDY_ADDRESS((addr_t)addr, order - 1));
         }
@@ -94,7 +94,7 @@ void* buddy_alloc(struct buddy* buddy, size_t size)
     } else {
         void* addr = (void*)stack_pop(&buddy->orders[order].free);
         bitset_set(buddy->orders[order].bitset,
-                   BUDDY_INDEX((addr_t)addr - buddy->base, order));
+                   BUDDY_INDEX((addr_t)addr, order));
         return addr;
     }
 }
@@ -104,10 +104,10 @@ void buddy_free(struct buddy* buddy, void* addr, size_t size)
     uint32_t order = log_2(size);
     for (; order <= buddy->max_order; order++) {
         bitset_unset(buddy->orders[order].bitset,
-                     BUDDY_INDEX((addr_t)addr - buddy->base, order));
+                     BUDDY_INDEX((addr_t)addr, order));
         addr_t buddy_addr = BUDDY_ADDRESS((addr_t)addr, order);
         if (bitset_test(buddy->orders[order].bitset,
-                        BUDDY_INDEX(buddy_addr - buddy->base, order)) ||
+                        BUDDY_INDEX(buddy_addr, order)) ||
             order == buddy->max_order) {
             stack_push(&buddy->orders[order].free, (addr_t)addr);
             break;

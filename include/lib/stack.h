@@ -35,10 +35,9 @@
 
 struct stack {
     size_t size;
-    addr_t* storage;
-    addr_t* top;
+    addr_t top;
 };
 
-extern void stack_init(struct stack* stack, void* storage);
-extern size_t stack_push(struct stack* stack, addr_t data);
+extern void stack_init(struct stack* stack);
+extern void stack_push(struct stack* stack, addr_t address);
 extern addr_t stack_pop(struct stack* stack);

@@ -31,6 +31,7 @@
 
 #include <arch/mm/mm.h>
 #include <arch/mm/mmap.h>
+#include <kernel.h>
 #include <mm/physical.h>
 #include <mm/virtual.h>
 #include <string.h>
