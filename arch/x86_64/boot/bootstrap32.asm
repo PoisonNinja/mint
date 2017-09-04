@@ -44,7 +44,6 @@ gdt64:                           ; Global Descriptor Table (64-bit).
     dw $ - gdt64 - 1             ; Limit.
     dq gdt64                     ; Base.
 
-; Page tables to map us into -2GB
 align 4096
 pml4_base:
     dq (pml3_base + 0x7)
@@ -61,11 +60,23 @@ pml3_base:
 align 4096
 pml2_base:
     %assign i 0
-    %rep 8
-    dq (i * 0x200000) | 0x83
+    %rep 25
+    dq (pml1_base + i + 0x7)
+    %assign i i+4096
+    %endrep
+
+    times (512-25) dq 0
+
+align 4096
+; 15 tables are described here
+; this maps 40 MB from address 0x0
+; to an identity mapping
+pml1_base:
+    %assign i 0
+    %rep 512*25
+    dq (i << 12) | 0x087
     %assign i i+1
     %endrep
-    times (512 - 8) dq 0
 
 halt32:
     cli
