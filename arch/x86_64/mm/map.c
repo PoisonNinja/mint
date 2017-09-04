@@ -36,14 +36,11 @@
 #include <mm/virtual.h>
 #include <string.h>
 
-static inline void* __virtual_get_address(struct page* page)
+static inline void __virtual_set_address(struct page* page)
 {
     if (!page->present) {
-        void* ptr = physical_alloc(0x1000, 0);
-        memset((void*)((addr_t)ptr + PHYS_START), 0, 0x1000);
-        return ptr;
-    } else {
-        return (void*)(page->address * 0x1000);
+        addr_t addr = (addr_t)physical_alloc(0x1000, 0);
+        page->address = addr / 0x1000;
     }
 }
 
@@ -59,24 +56,23 @@ static inline void __virtual_set_flags(struct page* page, uint8_t flags)
 void arch_virtual_map(struct memory_context* context, addr_t virtual,
                       addr_t physical, uint8_t flags)
 {
-    struct page_table* pml4 =
-        (struct page_table*)(context->page_table + PHYS_START);
-    struct page_table* pdpt = NULL;
-    struct page_table* pd = NULL;
-    struct page_table* pt = NULL;
-    pdpt = __virtual_get_address(&pml4->pages[PML4_INDEX(virtual)]);
+    struct page_table* pml4 = (struct page_table*)entry_to_address(
+        RECURSIVE_ENTRY, RECURSIVE_ENTRY, RECURSIVE_ENTRY, RECURSIVE_ENTRY);
+    struct page_table* pdpt = (struct page_table*)entry_to_address(
+        RECURSIVE_ENTRY, RECURSIVE_ENTRY, RECURSIVE_ENTRY, PML4_INDEX(virtual));
+    struct page_table* pd = (struct page_table*)entry_to_address(
+        RECURSIVE_ENTRY, RECURSIVE_ENTRY, PML4_INDEX(virtual),
+        PDPT_INDEX(virtual));
+    struct page_table* pt = (struct page_table*)entry_to_address(
+        RECURSIVE_ENTRY, PML4_INDEX(virtual), PDPT_INDEX(virtual),
+        PD_INDEX(virtual));
+    __virtual_set_address(&pml4->pages[PML4_INDEX(virtual)]);
     __virtual_set_flags(&pml4->pages[PML4_INDEX(virtual)], flags);
-    pml4->pages[PML4_INDEX(virtual)].address = (addr_t)pdpt / 0x1000;
-    pdpt = (struct page_table*)((addr_t)pdpt + PHYS_START);
-    pd = __virtual_get_address(&pdpt->pages[PDPT_INDEX(virtual)]);
+    __virtual_set_address(&pdpt->pages[PDPT_INDEX(virtual)]);
     __virtual_set_flags(&pdpt->pages[PDPT_INDEX(virtual)], flags);
-    pdpt->pages[PDPT_INDEX(virtual)].address = (addr_t)pd / 0x1000;
-    pd = (struct page_table*)((addr_t)pd + PHYS_START);
     if (!(flags & PAGE_HUGE)) {
-        pt = __virtual_get_address(&pd->pages[PD_INDEX(virtual)]);
+        __virtual_set_address(&pd->pages[PD_INDEX(virtual)]);
         __virtual_set_flags(&pd->pages[PD_INDEX(virtual)], flags);
-        pd->pages[PD_INDEX(virtual)].address = (addr_t)pt / 0x1000;
-        pt = (struct page_table*)((addr_t)pt + PHYS_START);
         __virtual_set_flags(&pt->pages[PT_INDEX(virtual)], flags);
         pt->pages[PT_INDEX(virtual)].address = physical / 0x1000;
     } else {

@@ -68,6 +68,9 @@ static char *memory_type_strings[] = {
 static void x86_64_patch_pml4(struct memory_context *context)
 {
     struct page_table *pml4 = (struct page_table *)(read_cr3() + VMA_BASE);
+    pml4->pages[RECURSIVE_ENTRY].present = 1;
+    pml4->pages[RECURSIVE_ENTRY].writable = 1;
+    pml4->pages[RECURSIVE_ENTRY].address = ((addr_t)pml4 - VMA_BASE) / 0x1000;
     pml4->pages[0].address = 0;
     pml4->pages[0].present = 0;
     addr_t address = 0;
