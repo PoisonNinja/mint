@@ -34,12 +34,15 @@
 #include <lib/stack.h>
 #include <mm/virtual.h>
 
-static volatile addr_t* phys_page = (addr_t*)PHYS_MAP;
+// A known virtual address to map into
+__attribute__((aligned(0x1000))) static uint8_t phys_page_virt[0x1000];
+
+static volatile addr_t* phys_page = (addr_t*)&phys_page_virt;
 
 static inline void stack_map(addr_t physical)
 {
-    return virtual_map(&kernel_context, PHYS_MAP, physical, 0x1000,
-                       PAGE_PRESENT | PAGE_WRITABLE);
+    return virtual_map(&kernel_context, (addr_t)&phys_page_virt, physical,
+                       0x1000, PAGE_PRESENT | PAGE_WRITABLE);
 }
 
 void stack_init(struct stack* stack)

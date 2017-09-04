@@ -93,26 +93,6 @@ static void x86_64_patch_pml4(struct memory_context *context)
     context->page_table = (addr_t)pml4 - VMA_BASE;
 }
 
-static void x86_64_setup_phys_map(struct memory_context *context)
-{
-    struct page_table *pml4 = (struct page_table *)(read_cr3() + VMA_BASE);
-    pml4->pages[PML4_INDEX(PHYS_MAP)].address =
-        ((addr_t)&phys_map_pml3 - VMA_BASE) / 0x1000;
-    pml4->pages[PML4_INDEX(PHYS_MAP)].present = 1;
-    pml4->pages[PML4_INDEX(PHYS_MAP)].writable = 1;
-    phys_map_pml3.pages[PDPT_INDEX(PHYS_MAP)].address =
-        ((addr_t)&phys_map_pml2 - VMA_BASE) / 0x1000;
-    phys_map_pml3.pages[PDPT_INDEX(PHYS_MAP)].present = 1;
-    phys_map_pml3.pages[PDPT_INDEX(PHYS_MAP)].writable = 1;
-    phys_map_pml2.pages[PD_INDEX(PHYS_MAP)].address =
-        ((addr_t)&phys_map_pml1 - VMA_BASE) / 0x1000;
-    phys_map_pml2.pages[PD_INDEX(PHYS_MAP)].present = 1;
-    phys_map_pml2.pages[PD_INDEX(PHYS_MAP)].writable = 1;
-    phys_map_pml1.pages[PT_INDEX(PHYS_MAP)].address = 0;
-    phys_map_pml1.pages[PT_INDEX(PHYS_MAP)].present = 1;
-    phys_map_pml1.pages[PT_INDEX(PHYS_MAP)].writable = 1;
-}
-
 /*
  * Multiboot's memory region comes mainly from BIOS calls, and it doesn't
  * do anything to mark kernel areas as used. Thus, when we blindly pass
@@ -210,12 +190,6 @@ static void x86_64_finalize_paging(struct memory_context *context)
         (struct page_table *)(physical_alloc(0x1000, 0) + PHYS_START);
     memset(pml4, 0, sizeof(struct page_table));
     context->page_table = (addr_t)pml4 - PHYS_START;
-    pml4->pages[PML4_INDEX(PHYS_MAP)].present = 1;
-    pml4->pages[PML4_INDEX(PHYS_MAP)].writable = 1;
-    pml4->pages[PML4_INDEX(PHYS_MAP)].address =
-        ((addr_t)&phys_map_pml3 - VMA_BASE) / 0x1000;
-    virtual_map(context, PHYS_START, 0, PHYS_END - PHYS_START,
-                PAGE_PRESENT | PAGE_WRITABLE | PAGE_HUGE | PAGE_NX);
     virtual_map(context, KERNEL_START, KERNEL_PHYS, KERNEL_END - KERNEL_START,
                 PAGE_PRESENT | PAGE_WRITABLE);
     virtual_map(context, VGA_START, VGA_PHYS, VGA_END - VGA_START,
@@ -240,7 +214,6 @@ void arch_mm_init(struct mint_bootinfo *bootinfo,
 {
     x86_64_install_handler();
     x86_64_patch_pml4(context);
-    x86_64_setup_phys_map(context);
     physical_init(bootinfo->highest_mem, DMA_MAX);
     x86_64_fix_multiboot(bootinfo);
     printk(INFO, "%d memory regions:\n", bootinfo->num_memregions);
