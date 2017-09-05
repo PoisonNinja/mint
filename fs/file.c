@@ -32,14 +32,11 @@
 #include <errno.h>
 #include <fs/file.h>
 #include <fs/path.h>
-#include <mm/slab.h>
 #include <string.h>
-
-static struct slab_cache* file_slab_cache = NULL;
 
 struct file* file_allocate(void)
 {
-    struct file* file = slab_allocate(file_slab_cache);
+    struct file* file = kmalloc(sizeof(struct file));
     if (file)
         memset(file, 0, sizeof(struct file));
     return file;
@@ -48,7 +45,7 @@ struct file* file_allocate(void)
 void file_free(struct file* file)
 {
     if (file)
-        slab_free((void*)file);
+        free((void*)file);
 }
 
 ssize_t file_pread(struct file* file, uint8_t* buffer, size_t size)
@@ -109,5 +106,4 @@ struct file* file_open(const char* name, uint32_t flags, mode_t mode)
 
 void file_init(void)
 {
-    file_slab_cache = slab_create("file_cache", sizeof(struct file), 0);
 }
