@@ -32,6 +32,7 @@
 #include <errno.h>
 #include <fs/file.h>
 #include <fs/path.h>
+#include <mm/heap.h>
 #include <string.h>
 
 struct file* file_allocate(void)
@@ -45,7 +46,7 @@ struct file* file_allocate(void)
 void file_free(struct file* file)
 {
     if (file)
-        free((void*)file);
+        kfree((void*)file);
 }
 
 ssize_t file_pread(struct file* file, uint8_t* buffer, size_t size)
@@ -102,8 +103,4 @@ struct file* file_open(const char* name, uint32_t flags, mode_t mode)
     file->f_dentry = dentry;
     file->f_ops = inode->i_fops;
     return file;
-}
-
-void file_init(void)
-{
 }

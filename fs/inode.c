@@ -32,6 +32,7 @@
 #include <fs/fs.h>
 #include <fs/inode.h>
 #include <lib/list.h>
+#include <mm/heap.h>
 #include <string.h>
 
 struct inode* inode_allocate(struct superblock* sb)
@@ -60,8 +61,4 @@ struct inode* inode_resolve_dentry(struct dentry* dentry)
     if (inode->i_sb->s_ops->read_inode)
         inode->i_sb->s_ops->read_inode(inode);
     return inode;
-}
-
-void inode_init(void)
-{
 }

@@ -30,6 +30,7 @@
  */
 
 #include <fs/fs.h>
+#include <mm/heap.h>
 #include <string.h>
 
 struct dentry* dentry_allocate(void)
@@ -43,7 +44,7 @@ struct dentry* dentry_allocate(void)
 void dentry_free(struct dentry* dentry)
 {
     if (dentry)
-        free(dentry);
+        kfree(dentry);
 }
 
 struct dentry* dentry_lookup(struct inode* inode, char* name)
@@ -60,8 +61,4 @@ struct dentry* dentry_lookup(struct inode* inode, char* name)
     } else {
         return dentry;
     }
-}
-
-void dentry_init(void)
-{
 }
