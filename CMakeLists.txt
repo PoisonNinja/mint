@@ -85,10 +85,9 @@ add_subdirectory(mm)
 add_subdirectory(tests)
 add_subdirectory(tm)
 
-set(LN_ARGS ln -s -f ${ARCH_INCLUDE_PATH} ${CMAKE_SOURCE_DIR}/include/arch)
+set(LN_ARGS ln -sf ${ARCH_INCLUDE_PATH} ${CMAKE_SOURCE_DIR}/include/arch)
 execute_process(
     COMMAND ${LN_ARGS}
-    RESULT_VARIABLE res
 )
 
 add_custom_command(
