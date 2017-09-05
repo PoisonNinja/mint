@@ -85,15 +85,10 @@ add_subdirectory(mm)
 add_subdirectory(tests)
 add_subdirectory(tm)
 
-
-add_custom_target(
-    arch-headers
-    COMMAND rsync
-      -aq
-      --update
-      "${ARCH_INCLUDE_PATH}/"
-      "${CMAKE_SOURCE_DIR}/include/arch/"
-    COMMENT "Installing architecture-specific headers"
+set(LN_ARGS ln -s -f ${ARCH_INCLUDE_PATH} ${CMAKE_SOURCE_DIR}/include/arch)
+execute_process(
+    COMMAND ${LN_ARGS}
+    RESULT_VARIABLE res
 )
 
 add_custom_command(
@@ -108,9 +103,8 @@ add_custom_command(
 add_custom_target(
     version-header
     DEPENDS "${CMAKE_SOURCE_DIR}/include/kernel/version.h"
-    DEPENDS "${CMAKE_SOURCE_DIR}/include/arch"
 )
 
-add_dependencies(mint.kernel arch-headers version-header)
+add_dependencies(mint.kernel version-header)
 
 install(TARGETS mint.kernel RUNTIME DESTINATION "${SYSROOT}/boot")
