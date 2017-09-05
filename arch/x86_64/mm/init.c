@@ -46,6 +46,8 @@ extern addr_t __kernel_end;
 static struct mint_memory_region fixup_regions[10];
 static uint8_t free_fixup_region = 0;
 
+__attribute__((aligned(0x1000))) static struct page_table final_pml4;
+
 static char *memory_type_strings[] = {
     "Unknown",
     "Available",
@@ -163,14 +165,20 @@ static void x86_64_fix_multiboot(struct mint_bootinfo *bootinfo)
  */
 static void x86_64_finalize_paging(struct memory_context *context)
 {
-    struct page_table *pml4 =
-        (struct page_table *)(physical_alloc(0x1000, 0) + PHYS_START);
-    memset(pml4, 0, sizeof(struct page_table));
-    context->physical_base = (addr_t)pml4 - PHYS_START;
-    virtual_map(context, KERNEL_START, KERNEL_PHYS, KERNEL_END - KERNEL_START,
+    memset(&final_pml4, 0, sizeof(struct page_table));
+    struct memory_context new_context;
+    new_context.physical_base = (addr_t)&final_pml4 - VMA_BASE;
+    new_context.virtual_base = (addr_t)&final_pml4;
+    final_pml4.pages[RECURSIVE_ENTRY].address =
+        new_context.physical_base / 0x1000;
+    final_pml4.pages[RECURSIVE_ENTRY].present = 1;
+    final_pml4.pages[RECURSIVE_ENTRY].writable = 1;
+    virtual_map(&new_context, KERNEL_START, KERNEL_PHYS,
+                KERNEL_END - KERNEL_START, PAGE_PRESENT | PAGE_WRITABLE);
+    virtual_map(&new_context, VGA_START, VGA_PHYS, VGA_END - VGA_START,
                 PAGE_PRESENT | PAGE_WRITABLE);
-    virtual_map(context, VGA_START, VGA_PHYS, VGA_END - VGA_START,
-                PAGE_PRESENT | PAGE_WRITABLE);
+    context->physical_base = new_context.physical_base;
+    context->virtual_base = new_context.virtual_base;
     write_cr3(context->physical_base);
 }
 
