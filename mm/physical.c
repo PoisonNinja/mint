@@ -49,12 +49,11 @@ void physical_init(size_t size, addr_t dma_boundary)
 {
     dma_region.base = 0x0;
     dma_region.size = dma_boundary;
-    dma_region.buddy =
-        buddy_init(dma_region.base, PHYS_START, dma_region.size, 12, 16);
+    dma_region.buddy = buddy_init(dma_region.base, dma_region.size, 12, 16);
     normal_region.base = dma_boundary;
     normal_region.size = size - dma_boundary;
     normal_region.buddy =
-        buddy_init(normal_region.base, PHYS_START, normal_region.size, 12, 28);
+        buddy_init(normal_region.base, normal_region.size, 12, 28);
 }
 
 void* physical_alloc(size_t size, uint8_t flags)

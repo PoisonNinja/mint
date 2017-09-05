@@ -39,15 +39,13 @@
 #define BUDDY_ADDRESS(x, order) ((x) ^ (1 << (order)))
 #define BUDDY_INDEX(x, order) ((x) / (POW_2(order)))
 
-struct buddy* buddy_init(addr_t base, addr_t virtual_base, size_t size,
-                         uint8_t min, uint8_t max)
+struct buddy* buddy_init(addr_t base, size_t size, uint8_t min, uint8_t max)
 {
     if (!size || !min || !max)
         return NULL;
     struct buddy* buddy = kmalloc(sizeof(struct buddy));
     // No zero checks for base because 0 is a valid base (e.g. low memory)
     buddy->base = base;
-    buddy->virtual_base = virtual_base;
     buddy->size = size;
     buddy->min_order = min;
     buddy->max_order = max;
