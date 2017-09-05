@@ -101,19 +101,13 @@ void arch_virtual_map(struct memory_context* context, addr_t virtual,
     if (r) {
         memset(pd, 0, sizeof(struct page_table));
     }
-    if (!(flags & PAGE_HUGE)) {
-        r = __virtual_set_address(&pd->pages[PD_INDEX(virtual)]);
-        __virtual_set_flags(&pd->pages[PD_INDEX(virtual)], flags);
-        if (r) {
-            memset(pt, 0, sizeof(struct page_table));
-        }
-        __virtual_set_flags(&pt->pages[PT_INDEX(virtual)], flags);
-        pt->pages[PT_INDEX(virtual)].address = physical / 0x1000;
-    } else {
-        __virtual_set_flags(&pd->pages[PD_INDEX(virtual)], flags);
-        pd->pages[PD_INDEX(virtual)].huge_page = 1;
-        pd->pages[PD_INDEX(virtual)].address = physical / 0x1000;
+    r = __virtual_set_address(&pd->pages[PD_INDEX(virtual)]);
+    __virtual_set_flags(&pd->pages[PD_INDEX(virtual)], flags);
+    if (r) {
+        memset(pt, 0, sizeof(struct page_table));
     }
+    __virtual_set_flags(&pt->pages[PT_INDEX(virtual)], flags);
+    pt->pages[PT_INDEX(virtual)].address = physical / 0x1000;
     // Restore the original fractal mapping
     current->pages[RECURSIVE_ENTRY].address = original_fractal;
     // Flush the TLB entries by writing to CR3

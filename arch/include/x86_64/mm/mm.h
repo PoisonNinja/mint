@@ -34,7 +34,6 @@
 #include <types.h>
 
 #define PAGE_SIZE 4096
-#define PAGE_HUGE_SIZE 2097152
 #define PAGE_MASK 0xFFFFFFFFFFFFF000
 
 #define PML4_INDEX(x) ((x >> 39) & 0x1FF)
