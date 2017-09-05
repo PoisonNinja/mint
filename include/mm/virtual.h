@@ -56,6 +56,7 @@ extern struct memory_context kernel_context;
 
 extern void virtual_map(struct memory_context* context, addr_t virtual,
                         addr_t physical, size_t size, uint8_t flags);
-extern void virtual_unmap(struct memory_context* context, addr_t virtual);
+extern void virtual_unmap(struct memory_context* context, addr_t virtual,
+                          size_t size);
 extern void virtual_clone(struct memory_context* original,
                           struct memory_context* new);

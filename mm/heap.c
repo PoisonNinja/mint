@@ -97,10 +97,7 @@ static void *map_heap(size_t size)
 static void free_heap(void *start, size_t size)
 {
     size *= PAGE_SIZE;
-    for (uint64_t i = (uint64_t)start; i < (uint64_t)start + size;
-         i += PAGE_SIZE) {
-        virtual_unmap(&kernel_context, i);
-    }
+    virtual_unmap(&kernel_context, (addr_t)start, size);
 }
 
 static int liballoc_lock(void)
