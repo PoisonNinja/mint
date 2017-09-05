@@ -49,7 +49,7 @@ static inline int __virtual_table_is_empty(struct page_table* table)
 void arch_virtual_unmap(struct memory_context* context, addr_t virtual)
 {
     struct page_table* pml4 =
-        (struct page_table*)(context->page_table + PHYS_START);
+        (struct page_table*)(context->physical_base + PHYS_START);
     struct page_table* pdpt = NULL;
     struct page_table* pd = NULL;
     struct page_table* pt = NULL;

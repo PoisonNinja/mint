@@ -66,7 +66,8 @@ static void x86_64_patch_pml4(struct memory_context *context)
     pml4->pages[RECURSIVE_ENTRY].address = ((addr_t)pml4 - VMA_BASE) / 0x1000;
     pml4->pages[0].address = 0;
     pml4->pages[0].present = 0;
-    context->page_table = (addr_t)pml4 - VMA_BASE;
+    context->physical_base = (addr_t)pml4 - VMA_BASE;
+    context->virtual_base = (addr_t)pml4;
 }
 
 /*
@@ -165,12 +166,12 @@ static void x86_64_finalize_paging(struct memory_context *context)
     struct page_table *pml4 =
         (struct page_table *)(physical_alloc(0x1000, 0) + PHYS_START);
     memset(pml4, 0, sizeof(struct page_table));
-    context->page_table = (addr_t)pml4 - PHYS_START;
+    context->physical_base = (addr_t)pml4 - PHYS_START;
     virtual_map(context, KERNEL_START, KERNEL_PHYS, KERNEL_END - KERNEL_START,
                 PAGE_PRESENT | PAGE_WRITABLE);
     virtual_map(context, VGA_START, VGA_PHYS, VGA_END - VGA_START,
                 PAGE_PRESENT | PAGE_WRITABLE);
-    write_cr3(context->page_table);
+    write_cr3(context->physical_base);
 }
 
 extern int arch_virtual_fault(struct interrupt_ctx *, void *);

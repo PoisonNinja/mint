@@ -85,7 +85,7 @@ void arch_virtual_clone(struct memory_context* original,
         (struct page_table*)((addr_t)physical_alloc(0x1000, 0) + PHYS_START);
     memset(pml4, 0, sizeof(struct page_table));
     struct page_table* old_pml4 =
-        (struct page_table*)((addr_t)original->page_table + PHYS_START);
+        (struct page_table*)((addr_t)original->physical_base + PHYS_START);
     memcpy(pml4, old_pml4, sizeof(struct page_table));
     for (int i = 0; i < 512; i++) {
         if (i >= (int)PML4_INDEX(HIGHER_HALF)) {
@@ -104,5 +104,5 @@ void arch_virtual_clone(struct memory_context* original,
             }
         }
     }
-    new->page_table = (addr_t)pml4 - PHYS_START;
+    new->physical_base = (addr_t)pml4 - PHYS_START;
 }

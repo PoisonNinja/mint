@@ -48,7 +48,8 @@
 #define FAULT_IF 0x10
 
 struct memory_context {
-    addr_t page_table;
+    addr_t physical_base;
+    addr_t virtual_base;
 };
 
 extern struct memory_context kernel_context;
