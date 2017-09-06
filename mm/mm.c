@@ -32,6 +32,7 @@
 #include <arch/mm/mm.h>
 #include <boot/bootinfo.h>
 #include <kernel.h>
+#include <mm/dma.h>
 #include <mm/heap.h>
 #include <mm/virtual.h>
 
@@ -46,4 +47,5 @@ void mm_init(struct mint_bootinfo* bootinfo)
     printk(INFO, "Highest address is %p\n", bootinfo->highest_mem);
     arch_mm_init(bootinfo, &kernel_context);
     kmalloc_init();
+    dma_init();
 }
