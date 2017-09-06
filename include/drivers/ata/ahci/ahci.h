@@ -382,6 +382,7 @@ struct ahci_device {
     struct hba_memory* hba;
     struct hba_port* port;
     addr_t fis_base, command_base;
+    addr_t command_table_base[32];
     uint16_t identify[256];
 };
 

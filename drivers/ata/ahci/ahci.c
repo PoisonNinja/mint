@@ -53,6 +53,7 @@
 #include <kernel.h>
 #include <kernel/init.h>
 #include <lib/math.h>
+#include <mm/dma.h>
 #include <mm/heap.h>
 #include <string.h>
 
@@ -126,10 +127,7 @@ static void ahci_send_command(struct ahci_device* device, uint8_t command,
     header->write = write ? 1 : 0;
     header->prdt_len = ((size - 1) / AHCI_PRDT_MAX_MEMORY) + 1;
     struct hba_command_table* table =
-        (struct hba_command_table*)((addr_t)MERGE_64(
-                                        header->command_table_base_high,
-                                        header->command_table_base_low) +
-                                    PHYS_START);
+        (struct hba_command_table*)device->command_table_base[slot];
     size_t index = 0;
     size_t to_write = size;
     while (to_write && index < 65536) {
@@ -186,14 +184,14 @@ static int ahci_await_completion(struct ahci_device* device)
 static ssize_t ahci_read(struct ahci_device* device, uint8_t* buffer,
                          size_t size, off_t offset)
 {
-    void* dma = kmalloc(size);
+    struct dma_region* region = dma_alloc(size);
     while (size) {
         uint64_t block_index = offset / AHCI_BLOCK_SIZE;
         // TODO: Select cmd based on LBA size
         ahci_send_command(device, ATA_CMD_READ_DMA_EXT, size, 0, block_index,
-                          (void*)((addr_t)dma - PHYS_START));
+                          (void*)region->physical_base);
         ahci_await_completion(device);
-        memcpy(buffer, dma, size);
+        memcpy(buffer, (const void*)region->virtual_base, size);
         size -= size;
     }
     return size;
@@ -204,27 +202,31 @@ static void ahci_initialize_port(struct ahci_device* device)
     struct hba_port* port =
         (struct hba_port*)((addr_t)&device->hba->ports[device->port_no]);
     ahci_stop_command(port);
-    addr_t command_list_base = (addr_t)kzalloc(0x2000) - PHYS_START;
-    addr_t fis_base = (addr_t)kzalloc(0x1000) - PHYS_START;
+    struct dma_region* command_list_base_dma = dma_alloc(0x2000);
+    struct dma_region* fis_base_dma = dma_alloc(0x1000);
+    addr_t command_list_base = command_list_base_dma->physical_base;
+    addr_t fis_base = fis_base_dma->physical_base;
     /*
      * TODO: Make this 32-bit ready, since if addr_t is 32 bit, shifting by 32
      * bits will be undefined behavior.
      * https://stackoverflow.com/questions/9860538/
      */
     struct hba_command_header* header =
-        (struct hba_command_header*)(command_list_base + PHYS_START);
+        (struct hba_command_header*)command_list_base_dma->virtual_base;
     for (int i = 0; i < 32; i++, header++) {
-        addr_t command_table_base = (addr_t)kzalloc(0x1000) - PHYS_START;
+        struct dma_region* command_table_base_dma = dma_alloc(0x1000);
+        addr_t command_table_base = command_table_base_dma->physical_base;
         header->command_table_base_low = command_table_base & 0xFFFFFFFF;
         header->command_table_base_high =
             (command_table_base >> 32) & 0xFFFFFFFF;
+        device->command_table_base[i] = command_table_base_dma->virtual_base;
     }
     port->command_list_base_low = command_list_base & 0xFFFFFFFF;
     port->command_list_base_high = (command_list_base >> 32) & 0xFFFFFFFF;
     port->fis_base_low = fis_base & 0xFFFFFFFF;
     port->fis_base_high = (fis_base >> 32) & 0xFFFFFFFF;
-    device->fis_base = fis_base + PHYS_START;
-    device->command_base = command_list_base + PHYS_START;
+    device->fis_base = fis_base_dma->virtual_base;
+    device->command_base = command_list_base_dma->virtual_base;
     ahci_start_command(port);
     port->interrupt_enable =
         PXIE_DHRE | PXIE_PSE | PXIE_DSE | PXIE_SDBE | PXIE_DPE;
@@ -257,14 +259,14 @@ static void ahci_detect_ports(struct hba_memory* abar)
                     (struct hba_port*)((addr_t)&abar->ports[device->port_no]);
                 ports[i] = device;
                 ahci_initialize_port(ports[i]);
-                void* buffer = kmalloc(512);
+                struct dma_region* buffer = dma_alloc(512);
                 if (!buffer) {
                     AHCI_LOG(ERROR, "Failed to allocate memory for IDENTIFY\n");
                     continue;
                 }
                 AHCI_LOG(INFO, "Sending IDENTIFY command to device...\n");
                 ahci_send_command(device, ATA_CMD_IDENTIFY, 512, 0, 0,
-                                  (void*)((addr_t)buffer - PHYS_START));
+                                  (void*)buffer->physical_base);
                 // Can't use ahci_await_completion here
                 uint32_t timeout = 1000000;
                 while (--timeout) {
@@ -273,7 +275,7 @@ static void ahci_detect_ports(struct hba_memory* abar)
                           1))
                         break;
                 }
-                memcpy(device->identify, (uint16_t*)buffer, 512);
+                memcpy(device->identify, (uint16_t*)buffer->virtual_base, 512);
                 char model[41];
                 char serial[21];
                 ahci_string_copy(
