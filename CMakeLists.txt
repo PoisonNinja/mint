@@ -59,7 +59,7 @@ endif()
 message(STATUS "Platform file: " ${PLATFORM_FILE})
 include(${PLATFORM_FILE})
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -ffreestanding -fno-builtin -Iinclude -std=gnu11 -fcolor-diagnostics")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -ffreestanding -fno-builtin -Iinclude -std=gnu11 -fcolor-diagnostics -O3")
 message(STATUS "CFLAGS: " ${CMAKE_C_FLAGS})
 
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -nostdlib")
