@@ -48,46 +48,60 @@ static inline int __virtual_table_is_empty(struct page_table* table)
 
 void arch_virtual_unmap(struct memory_context* context, addr_t virtual)
 {
-    struct page_table* pml4 =
-        (struct page_table*)(context->physical_base + PHYS_START);
-    struct page_table* pdpt = NULL;
-    struct page_table* pd = NULL;
-    struct page_table* pt = NULL;
-    struct page* page = NULL;
-    pdpt =
-        (struct page_table*)(pml4->pages[PML4_INDEX(virtual)].address * 0x1000 +
-                             PHYS_START);
-    if (!pdpt)
+    addr_t original_fractal;
+    // TODO: Get current process memory_context
+    struct page_table* current =
+        (struct page_table*)kernel_context.virtual_base;
+    /*
+     * Back up original fractal mapping to restore at the end of this call.
+     *
+     * This is required when virtual_map ends up making a call to
+     * physical_alloc to allocate a page frame. When that happens, we
+     * end up using whatever physical_alloc maps into this slot, which
+     * ends up really badly, because we'll end up mapping into the wrong
+     * address space.
+     */
+    original_fractal = current->pages[RECURSIVE_ENTRY].address;
+    // Set up fractal mapping for the new context
+    current->pages[RECURSIVE_ENTRY].address = context->physical_base / 0x1000;
+    // Flush the TLB entries by writing to CR3
+    write_cr3(kernel_context.physical_base);
+    struct page_table* pml4 = (struct page_table*)entry_to_address(
+        RECURSIVE_ENTRY, RECURSIVE_ENTRY, RECURSIVE_ENTRY, RECURSIVE_ENTRY);
+    struct page_table* pdpt = entry_to_address(
+        RECURSIVE_ENTRY, RECURSIVE_ENTRY, RECURSIVE_ENTRY, PML4_INDEX(virtual));
+    struct page_table* pd =
+        entry_to_address(RECURSIVE_ENTRY, RECURSIVE_ENTRY, PML4_INDEX(virtual),
+                         PDPT_INDEX(virtual));
+    struct page_table* pt =
+        entry_to_address(RECURSIVE_ENTRY, PML4_INDEX(virtual),
+                         PDPT_INDEX(virtual), PD_INDEX(virtual));
+    if (!pml4->pages[PML4_INDEX(virtual)].present)
         return;
-    pd =
-        (struct page_table*)(pdpt->pages[PDPT_INDEX(virtual)].address * 0x1000 +
-                             PHYS_START);
-    if (!pd)
+    if (!pdpt->pages[PDPT_INDEX(virtual)].present)
         return;
-    pt = (struct page_table*)(pd->pages[PD_INDEX(virtual)].address * 0x1000 +
-                              PHYS_START);
-    if (!pt)
+    if (!pd->pages[PD_INDEX(virtual)].present)
         return;
-    page = (struct page*)&pt->pages[PT_INDEX(virtual)];
-    if (!page)
+    if (!pt->pages[PT_INDEX(virtual)].present)
         return;
-    memset(page, 0, sizeof(struct page));
+    memset(&pt->pages[PT_INDEX(virtual)], 0, sizeof(struct page));
     if (__virtual_table_is_empty(pt)) {
-        physical_free((void*)((addr_t)pt - PHYS_START), 0x1000);
+        physical_free((void*)(pd->pages[PD_INDEX(virtual)].address * 0x1000),
+                      0x1000);
         memset(&pd->pages[PD_INDEX(virtual)], 0, sizeof(struct page));
-    } else {
-        return;
     }
     if (__virtual_table_is_empty(pd)) {
-        physical_free((void*)((addr_t)pd - PHYS_START), 0x1000);
+        physical_free(
+            (void*)(pdpt->pages[PDPT_INDEX(virtual)].address * 0x1000), 0x1000);
         memset(&pdpt->pages[PDPT_INDEX(virtual)], 0, sizeof(struct page));
-    } else {
-        return;
     }
     if (__virtual_table_is_empty(pdpt)) {
-        physical_free((void*)((addr_t)pdpt - PHYS_START), 0x1000);
+        physical_free(
+            (void*)(pml4->pages[PML4_INDEX(virtual)].address * 0x1000), 0x1000);
         memset(&pml4->pages[PML4_INDEX(virtual)], 0, sizeof(struct page));
-    } else {
-        return;
     }
+    // Restore the original fractal mapping
+    current->pages[RECURSIVE_ENTRY].address = original_fractal;
+    // Flush the TLB entries by writing to CR3
+    write_cr3(kernel_context.physical_base);
 }
