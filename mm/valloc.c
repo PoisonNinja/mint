@@ -1,3 +1,4 @@
+#include <kernel.h>
 #include <mm/heap.h>
 #include <mm/valloc.h>
 
@@ -15,7 +16,7 @@ struct valloc_region* valloc_create(addr_t base, size_t extent)
     }
     region->base = base;
     region->extent = extent;
-    region->current = 0;
+    region->current = base;
     return region;
 }
 
