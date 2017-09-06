@@ -38,7 +38,7 @@
 static int test_file(void)
 {
     START_TEST("File operations");
-    struct file* file = file_open("/test", 0, 0);
+    struct file *file = file_open("/test", 0, 0);
     ASSERT("Opening non-existent file should fail", !file);
     file = file_open("/test", O_CREAT, S_IFDIR);
     ASSERT("Opening with O_CREAT creates file", file);
@@ -47,12 +47,12 @@ static int test_file(void)
     ssize_t string_len = strlen("Hello world!") + 1;
     ASSERT(
         "Writing to file succeeds",
-        file_pwrite(file, (uint8_t*)"Hello world!", string_len) == string_len);
+        file_pwrite(file, (uint8_t *)"Hello world!", string_len) == string_len);
     uint8_t buffer[1024];
     ASSERT("Reading from file succeeds",
            file_pread(file, buffer, string_len) == string_len);
     ASSERT("Data read matches written",
-           !memcmp(buffer, (uint8_t*)"Hello world!", string_len));
+           !memcmp(buffer, (uint8_t *)"Hello world!", string_len));
     FINISH_TEST();
     return 0;
 }

@@ -5,6 +5,7 @@
 #include <mm/physical.h>
 #include <mm/valloc.h>
 #include <mm/virtual.h>
+#include <string.h>
 
 static struct valloc_region* dma_region = NULL;
 
