@@ -3,5 +3,6 @@ target_sources(mint.kernel
     ${CMAKE_CURRENT_SOURCE_DIR}/heap.c
     ${CMAKE_CURRENT_SOURCE_DIR}/mm.c
     ${CMAKE_CURRENT_SOURCE_DIR}/physical.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/valloc.c
     ${CMAKE_CURRENT_SOURCE_DIR}/virtual.c
 )
