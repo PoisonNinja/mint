@@ -313,9 +313,8 @@ static struct interrupt_handler ahci_interrupt_handler = {
 
 static int ahci_probe(struct pci_device* device)
 {
-    struct hba_memory* abar =
-        (struct hba_memory*)((addr_t)device->header->header00.bar[5] +
-                             PHYS_START);
+    struct hba_memory* abar = (struct hba_memory*)pci_map(
+        (addr_t)device->header->header00.bar[5], sizeof(struct hba_memory));
     AHCI_LOG(INFO, "Got controller with HBA memory located at %p\n", abar);
     if (!(device->header->command & 0x4)) {
         AHCI_LOG(INFO, "Enabling bus mastering mode\n");
