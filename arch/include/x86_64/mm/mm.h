@@ -42,6 +42,7 @@
 #define PT_INDEX(x) ((x >> 12) & 0x1FF)
 
 #define RECURSIVE_ENTRY 510
+#define COPY_ENTRY 509
 
 struct page {
     uint32_t present : 1;
