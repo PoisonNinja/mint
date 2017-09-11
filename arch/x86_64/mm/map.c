@@ -74,8 +74,6 @@ void arch_virtual_map(struct memory_context* context, addr_t virtual,
     original_fractal = current->pages[RECURSIVE_ENTRY].address;
     // Set up fractal mapping for the new context
     current->pages[RECURSIVE_ENTRY].address = context->physical_base / 0x1000;
-    // Flush the TLB entries by writing to CR3
-    write_cr3(kernel_context.physical_base);
     struct page_table* pml4 = (struct page_table*)entry_to_address(
         RECURSIVE_ENTRY, RECURSIVE_ENTRY, RECURSIVE_ENTRY, RECURSIVE_ENTRY);
     struct page_table* pdpt = (struct page_table*)entry_to_address(
@@ -86,6 +84,10 @@ void arch_virtual_map(struct memory_context* context, addr_t virtual,
     struct page_table* pt = (struct page_table*)entry_to_address(
         RECURSIVE_ENTRY, PML4_INDEX(virtual), PDPT_INDEX(virtual),
         PD_INDEX(virtual));
+    invlpg(pml4);
+    invlpg(pdpt);
+    invlpg(pd);
+    invlpg(pt);
     int r = 0;
     r = __virtual_set_address(&pml4->pages[PML4_INDEX(virtual)]);
     __virtual_set_flags(&pml4->pages[PML4_INDEX(virtual)], flags);
@@ -110,6 +112,8 @@ void arch_virtual_map(struct memory_context* context, addr_t virtual,
     pt->pages[PT_INDEX(virtual)].address = physical / 0x1000;
     // Restore the original fractal mapping
     current->pages[RECURSIVE_ENTRY].address = original_fractal;
-    // Flush the TLB entries by writing to CR3
-    write_cr3(kernel_context.physical_base);
+    invlpg(pml4);
+    invlpg(pdpt);
+    invlpg(pd);
+    invlpg(pt);
 }

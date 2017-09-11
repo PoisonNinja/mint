@@ -76,6 +76,10 @@ void arch_virtual_unmap(struct memory_context* context, addr_t virtual)
     struct page_table* pt =
         entry_to_address(RECURSIVE_ENTRY, PML4_INDEX(virtual),
                          PDPT_INDEX(virtual), PD_INDEX(virtual));
+    invlpg(pml4);
+    invlpg(pdpt);
+    invlpg(pd);
+    invlpg(pt);
     if (!pml4->pages[PML4_INDEX(virtual)].present)
         return;
     if (!pdpt->pages[PDPT_INDEX(virtual)].present)
@@ -102,6 +106,8 @@ void arch_virtual_unmap(struct memory_context* context, addr_t virtual)
     }
     // Restore the original fractal mapping
     current->pages[RECURSIVE_ENTRY].address = original_fractal;
-    // Flush the TLB entries by writing to CR3
-    write_cr3(kernel_context.physical_base);
+    invlpg(pml4);
+    invlpg(pdpt);
+    invlpg(pd);
+    invlpg(pt);
 }
