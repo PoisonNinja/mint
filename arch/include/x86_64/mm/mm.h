@@ -34,7 +34,6 @@
 #include <types.h>
 
 #define PAGE_SIZE 4096
-#define PAGE_HUGE_SIZE 2097152
 #define PAGE_MASK 0xFFFFFFFFFFFFF000
 
 #define PML4_INDEX(x) ((x >> 39) & 0x1FF)
@@ -43,6 +42,7 @@
 #define PT_INDEX(x) ((x >> 12) & 0x1FF)
 
 #define RECURSIVE_ENTRY 510
+#define COPY_ENTRY 509
 
 struct page {
     uint32_t present : 1;
@@ -77,7 +77,27 @@ static inline void write_cr3(uint64_t value)
     __asm__("mov %%rax, %%cr3" : : "a"(value));
 }
 
-static inline void invlpg(addr_t addr)
+static inline void invlpg(void* addr)
 {
     __asm__ __volatile__("invlpg (%0)" ::"r"(addr) : "memory");
+}
+
+/*
+ * Convert a table entry into the recursive mapping address. Taken from
+ * some forum post on osdev.org
+ */
+static inline void* entry_to_address(uint64_t pml4, uint64_t pdp, uint64_t pd,
+                                     uint64_t pt)
+{
+    uint64_t address = (pml4 << 39);
+
+    if ((address & (1ll << 47)) > 0) {
+        // We need to sign extend
+        address |= 0xFFFF000000000000UL;
+    }
+
+    address |= pdp << 30;
+    address |= pd << 21;
+    address |= pt << 12;
+    return (void*)address;
 }

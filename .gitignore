@@ -44,7 +44,8 @@
 *.pdb
 
 # Generated directories
-include/arch/
+# Technically a symlink, but treat it as a directory
+include/arch
 build/
 
 # Generated version files

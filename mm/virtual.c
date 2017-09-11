@@ -49,17 +49,21 @@ void virtual_map(struct memory_context* context, addr_t virtual,
     size_t mapped = 0;
     while (mapped < size) {
         arch_virtual_map(context, virtual + mapped, physical + mapped, flags);
-        mapped += (flags & PAGE_HUGE) ? PAGE_HUGE_SIZE : PAGE_SIZE;
+        mapped += PAGE_SIZE;
     }
 }
 
 extern void arch_virtual_unmap(struct memory_context* context, addr_t virtual);
 
-void virtual_unmap(struct memory_context* context, addr_t virtual)
+void virtual_unmap(struct memory_context* context, addr_t virtual, size_t size)
 {
-    if (!context)
+    if (!size || !context)
         return;
-    arch_virtual_unmap(context, virtual);
+    size_t mapped = 0;
+    while (mapped < size) {
+        arch_virtual_unmap(context, virtual);
+        mapped += PAGE_SIZE;
+    }
 }
 
 extern void arch_virtual_clone(struct memory_context* original,

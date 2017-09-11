@@ -45,24 +45,24 @@ void __copy_pt_entry(struct page_table* new_pt, struct page_table* old_pt)
     }
 }
 
-void __copy_pd_entry(struct page_table* new_pd, struct page_table* old_pd)
+void __copy_pd_entry(struct page_table* new_pd, struct page_table* old_pd,
+                     int pml4_index, int pdpt_index)
 {
     for (int i = 0; i < 512; i++) {
         if (old_pd->pages[i].present) {
+            struct page_table* new_pt = physical_alloc(0x1000, 0);
             memcpy(&new_pd->pages[i], &old_pd->pages[i], sizeof(struct page));
-            if (!old_pd->pages[i].huge_page) {
-                struct page_table* new_pt = physical_alloc(0x1000, 0);
-                new_pd->pages[i].address = (addr_t)new_pt / 0x1000;
-                __copy_pt_entry(
-                    (struct page_table*)((addr_t)new_pt + PHYS_START),
-                    (struct page_table*)(old_pd->pages[i].address * 0x1000 +
-                                         PHYS_START));
-            }
+            new_pd->pages[i].address = (addr_t)new_pt / 0x1000;
+            __copy_pt_entry((struct page_table*)entry_to_address(
+                                COPY_ENTRY, pml4_index, pdpt_index, i),
+                            (struct page_table*)entry_to_address(
+                                RECURSIVE_ENTRY, pml4_index, pdpt_index, i));
         }
     }
 }
 
-void __copy_pdpt_entry(struct page_table* new_pdpt, struct page_table* old_pdpt)
+void __copy_pdpt_entry(struct page_table* new_pdpt, struct page_table* old_pdpt,
+                       int pml4_index)
 {
     for (int i = 0; i < 512; i++) {
         if (old_pdpt->pages[i].present) {
@@ -71,9 +71,11 @@ void __copy_pdpt_entry(struct page_table* new_pdpt, struct page_table* old_pdpt)
                    sizeof(struct page));
             new_pdpt->pages[i].address = (addr_t)new_pd / 0x1000;
             __copy_pd_entry(
-                (struct page_table*)((addr_t)new_pd + PHYS_START),
-                (struct page_table*)(old_pdpt->pages[i].address * 0x1000 +
-                                     PHYS_START));
+                (struct page_table*)entry_to_address(COPY_ENTRY, COPY_ENTRY,
+                                                     pml4_index, i),
+                (struct page_table*)entry_to_address(
+                    RECURSIVE_ENTRY, RECURSIVE_ENTRY, pml4_index, i),
+                pml4_index, i);
         }
     }
 }
@@ -81,28 +83,50 @@ void __copy_pdpt_entry(struct page_table* new_pdpt, struct page_table* old_pdpt)
 void arch_virtual_clone(struct memory_context* original,
                         struct memory_context* new)
 {
-    struct page_table* pml4 =
-        (struct page_table*)((addr_t)physical_alloc(0x1000, 0) + PHYS_START);
-    memset(pml4, 0, sizeof(struct page_table));
-    struct page_table* old_pml4 =
-        (struct page_table*)((addr_t)original->page_table + PHYS_START);
-    memcpy(pml4, old_pml4, sizeof(struct page_table));
+    addr_t original_fractal_recursive, original_fractal_copy;
+    // TODO: Get current process memory_context
+    struct page_table* current =
+        (struct page_table*)kernel_context.virtual_base;
+    /*
+     * Back up original fractal mapping to restore at the end of this call.
+     *
+     * This is required when virtual_map ends up making a call to
+     * physical_alloc to allocate a page frame. When that happens, we
+     * end up using whatever physical_alloc maps into this slot, which
+     * ends up really badly, because we'll end up mapping into the wrong
+     * address space.
+     */
+    original_fractal_recursive = current->pages[RECURSIVE_ENTRY].address;
+    original_fractal_copy = current->pages[COPY_ENTRY].address;
+    // Set up fractal mapping for the new context
+    current->pages[RECURSIVE_ENTRY].address = original->physical_base / 0x1000;
+    current->pages[COPY_ENTRY].address = new->physical_base / 0x1000;
+    // Flush the TLB entries by writing to CR3
+    write_cr3(kernel_context.physical_base);
+    struct page_table* new_pml4 = (struct page_table*)entry_to_address(
+        COPY_ENTRY, COPY_ENTRY, COPY_ENTRY, COPY_ENTRY);
+    memset(new_pml4, 0, sizeof(struct page_table));
+    struct page_table* old_pml4 = (struct page_table*)entry_to_address(
+        RECURSIVE_ENTRY, RECURSIVE_ENTRY, RECURSIVE_ENTRY, RECURSIVE_ENTRY);
+    memcpy(new_pml4, old_pml4, sizeof(struct page_table));
     for (int i = 0; i < 512; i++) {
         if (i >= (int)PML4_INDEX(HIGHER_HALF)) {
             // We are in something kernel related
-            memcpy(&pml4->pages[i], &old_pml4->pages[i], sizeof(struct page));
+            memcpy(&new_pml4->pages[i], &old_pml4->pages[i],
+                   sizeof(struct page));
         } else {
             if (old_pml4->pages[i].present) {
                 struct page_table* new_pdpt = physical_alloc(0x1000, 0);
-                memcpy(&pml4->pages[i], &old_pml4->pages[i],
+                memcpy(&new_pml4->pages[i], &old_pml4->pages[i],
                        sizeof(struct page));
-                pml4->pages[i].address = (addr_t)new_pdpt / 0x1000;
+                new_pml4->pages[i].address = (addr_t)new_pdpt / 0x1000;
                 __copy_pdpt_entry(
-                    (struct page_table*)((addr_t)new_pdpt + PHYS_START),
-                    (struct page_table*)(old_pml4->pages[i].address * 0x1000 +
-                                         PHYS_START));
+                    (struct page_table*)entry_to_address(COPY_ENTRY, COPY_ENTRY,
+                                                         COPY_ENTRY, i),
+                    (struct page_table*)entry_to_address(
+                        RECURSIVE_ENTRY, RECURSIVE_ENTRY, RECURSIVE_ENTRY, i),
+                    i);
             }
         }
     }
-    new->page_table = (addr_t)pml4 - PHYS_START;
 }

@@ -30,14 +30,12 @@
  */
 
 #include <fs/fs.h>
-#include <mm/slab.h>
+#include <mm/heap.h>
 #include <string.h>
-
-static struct slab_cache* dentry_slab_cache = NULL;
 
 struct dentry* dentry_allocate(void)
 {
-    struct dentry* dentry = slab_allocate(dentry_slab_cache);
+    struct dentry* dentry = kmalloc(sizeof(struct dentry));
     if (dentry)
         memset(dentry, 0, sizeof(struct dentry));
     return dentry;
@@ -46,7 +44,7 @@ struct dentry* dentry_allocate(void)
 void dentry_free(struct dentry* dentry)
 {
     if (dentry)
-        slab_free(dentry);
+        kfree(dentry);
 }
 
 struct dentry* dentry_lookup(struct inode* inode, char* name)
@@ -63,9 +61,4 @@ struct dentry* dentry_lookup(struct inode* inode, char* name)
     } else {
         return dentry;
     }
-}
-
-void dentry_init(void)
-{
-    dentry_slab_cache = slab_create("dentry_cache", sizeof(struct dentry), 0);
 }

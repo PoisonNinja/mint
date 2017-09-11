@@ -105,7 +105,8 @@ static ssize_t initfs_write(struct file* file, uint8_t* buffer, size_t size,
 }
 
 static struct file_operations initfs_file_operations = {
-    .read = &initfs_read, .write = &initfs_write,
+    .read = &initfs_read,
+    .write = &initfs_write,
 };
 
 struct inode* initfs_create(struct inode* parent, struct dentry* dentry,
@@ -149,7 +150,8 @@ static int initfs_lookup(struct inode* root, struct dentry* entry)
 }
 
 static struct inode_operations initfs_inode_operations = {
-    .create = &initfs_create, .lookup = &initfs_lookup,
+    .create = &initfs_create,
+    .lookup = &initfs_lookup,
 };
 
 static int initfs_write_inode(struct inode* node)
@@ -187,12 +189,14 @@ static int initfs_read_inode(struct inode* node)
 }
 
 struct superblock_operations initfs_superblock_operations = {
-    .read_inode = initfs_read_inode, .write_inode = initfs_write_inode,
+    .read_inode = initfs_read_inode,
+    .write_inode = initfs_write_inode,
 };
 
 static int initfs_mount(struct superblock* sb)
 {
     struct initfs_data* data = kmalloc(sizeof(struct initfs_data));
+    data->next = 0;
     sb->s_data = data;
     sb->s_ops = &initfs_superblock_operations;
     struct inode* root_inode = initfs_allocate(sb);
@@ -208,7 +212,8 @@ static int initfs_mount(struct superblock* sb)
 }
 
 static struct filesystem initfs_filesystem = {
-    .name = "initfs", .mount = initfs_mount,
+    .name = "initfs",
+    .mount = initfs_mount,
 };
 
 static struct inode* initfs_allocate(struct superblock* sb)

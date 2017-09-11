@@ -110,5 +110,7 @@ struct pci_driver {
     struct list_element list;
 };
 
+extern void* pci_map(addr_t physical, size_t size);
+
 extern int pci_driver_register(struct pci_driver* driver);
 extern void pci_init(void);

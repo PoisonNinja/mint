@@ -29,41 +29,43 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <arch/mm/mm.h>
+#include <arch/mm/mmap.h>
 #include <lib/stack.h>
+#include <mm/virtual.h>
 
-/*
- * To prevent overruns, since NULL could actually be a valid value, especially
- * when used with a buddy allocator (memory starts at 0x0)
- */
-static struct stack_item sentry;
+// A known virtual address to map into
+__attribute__((aligned(0x1000))) static uint8_t phys_page_virt[0x1000];
+
+static volatile addr_t* phys_page = (addr_t*)&phys_page_virt;
+
+static inline void stack_map(addr_t physical)
+{
+    return virtual_map(&kernel_context, (addr_t)&phys_page_virt, physical,
+                       0x1000, PAGE_PRESENT | PAGE_WRITABLE);
+}
 
 void stack_init(struct stack* stack)
 {
     stack->size = 0;
-    stack->top = &sentry;
+    stack->top = 0;
 }
 
-size_t stack_push(struct stack* stack, struct stack_item* item)
+void stack_push(struct stack* stack, addr_t address)
 {
+    stack_map(address);
+    *phys_page = stack->top;
+    stack->top = address;
     stack->size++;
-    stack->top->next = item;
-    item->prev = stack->top;
-    item->next = &sentry;
-    stack->top = item;
-    return stack->size;
 }
 
-void* stack_pop(struct stack* stack)
+addr_t stack_pop(struct stack* stack)
 {
-    struct stack_item* item = stack->top;
-    if (item == &sentry)
-        return NULL;
-    if (item->prev == &sentry)
-        stack->top = &sentry;
-    else {
-        stack->top->prev->next = &sentry;
-        stack->top = stack->top->prev;
-    }
+    if (stack->size == 0)
+        return 0;
+    stack_map(stack->top);
+    addr_t ret = stack->top;
+    stack->top = *phys_page;
     stack->size--;
-    return item->data;
+    return ret;
 }

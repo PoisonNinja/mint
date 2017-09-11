@@ -69,6 +69,6 @@ void process_init(void)
 {
     process_hashmap = hashmap_create(1000);
     kernel_process = process_allocate();
-    kernel_process->ctx.page_table = kernel_context.page_table;
+    kernel_process->ctx.physical_base = kernel_context.physical_base;
     process_add(kernel_process);
 }

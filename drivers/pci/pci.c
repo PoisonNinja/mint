@@ -30,13 +30,19 @@
  */
 
 #include <arch/drivers/io.h>
+#include <arch/mm/mmap.h>
 #include <drivers/pci/pci.h>
 #include <drivers/pci/pci_list.h>
 #include <kernel.h>
+#include <lib/math.h>
 #include <mm/heap.h>
+#include <mm/valloc.h>
+#include <mm/virtual.h>
 
 static struct list_element pci_driver_list = LIST_COMPILE_INIT(pci_driver_list);
 static struct list_element pci_device_list = LIST_COMPILE_INIT(pci_device_list);
+
+static struct valloc_region* pci_region = NULL;
 
 struct pci_device* pci_driver_match_device(struct pci_driver* driver)
 {
@@ -104,14 +110,16 @@ void pci_write_dword(const uint16_t bus, const uint16_t dev,
 static void pci_dump_header(struct pci_header* header)
 {
     PCI_VENTABLE pci_vendor = {
-        .VenShort = "Unknown", .VenFull = "Unknown",
+        .VenShort = "Unknown",
+        .VenFull = "Unknown",
     };
     for (uint16_t i = 0; i < PCI_VENTABLE_LEN; i++) {
         if (PciVenTable[i].VenId == header->vendor_id)
             pci_vendor = PciVenTable[i];
     }
     PCI_DEVTABLE pci_device = {
-        .Chip = "Unknown", .ChipDesc = "Unknown device",
+        .Chip = "Unknown",
+        .ChipDesc = "Unknown device",
     };
     for (uint16_t i = 0; i < PCI_DEVTABLE_LEN; i++) {
         if (PciDevTable[i].VenId == header->vendor_id) {
@@ -139,6 +147,15 @@ struct pci_header* pci_probe(uint16_t bus, uint16_t dev, uint16_t func)
             pci_read_dword(bus, dev, func, i + 12);
     }
     return header;
+}
+
+void* pci_map(addr_t physical, size_t size)
+{
+    size = ROUND_UP(size, 0x1000);
+    addr_t virtual = valloc_alloc(pci_region, size);
+    virtual_map(&kernel_context, virtual, physical, size,
+                PAGE_PRESENT | PAGE_WRITABLE);
+    return (void*)virtual;
 }
 
 void pci_detect(void)
@@ -175,5 +192,6 @@ void pci_detect(void)
 
 void pci_init(void)
 {
+    pci_region = valloc_create(PCI_START, PCI_END - PCI_START);
     pci_detect();
 }

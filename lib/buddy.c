@@ -29,6 +29,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <kernel.h>
 #include <lib/bitset.h>
 #include <lib/buddy.h>
 #include <lib/math.h>
@@ -38,15 +39,13 @@
 #define BUDDY_ADDRESS(x, order) ((x) ^ (1 << (order)))
 #define BUDDY_INDEX(x, order) ((x) / (POW_2(order)))
 
-struct buddy* buddy_init(addr_t base, addr_t virtual_base, size_t size,
-                         uint8_t min, uint8_t max)
+struct buddy* buddy_init(addr_t base, size_t size, uint8_t min, uint8_t max)
 {
     if (!size || !min || !max)
         return NULL;
     struct buddy* buddy = kmalloc(sizeof(struct buddy));
     // No zero checks for base because 0 is a valid base (e.g. low memory)
     buddy->base = base;
-    buddy->virtual_base = virtual_base;
     buddy->size = size;
     buddy->min_order = min;
     buddy->max_order = max;
@@ -80,23 +79,20 @@ void* buddy_alloc(struct buddy* buddy, size_t size)
         if (!found) {
             return NULL;
         }
-        void* addr = stack_pop(&buddy->orders[order].free);
+        void* addr = (void*)stack_pop(&buddy->orders[order].free);
         for (; order > original_order; order--) {
             bitset_set(buddy->orders[order].bitset,
-                       BUDDY_INDEX((addr_t)addr - buddy->base, order));
+                       BUDDY_INDEX((addr_t)addr, order));
             bitset_set(buddy->orders[order - 1].bitset,
-                       BUDDY_INDEX((addr_t)addr - buddy->base, order - 1));
-            struct stack_item* item =
-                (struct stack_item*)(BUDDY_ADDRESS((addr_t)addr, order - 1) +
-                                     buddy->virtual_base);
-            item->data = (void*)BUDDY_ADDRESS((addr_t)addr, order - 1);
-            stack_push(&buddy->orders[order - 1].free, item);
+                       BUDDY_INDEX((addr_t)addr, order - 1));
+            stack_push(&buddy->orders[order - 1].free,
+                       BUDDY_ADDRESS((addr_t)addr, order - 1));
         }
         return addr;
     } else {
-        void* addr = stack_pop(&buddy->orders[order].free);
+        void* addr = (void*)stack_pop(&buddy->orders[order].free);
         bitset_set(buddy->orders[order].bitset,
-                   BUDDY_INDEX((addr_t)addr - buddy->base, order));
+                   BUDDY_INDEX((addr_t)addr, order));
         return addr;
     }
 }
@@ -106,15 +102,12 @@ void buddy_free(struct buddy* buddy, void* addr, size_t size)
     uint32_t order = log_2(size);
     for (; order <= buddy->max_order; order++) {
         bitset_unset(buddy->orders[order].bitset,
-                     BUDDY_INDEX((addr_t)addr - buddy->base, order));
+                     BUDDY_INDEX((addr_t)addr, order));
         addr_t buddy_addr = BUDDY_ADDRESS((addr_t)addr, order);
         if (bitset_test(buddy->orders[order].bitset,
-                        BUDDY_INDEX(buddy_addr - buddy->base, order)) ||
+                        BUDDY_INDEX(buddy_addr, order)) ||
             order == buddy->max_order) {
-            struct stack_item* item =
-                (struct stack_item*)(addr + buddy->virtual_base);
-            item->data = (void*)addr;
-            stack_push(&buddy->orders[order].free, item);
+            stack_push(&buddy->orders[order].free, (addr_t)addr);
             break;
         }
     }

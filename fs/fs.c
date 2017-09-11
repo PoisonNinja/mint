@@ -65,17 +65,8 @@ struct filesystem* filesystem_get(const char* name)
     return NULL;
 }
 
-extern void dentry_init(void);
-extern void inode_init(void);
-extern void file_init(void);
 void filesystem_init(void)
 {
-    // Initialize the inode allocator
-    inode_init();
-    // Initialize the dentry allocator
-    dentry_init();
-    // Initialize the file allocator
-    file_init();
 }
 
 extern struct inode* fs_root;

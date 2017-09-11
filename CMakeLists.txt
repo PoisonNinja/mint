@@ -59,7 +59,7 @@ endif()
 message(STATUS "Platform file: " ${PLATFORM_FILE})
 include(${PLATFORM_FILE})
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -ffreestanding -fno-builtin -Iinclude -std=gnu11 -fcolor-diagnostics")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -ffreestanding -fno-builtin -Iinclude -std=gnu11 -fcolor-diagnostics -O3")
 message(STATUS "CFLAGS: " ${CMAKE_C_FLAGS})
 
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -nostdlib")
@@ -74,25 +74,6 @@ if(NOT DEFINED SYSROOT)
 endif()
 message(STATUS "Sysroot: " ${SYSROOT})
 
-add_custom_target(
-   arch-headers
-   COMMAND rsync
-      -aq
-      --update
-      "${ARCH_INCLUDE_PATH}/"
-      "${CMAKE_SOURCE_DIR}/include/arch/"
-   COMMENT "Installing architecture-specific headers"
-)
-
-add_custom_target(
-    version-headers
-    COMMAND ${CMAKE_SOURCE_DIR}/tools/version.sh
-        ${MINT_VERSION}
-        ${ARCH}
-        ${CMAKE_C_COMPILER}
-    COMMENT "Generating version header"
-)
-
 add_executable(mint.kernel "")
 add_subdirectory(${ARCH_PATH})
 add_subdirectory(cpu)
@@ -104,6 +85,25 @@ add_subdirectory(mm)
 add_subdirectory(tests)
 add_subdirectory(tm)
 
-add_dependencies(mint.kernel arch-headers version-headers)
+set(LN_ARGS ln -sf ${ARCH_INCLUDE_PATH} ${CMAKE_SOURCE_DIR}/include/arch)
+execute_process(
+    COMMAND ${LN_ARGS}
+)
+
+add_custom_command(
+    OUTPUT ${CMAKE_SOURCE_DIR}/include/kernel/version.h
+    COMMAND ${CMAKE_SOURCE_DIR}/tools/version.sh
+        ${MINT_VERSION}
+        ${ARCH}
+        ${CMAKE_C_COMPILER}
+    COMMENT "Generating version header"
+)
+
+add_custom_target(
+    version-header
+    DEPENDS "${CMAKE_SOURCE_DIR}/include/kernel/version.h"
+)
+
+add_dependencies(mint.kernel version-header)
 
 install(TARGETS mint.kernel RUNTIME DESTINATION "${SYSROOT}/boot")

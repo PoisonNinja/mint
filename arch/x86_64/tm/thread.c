@@ -90,7 +90,7 @@ void arch_thread_switch(struct interrupt_ctx* ctx, struct thread* current,
      * is corrupted, because the kernel is mapped into every address space
      * anyways
      */
-    addr_t pml4 = next->process->ctx.page_table;
+    addr_t pml4 = next->process->ctx.physical_base;
     if (!pml4)
         return;
     write_cr3(pml4);

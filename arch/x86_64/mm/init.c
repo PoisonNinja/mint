@@ -40,17 +40,18 @@
 #include <mm/virtual.h>
 #include <string.h>
 
-__attribute__((aligned(0x1000))) static struct page_table pml3;
-__attribute__((aligned(0x1000))) static struct page_table pml2[512];
-
 extern addr_t __kernel_start;
 extern addr_t __kernel_end;
 
 static struct mint_memory_region fixup_regions[10];
 static uint8_t free_fixup_region = 0;
 
+__attribute__((aligned(0x1000))) static struct page_table final_pml4;
+
 static char *memory_type_strings[] = {
-    "Unknown", "Available", "Reserved",
+    "Unknown",
+    "Available",
+    "Reserved",
 };
 
 /*
@@ -59,30 +60,16 @@ static char *memory_type_strings[] = {
  * make mapping easier while the physical memory manager is offline since
  * we can't allocate new pages yet, only using preallocated/compiled in
  */
-
 static void x86_64_patch_pml4(struct memory_context *context)
 {
     struct page_table *pml4 = (struct page_table *)(read_cr3() + VMA_BASE);
+    pml4->pages[RECURSIVE_ENTRY].present = 1;
+    pml4->pages[RECURSIVE_ENTRY].writable = 1;
+    pml4->pages[RECURSIVE_ENTRY].address = ((addr_t)pml4 - VMA_BASE) / 0x1000;
     pml4->pages[0].address = 0;
     pml4->pages[0].present = 0;
-    addr_t address = 0;
-    for (int i = 0; i < 512; i++) {
-        pml3.pages[i].address = ((addr_t)&pml2[i] - VMA_BASE) / 0x1000;
-        pml3.pages[i].present = 1;
-        pml3.pages[i].writable = 1;
-        for (int j = 0; j < 512; j++) {
-            pml2[i].pages[j].address = address / 0x1000;
-            pml2[i].pages[j].present = 1;
-            pml2[i].pages[j].writable = 1;
-            pml2[i].pages[j].huge_page = 1;
-            address += 0x200000;
-        }
-    }
-    pml4->pages[PML4_INDEX(PHYS_START)].address =
-        ((addr_t)&pml3 - VMA_BASE) / 0x1000;
-    pml4->pages[PML4_INDEX(PHYS_START)].present = 1;
-    pml4->pages[PML4_INDEX(PHYS_START)].writable = 1;
-    context->page_table = (addr_t)pml4;
+    context->physical_base = (addr_t)pml4 - VMA_BASE;
+    context->virtual_base = (addr_t)pml4;
 }
 
 /*
@@ -178,16 +165,21 @@ static void x86_64_fix_multiboot(struct mint_bootinfo *bootinfo)
  */
 static void x86_64_finalize_paging(struct memory_context *context)
 {
-    struct page_table *pml4 = (struct page_table *)physical_alloc(0x1000, 0);
-    memset((void *)((addr_t)pml4 + PHYS_START), 0, sizeof(struct page_table));
-    context->page_table = (addr_t)pml4;
-    virtual_map(context, PHYS_START, 0, PHYS_END - PHYS_START,
-                PAGE_PRESENT | PAGE_WRITABLE | PAGE_HUGE | PAGE_NX);
-    virtual_map(context, KERNEL_START, KERNEL_PHYS, KERNEL_END - KERNEL_START,
+    memset(&final_pml4, 0, sizeof(struct page_table));
+    struct memory_context new_context;
+    new_context.physical_base = (addr_t)&final_pml4 - VMA_BASE;
+    new_context.virtual_base = (addr_t)&final_pml4;
+    final_pml4.pages[RECURSIVE_ENTRY].address =
+        new_context.physical_base / 0x1000;
+    final_pml4.pages[RECURSIVE_ENTRY].present = 1;
+    final_pml4.pages[RECURSIVE_ENTRY].writable = 1;
+    virtual_map(&new_context, KERNEL_START, KERNEL_PHYS,
+                KERNEL_END - KERNEL_START, PAGE_PRESENT | PAGE_WRITABLE);
+    virtual_map(&new_context, VGA_START, VGA_PHYS, VGA_END - VGA_START,
                 PAGE_PRESENT | PAGE_WRITABLE);
-    virtual_map(context, VGA_START, VGA_PHYS, VGA_END - VGA_START,
-                PAGE_PRESENT | PAGE_WRITABLE);
-    write_cr3(context->page_table);
+    context->physical_base = new_context.physical_base;
+    context->virtual_base = new_context.virtual_base;
+    write_cr3(context->physical_base);
 }
 
 extern int arch_virtual_fault(struct interrupt_ctx *, void *);
