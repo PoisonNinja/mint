@@ -76,6 +76,7 @@ message(STATUS "Sysroot: " ${SYSROOT})
 
 add_executable(mint.kernel "")
 add_subdirectory(${ARCH_PATH})
+add_subdirectory(block)
 add_subdirectory(cpu)
 add_subdirectory(drivers)
 add_subdirectory(fs)
