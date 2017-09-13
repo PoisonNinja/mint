@@ -109,6 +109,8 @@ IRQ 15, 47
 
 extern x86_64_exception_handler
 isr_stub:
+    cld
+
     PUSHA
 
     mov rdi, rsp                        ; Push the registers
@@ -120,6 +122,8 @@ isr_stub:
 
 extern x86_64_interrupt_handler
 irq_stub:
+    cld
+
     PUSHA
 
     mov rdi, rsp                        ; Push the registers
