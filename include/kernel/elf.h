@@ -422,12 +422,12 @@ typedef struct elf64_shdr {
 #define NT_PPC_TM_SPR 0x10c    /* TM Special Purpose Registers */
 #define NT_PPC_TM_CTAR 0x10d   /* TM checkpointed Target Address Register */
 #define NT_PPC_TM_CPPR 0x10e   /* TM checkpointed Program Priority Register */
-#define NT_PPC_TM_CDSCR                                   \
-    0x10f /* TM checkpointed Data Stream Control Register \
-           */
-#define NT_386_TLS 0x200          /* i386 TLS slots (struct user_desc) */
-#define NT_386_IOPERM 0x201       /* x86 io permission bitmap (1=deny) */
-#define NT_X86_XSTATE 0x202       /* x86 extended state using xsave */
+#define NT_PPC_TM_CDSCR                                                     \
+    0x10f                   /* TM checkpointed Data Stream Control Register \
+                             */
+#define NT_386_TLS 0x200    /* i386 TLS slots (struct user_desc) */
+#define NT_386_IOPERM 0x201 /* x86 io permission bitmap (1=deny) */
+#define NT_X86_XSTATE 0x202 /* x86 extended state using xsave */
 #define NT_S390_HIGH_GPRS 0x300   /* s390 upper register halves */
 #define NT_S390_TIMER 0x301       /* s390 timer register */
 #define NT_S390_TODCMP 0x302      /* s390 TOD clock comparator register */

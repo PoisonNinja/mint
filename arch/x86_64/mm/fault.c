@@ -32,7 +32,8 @@
 #include <arch/cpu/registers.h>
 #include <kernel.h>
 
-void virtual_fault(struct interrupt_ctx* registers, addr_t address, uint8_t reason);
+void virtual_fault(struct interrupt_ctx* registers, addr_t address,
+                   uint8_t reason);
 
 int arch_virtual_fault(struct interrupt_ctx* registers,
                        void* __attribute__((unused)) dev)

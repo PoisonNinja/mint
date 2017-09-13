@@ -49,9 +49,7 @@ static uint8_t free_fixup_region = 0;
 __attribute__((aligned(0x1000))) static struct page_table final_pml4;
 
 static char *memory_type_strings[] = {
-    "Unknown",
-    "Available",
-    "Reserved",
+    "Unknown", "Available", "Reserved",
 };
 
 /*
