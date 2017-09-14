@@ -88,6 +88,7 @@ void arch_virtual_map(struct memory_context* context, addr_t virtual,
     invlpg(pdpt);
     invlpg(pd);
     invlpg(pt);
+    invlpg(virtual);
     int r = 0;
     r = __virtual_set_address(&pml4->pages[PML4_INDEX(virtual)]);
     __virtual_set_flags(&pml4->pages[PML4_INDEX(virtual)], flags);
@@ -116,4 +117,5 @@ void arch_virtual_map(struct memory_context* context, addr_t virtual,
     invlpg(pdpt);
     invlpg(pd);
     invlpg(pt);
+    invlpg(virtual);
 }
