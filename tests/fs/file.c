@@ -39,7 +39,7 @@ static int test_file(void)
 {
     START_TEST("File operations");
     struct file *file = file_open("/test", 0, 0);
-    ASSERT("Opening non-existent file should fail", !file);
+    ASSERT("Opening non-existent file fails", !file);
     file = file_open("/test", O_CREAT, S_IFDIR);
     ASSERT("Opening with O_CREAT creates file", file);
     file = file_open("/test", 0, 0);

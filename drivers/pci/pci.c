@@ -110,14 +110,16 @@ void pci_write_dword(const uint16_t bus, const uint16_t dev,
 static void pci_dump_header(struct pci_header* header)
 {
     PCI_VENTABLE pci_vendor = {
-        .VenShort = "Unknown", .VenFull = "Unknown",
+        .VenShort = "Unknown",
+        .VenFull = "Unknown",
     };
     for (uint16_t i = 0; i < PCI_VENTABLE_LEN; i++) {
         if (PciVenTable[i].VenId == header->vendor_id)
             pci_vendor = PciVenTable[i];
     }
     PCI_DEVTABLE pci_device = {
-        .Chip = "Unknown", .ChipDesc = "Unknown device",
+        .Chip = "Unknown",
+        .ChipDesc = "Unknown device",
     };
     for (uint16_t i = 0; i < PCI_DEVTABLE_LEN; i++) {
         if (PciDevTable[i].VenId == header->vendor_id) {
