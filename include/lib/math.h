@@ -41,8 +41,8 @@
 
 // Rounding
 // x = value, y = multiple of
-#define ROUND_DOWN(x, y) ((x) - ((x) % (y)))
-#define ROUND_UP(x, y) (ROUND_DOWN((x), (y)) + (y))
+#define ROUND_DOWN(x, y) ((x) / (y) * (y))
+#define ROUND_UP(x, y) ((((x) + ((y)-1)) / y) * y)
 
 // Upper and lower bits
 #define LOWER_32(x) ((x)&0xFFFFFFFF)
