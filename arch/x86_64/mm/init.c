@@ -202,6 +202,8 @@ void arch_mm_init(struct mint_bootinfo *bootinfo,
     printk(INFO, "%d memory regions:\n", bootinfo->num_memregions);
     for (struct mint_memory_region *region = bootinfo->memregions; region;
          region = region->next) {
+        region->addr = ROUND_UP(region->addr, 0x1000);
+        region->size = ROUND_DOWN(region->size, 0x1000);
         printk(
             INFO, "  [%p - %p] Type: %s\n", region->addr,
             region->addr + region->size,
