@@ -34,6 +34,7 @@
 #include <fs/fs.h>
 #include <fs/inode.h>
 #include <fs/stat.h>
+#include <kernel.h>
 #include <kernel/init.h>
 #include <lib/list.h>
 #include <mm/heap.h>
@@ -115,6 +116,9 @@ struct inode* initfs_create(struct inode* parent, struct dentry* dentry,
     struct initfs_inode* rnode = kzalloc(sizeof(struct initfs_inode));
     struct inode* inode = initfs_allocate(parent->i_sb);
     struct initfs_dirent* dir = kmalloc(sizeof(struct initfs_dirent));
+    struct initfs_inode* iparent;
+    if (!(iparent = (data->inodes[parent->i_ino])))
+        return -EIO;
     rnode->i_ino = data->next++;
     list_runtime_init(&rnode->i_entries);
     inode->i_ino = rnode->i_ino;
@@ -124,7 +128,7 @@ struct inode* initfs_create(struct inode* parent, struct dentry* dentry,
     strncpy(dir->d_name, dentry->d_name, DENTRY_NAME_MAX);
     data->inodes[rnode->i_ino] = rnode;
     rnode->i_mode = mode;
-    list_add(&rnode->i_entries, &dir->list);
+    list_add(&iparent->i_entries, &dir->list);
     return inode;
 }
 
