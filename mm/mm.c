@@ -43,7 +43,8 @@ extern struct memory_context kernel_context;
 
 void mm_init(struct mint_bootinfo* bootinfo)
 {
-    printk(INFO, "%llu KiB of memory available\n", bootinfo->total_mem);
+    printk(INFO, "%llu MiB of memory available\n",
+           bootinfo->total_mem / 1024 / 1024);
     printk(INFO, "Highest address is %p\n", bootinfo->highest_mem);
     arch_mm_init(bootinfo, &kernel_context);
     kmalloc_init();
