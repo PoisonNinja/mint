@@ -30,6 +30,7 @@
  */
 
 #include <kernel.h>
+#include <kernel/symbol.h>
 #include <types.h>
 
 void arch_stacktrace(void)
@@ -41,6 +42,7 @@ void arch_stacktrace(void)
         if (!rip)
             break;
         rbp = (uint64_t*)rbp[0];
-        printk(INFO, "<%llX> %s\n", rip, "???????????");
+        struct ksymbol_resolve* resolve = ksymbol_resolve(rip);
+        printk(INFO, "<%llX+%llX> %s\n", rip, resolve->offset, resolve->name);
     }
 }

@@ -37,6 +37,7 @@
 #include <kernel.h>
 #include <kernel/elf.h>
 #include <kernel/init.h>
+#include <kernel/symbol.h>
 #include <mm/heap.h>
 #include <string.h>
 #include <types.h>
@@ -79,7 +80,7 @@ void multiboot_parse_symbols(struct multiboot_elf_section_header_table *table)
                 } else {
                     name = "N/A";
                 }
-                printk(INFO, "%p -> %s\n", symtab->st_value, name);
+                ksymbol_register(symtab->st_value, name, strlen(name));
             }
         }
     }
@@ -99,13 +100,6 @@ void x86_64_init(uint32_t magic, struct multiboot_info *mboot)
               MULTIBOOT_BOOTLOADER_MAGIC, magic);
     printk(INFO, "x86_64-init: Multiboot information structure at 0x%llX\n",
            mboot);
-    if (multiboot_has_symbols(mboot)) {
-        printk(INFO, "ELF symbols provided by multiboot, :)\n");
-        multiboot_parse_symbols(&mboot->u.elf_sec);
-    } else {
-        printk(WARNING, "ELF symbols not loaded, stack traces will NOT have "
-                        "resolved symbols\n");
-    }
     cpu_initialize_information();
     cpu_print_information(cpu_get_information(0));
     gdt_init();
@@ -115,6 +109,13 @@ void x86_64_init(uint32_t magic, struct multiboot_info *mboot)
      * that it can allocate to
      */
     early_malloc_set_properties((uint64_t)&__kernel_end + VMA_BASE, 0x100000);
+    if (multiboot_has_symbols(mboot)) {
+        printk(INFO, "ELF symbols provided by multiboot, :)\n");
+        multiboot_parse_symbols(&mboot->u.elf_sec);
+    } else {
+        printk(WARNING, "ELF symbols not loaded, stack traces will NOT have "
+                        "resolved symbols\n");
+    }
     memset(&bootinfo, 0, sizeof(struct mint_bootinfo));
     uint32_t mmap = mboot->mmap_addr;
     while (mmap < mboot->mmap_addr + mboot->mmap_length) {
