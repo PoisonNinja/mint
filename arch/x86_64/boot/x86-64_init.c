@@ -31,6 +31,7 @@
 
 #include <arch/boot/multiboot.h>
 #include <arch/cpu/cpu.h>
+#include <arch/mm/mm.h>
 #include <arch/mm/mmap.h>
 #include <boot/bootinfo.h>
 #include <cpu/interrupt.h>
@@ -38,9 +39,13 @@
 #include <kernel/elf.h>
 #include <kernel/init.h>
 #include <kernel/symbol.h>
+#include <lib/math.h>
 #include <mm/heap.h>
 #include <string.h>
 #include <types.h>
+
+extern addr_t __kernel_start;
+extern addr_t __kernel_end;
 
 extern int x86_64_init_console(void);
 extern void kmain(struct mint_bootinfo *);
@@ -52,6 +57,13 @@ static struct mint_bootinfo bootinfo;
 
 extern uint64_t __bss_start;
 extern uint64_t __bss_end;
+
+/*
+ * We only need a maximum of four, because there can only be a maximum of 2
+ * overlapping zones. The ones inside can simply be deleted.
+ */
+static struct mint_memory_region memory_regions[4];
+static int free_memory_region = 0;
 
 extern uint64_t __kernel_end;
 
@@ -92,6 +104,98 @@ static int multiboot_has_symbols(struct multiboot_info *mboot)
     return (mboot->flags & MULTIBOOT_INFO_ELF_SHDR) ? 1 : 0;
 }
 
+/*
+ * Multiboot's memory region comes mainly from BIOS calls, and it doesn't
+ * do anything to mark kernel areas as used. Thus, when we blindly pass
+ * in free regions to the physical manager, the physical manager happily
+ * marks the kernel memory as free to. Eventually, the kernel will get
+ * clobbered once that memory gets handed out to some unsuspecting
+ * function requesting memory. This function loops through the memory
+ * regions and fixes any overlap between the free regions and the kernel
+ * space.
+ */
+static void x86_64_fix_multiboot(struct multiboot_info *mboot)
+{
+    addr_t kernel_start = ROUND_DOWN((addr_t)&__kernel_start, PAGE_SIZE);
+    /*
+     * Yes, this kmalloc(0) is intentional. It's a pretty cool trick to get
+     * the current location of the heap without actually allocating stuff.
+     * Of course, this works only because malloc (early_malloc at this stage)
+     * is a simple watermark allocator. Something more advanced may not
+     * work with this trick
+     */
+    addr_t kernel_end = ROUND_UP((addr_t)&__kernel_end, PAGE_SIZE);
+    printk(INFO, "Kernel between %p and %p\n", kernel_start, kernel_end);
+    uint32_t mmap = mboot->mmap_addr;
+    while (mmap < mboot->mmap_addr + mboot->mmap_length) {
+        multiboot_memory_map_t *tmp = (multiboot_memory_map_t *)(uint64_t)mmap;
+        if (tmp->type == MULTIBOOT_MEMORY_AVAILABLE) {
+            if (tmp->addr <= kernel_start &&
+                tmp->addr + tmp->len >= kernel_end) {
+                printk(
+                    WARNING,
+                    "Kernel located in reported 'free' region, fixing up...\n");
+                /*
+                 * There are four possible cases in regards to kernel and the
+                 * region. |--| denotes the kernel, and xxx denotes free space.
+                 *
+                 * Case 1: xxxxx|xx---|. The free space is before the kernel and
+                 * ends before or equal to the kernel end. We only need to
+                 * reduce the existing size to the beginning of the kernel.
+                 *
+                 * Case 2: |----xxx|xxxxx. The free space is after the kernel
+                 * and starts in the kernel. We only need to move the start of
+                 * the region to the end of the kernel, maybe adding some buffer
+                 * space.
+                 *
+                 * Case 3: xxxxx|xxxxxx|xxxxx. The free space surrounds the
+                 * kernel. For this, we split the region into 2 regions, and set
+                 * the first region end to the start of the kernel, and the
+                 * start of the second region to the end of the kernel.
+                 *
+                 * Case 4: |--xxxx--|. The free space is in the kernel. In this
+                 * case, we just delete the region :)
+                 */
+                if (tmp->addr < kernel_start &&
+                    tmp->addr + tmp->len <= kernel_end) {
+                    // Case 1
+                    size_t overlap = (tmp->addr + tmp->len) - kernel_start;
+                    tmp->len -= overlap;
+                } else if (tmp->addr >= kernel_start &&
+                           tmp->addr <= kernel_end &&
+                           tmp->addr + tmp->len > kernel_end) {
+                    size_t overlap = (kernel_end - tmp->addr);
+                    // Case 2
+                    tmp->addr = kernel_end;
+                    tmp->len -= overlap;
+                } else if (tmp->addr < kernel_start &&
+                           tmp->addr + tmp->len >= kernel_end) {
+                    panic("Free memory region located completely inside "
+                          "kernel, unable to handle!\n");
+                    // // Case 3
+                    // size_t orig = tmp->len;
+                    // size_t overlap = (tmp->addr + tmp->len) - kernel_start;
+                    // tmp->len -= overlap;
+                    // fixup_regions[free_fixup_region].addr = kernel_end;
+                    // fixup_regions[free_fixup_region].len =
+                    //     (tmp->addr + orig) -
+                    //     fixup_regions[free_fixup_region].addr;
+                    // fixup_regions[free_fixup_region].type =
+                    //     MEMORY_TYPE_AVAILABLE;
+                    // fixup_regions[free_fixup_region].next = tmp->next;
+                    // tmp->next = &fixup_regions[free_fixup_region];
+                    // free_fixup_region++;
+                    // bootinfo->num_memregions++;
+                } else if (tmp->addr >= kernel_start &&
+                           tmp->addr + tmp->len <= kernel_end) {
+                    tmp->type = MULTIBOOT_MEMORY_RESERVED;
+                }
+            }
+        }
+        mmap += (tmp->size + sizeof(tmp->size));
+    }
+}
+
 void x86_64_init(uint32_t magic, struct multiboot_info *mboot)
 {
     interrupt_disable();
@@ -105,6 +209,7 @@ void x86_64_init(uint32_t magic, struct multiboot_info *mboot)
     cpu_print_information(cpu_get_information(0));
     gdt_init();
     idt_init();
+    x86_64_fix_multiboot(mboot);
     /*
      * Tell early_malloc where it can allocate memory from and the extent
      * that it can allocate to

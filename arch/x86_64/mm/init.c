@@ -43,13 +43,12 @@
 extern addr_t __kernel_start;
 extern addr_t __kernel_end;
 
-static struct mint_memory_region fixup_regions[10];
-static uint8_t free_fixup_region = 0;
-
 __attribute__((aligned(0x1000))) static struct page_table final_pml4;
 
 static char *memory_type_strings[] = {
-    "Unknown", "Available", "Reserved",
+    "Unknown",
+    "Available",
+    "Reserved",
 };
 
 /*
@@ -68,93 +67,6 @@ static void x86_64_patch_pml4(struct memory_context *context)
     pml4->pages[0].present = 0;
     context->physical_base = (addr_t)pml4 - VMA_BASE;
     context->virtual_base = (addr_t)pml4;
-}
-
-/*
- * Multiboot's memory region comes mainly from BIOS calls, and it doesn't
- * do anything to mark kernel areas as used. Thus, when we blindly pass
- * in free regions to the physical manager, the physical manager happily
- * marks the kernel memory as free to. Eventually, the kernel will get
- * clobbered once that memory gets handed out to some unsuspecting
- * function requesting memory. This function loops through the memory
- * regions and fixes any overlap between the free regions and the kernel
- * space.
- */
-static void x86_64_fix_multiboot(struct mint_bootinfo *bootinfo)
-{
-    addr_t kernel_start = ROUND_DOWN((addr_t)&__kernel_start, PAGE_SIZE);
-    /*
-     * Yes, this kmalloc(0) is intentional. It's a pretty cool trick to get
-     * the current location of the heap without actually allocating stuff.
-     * Of course, this works only because malloc (early_malloc at this stage)
-     * is a simple watermark allocator. Something more advanced may not
-     * work with this trick
-     */
-    addr_t kernel_end = ROUND_UP((addr_t)kmalloc(0) - VMA_BASE, PAGE_SIZE);
-    printk(INFO, "Kernel between %p and %p\n", kernel_start, kernel_end);
-    for (struct mint_memory_region *region = bootinfo->memregions; region;
-         region = region->next) {
-        if (region->addr <= kernel_start &&
-            region->addr + region->size >= kernel_end &&
-            region->type == MEMORY_TYPE_AVAILABLE) {
-            printk(WARNING,
-                   "Kernel located in reported 'free' region, fixing up...\n");
-            /*
-             * There are four possible cases in regards to kernel and the
-             * region. |--| denotes the kernel, and xxx denotes free space.
-             *
-             * Case 1: xxxxx|xx---|. The free space is before the kernel and
-             * ends before or equal to the kernel end. We only need to reduce
-             * the existing size to the beginning of the kernel.
-             *
-             * Case 2: |----xxx|xxxxx. The free space is after the kernel and
-             * starts in the kernel. We only need to move the start of the
-             * region to the end of the kernel, maybe adding some buffer space.
-             *
-             * Case 3: xxxxx|xxxxxx|xxxxx. The free space surrounds the kernel.
-             * For this, we split the region into 2 regions, and set the
-             * first region end to the start of the kernel, and the start
-             * of the second region to the end of the kernel.
-             *
-             * Case 4: |--xxxx--|. The free space is in the kernel. In this
-             * case, we just delete the region :)
-             */
-            if (region->addr < kernel_start &&
-                region->addr + region->size <= kernel_end) {
-                // Case 1
-                size_t overlap = (region->addr + region->size) - kernel_start;
-                region->size -= overlap;
-            } else if (region->addr >= kernel_start &&
-                       region->addr <= kernel_end) {
-                size_t overlap = (kernel_end - region->addr);
-                // Case 2
-                region->addr = kernel_end;
-                region->size -= overlap;
-            } else if (region->addr < kernel_start &&
-                       region->addr + region->size >= kernel_end) {
-                // Case 3
-                size_t orig = region->size;
-                size_t overlap = (region->addr + region->size) - kernel_start;
-                region->size -= overlap;
-                fixup_regions[free_fixup_region].addr = kernel_end;
-                fixup_regions[free_fixup_region].size =
-                    (region->addr + orig) -
-                    fixup_regions[free_fixup_region].addr;
-                fixup_regions[free_fixup_region].type = MEMORY_TYPE_AVAILABLE;
-                fixup_regions[free_fixup_region].next = region->next;
-                region->next = &fixup_regions[free_fixup_region];
-                free_fixup_region++;
-                bootinfo->num_memregions++;
-            } else if (region->addr >= kernel_start &&
-                       region->addr + region->size <= kernel_end) {
-                // Case 4
-                if (region->prev)
-                    region->prev->next = region->next;
-                if (region->next)
-                    region->next->prev = region->prev;
-            }
-        }
-    }
 }
 
 /*
@@ -198,7 +110,6 @@ void arch_mm_init(struct mint_bootinfo *bootinfo,
     x86_64_install_handler();
     x86_64_patch_pml4(context);
     physical_init(bootinfo->highest_mem, DMA_MAX);
-    x86_64_fix_multiboot(bootinfo);
     printk(INFO, "%d memory regions:\n", bootinfo->num_memregions);
     for (struct mint_memory_region *region = bootinfo->memregions; region;
          region = region->next) {
