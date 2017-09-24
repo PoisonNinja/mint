@@ -35,6 +35,7 @@
 #include <boot/bootinfo.h>
 #include <cpu/interrupt.h>
 #include <kernel.h>
+#include <kernel/elf.h>
 #include <kernel/init.h>
 #include <mm/heap.h>
 #include <string.h>
@@ -53,6 +54,42 @@ extern uint64_t __bss_end;
 
 extern uint64_t __kernel_end;
 
+void multiboot_parse_symbols(struct multiboot_elf_section_header_table *table)
+{
+    printk(INFO, "%u ELF table entries to load, size %u, address %p\n",
+           table->num, table->size, table->addr);
+    for (int i = 0; i < table->num; i++) {
+        struct elf64_shdr *shdr = table->addr + (table->size * i);
+        if (shdr->sh_type == SHT_SYMTAB) {
+            struct elf64_sym *symtab = (struct elf64_sym *)shdr->sh_addr;
+            if (!symtab)
+                continue;
+            int num_syms = shdr->sh_size / shdr->sh_entsize;
+            struct elf64_shdr *string_table_header =
+                (struct elf64_shdr *)((uint64_t)table->addr +
+                                      shdr->sh_link * table->size);
+            char *string_table = (char *)string_table_header->sh_addr;
+            for (int j = 1; j <= num_syms; j++) {
+                symtab++;
+                if (ELF32_ST_TYPE(symtab->st_info) != STT_FUNC)
+                    continue;
+                char *name;
+                if (symtab->st_name != 0) {
+                    name = (char *)&string_table[symtab->st_name];
+                } else {
+                    name = "N/A";
+                }
+                printk(INFO, "%p -> %s\n", symtab->st_value, name);
+            }
+        }
+    }
+}
+
+int multiboot_has_symbols(struct multiboot_info *mboot)
+{
+    return (mboot->flags & MULTIBOOT_INFO_ELF_SHDR) ? 1 : 0;
+}
+
 void x86_64_init(uint32_t magic, struct multiboot_info *mboot)
 {
     interrupt_disable();
@@ -62,13 +99,20 @@ void x86_64_init(uint32_t magic, struct multiboot_info *mboot)
               MULTIBOOT_BOOTLOADER_MAGIC, magic);
     printk(INFO, "x86_64-init: Multiboot information structure at 0x%llX\n",
            mboot);
+    if (multiboot_has_symbols(mboot)) {
+        printk(INFO, "ELF symbols provided by multiboot, :)\n");
+        multiboot_parse_symbols(&mboot->u.elf_sec);
+    } else {
+        printk(WARNING, "ELF symbols not loaded, stack traces will NOT have "
+                        "resolved symbols\n");
+    }
     cpu_initialize_information();
     cpu_print_information(cpu_get_information(0));
     gdt_init();
     idt_init();
     /*
-     * Tell early_malloc where it can allocate memory from and the extent that
-     * it can allocate to
+     * Tell early_malloc where it can allocate memory from and the extent
+     * that it can allocate to
      */
     early_malloc_set_properties((uint64_t)&__kernel_end + VMA_BASE, 0x100000);
     memset(&bootinfo, 0, sizeof(struct mint_bootinfo));
