@@ -55,7 +55,8 @@ extern uint64_t __bss_end;
 
 extern uint64_t __kernel_end;
 
-void multiboot_parse_symbols(struct multiboot_elf_section_header_table *table)
+static void multiboot_parse_symbols(
+    struct multiboot_elf_section_header_table *table)
 {
     printk(INFO, "%u ELF table entries to load, size %u, address %p\n",
            table->num, table->size, table->addr);
@@ -86,7 +87,7 @@ void multiboot_parse_symbols(struct multiboot_elf_section_header_table *table)
     }
 }
 
-int multiboot_has_symbols(struct multiboot_info *mboot)
+static int multiboot_has_symbols(struct multiboot_info *mboot)
 {
     return (mboot->flags & MULTIBOOT_INFO_ELF_SHDR) ? 1 : 0;
 }
