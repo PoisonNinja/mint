@@ -293,6 +293,7 @@ int vsprintf(char *s, const char *format, va_list arg)
         .buffer = s, .putcf = sprintf_putcf,
     };
     printf_format(&data, format, arg);
+    s[data.used] = '\0';
     return data.used;
 }
 
@@ -312,6 +313,7 @@ int vsnprintf(char *s, size_t size, const char *format, va_list arg)
         .buffer = s, .max = size, .putcf = snprintf_putcf,
     };
     printf_format(&data, format, arg);
+    s[data.used] = '\0';
     return data.used;
 }
 
