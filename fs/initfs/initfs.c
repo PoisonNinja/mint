@@ -115,11 +115,12 @@ struct inode* initfs_create(struct inode* parent, struct dentry* dentry,
     struct initfs_data* data = (struct initfs_data*)parent->i_sb->s_data;
     struct initfs_inode* rnode = kzalloc(sizeof(struct initfs_inode));
     struct inode* inode = initfs_allocate(parent->i_sb);
-    struct initfs_dirent* dir = kmalloc(sizeof(struct initfs_dirent));
+    struct initfs_dirent* dir = kzalloc(sizeof(struct initfs_dirent));
     struct initfs_inode* iparent;
     if (!(iparent = (data->inodes[parent->i_ino])))
         return -EIO;
     rnode->i_ino = data->next++;
+    rnode->i_mode = mode;
     list_runtime_init(&rnode->i_entries);
     inode->i_ino = rnode->i_ino;
     inode->i_mode = mode;
@@ -127,7 +128,6 @@ struct inode* initfs_create(struct inode* parent, struct dentry* dentry,
     dir->d_ino = inode->i_ino;
     strncpy(dir->d_name, dentry->d_name, DENTRY_NAME_MAX);
     data->inodes[rnode->i_ino] = rnode;
-    rnode->i_mode = mode;
     list_add(&iparent->i_entries, &dir->list);
     return inode;
 }
@@ -197,14 +197,14 @@ struct superblock_operations initfs_superblock_operations = {
 static int initfs_mount(struct superblock* sb)
 {
     struct initfs_data* data = kmalloc(sizeof(struct initfs_data));
-    data->next = 0;
+    data->next = 1;
     sb->s_data = data;
     sb->s_ops = &initfs_superblock_operations;
     struct inode* root_inode = initfs_allocate(sb);
     root_inode->i_ino = 0;
     root_inode->i_mode = S_IFDIR;
     sb->s_root = root_inode;
-    data->inodes[0] = kmalloc(sizeof(struct initfs_inode));
+    data->inodes[0] = kzalloc(sizeof(struct initfs_inode));
     struct initfs_inode* root = data->inodes[0];
     root->i_ino = 0;
     root->i_mode = S_IFDIR;
