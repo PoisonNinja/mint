@@ -86,5 +86,8 @@ void rootfs_init(void)
         return;
     }
     current_process->root = current_process->cwd = sb->s_root;
+    if (!path_resolve("/dev", O_CREAT, S_IFDIR, NULL)) {
+        printk(ERROR, "Failed to create /dev\n");
+    }
     return;
 }
