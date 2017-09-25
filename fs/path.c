@@ -129,7 +129,7 @@ static struct inode* __path_resolve_create(struct inode* start,
      * of the original flags, excluding O_CREATE because I don't want
      * to accidentally create the directory too.
      */
-    struct inode* dir = path_resolve(dirpath, 0, (flags & ~O_CREAT), NULL);
+    struct inode* dir = path_resolve(dirpath, (flags & ~O_CREAT), mode, NULL);
     if (!dir)
         return NULL;
     if (!S_ISDIR(dir->i_mode))
@@ -152,10 +152,10 @@ struct inode* path_resolve(const char* path, int flags, mode_t mode,
     struct inode* start = NULL;
     if (*path == '/') {
         /*
-         * A quick check to see if the entire path only consists of /. Instead
-         * of using strlen which can get really bad performance (O(n)) for
-         * longer strings, we simply check if the next character is a NULL
-         * terminator.
+         * A quick check to see if the entire path only consists of /.
+         * Instead of using strlen which can get really bad performance
+         * (O(n)) for longer strings, we simply check if the next character
+         * is a NULL terminator.
          */
         if (*(path + 1) == '\0')
             return current_process->root;

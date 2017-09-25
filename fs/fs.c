@@ -32,6 +32,7 @@
 #include <fs/fs.h>
 #include <fs/mount.h>
 #include <fs/path.h>
+#include <fs/stat.h>
 #include <kernel.h>
 #include <kernel/init.h>
 #include <mm/heap.h>
