@@ -50,14 +50,19 @@
 #include <cpu/interrupt.h>
 #include <drivers/ata/ahci/ahci.h>
 #include <drivers/pci/pci.h>
+#include <fs/device.h>
+#include <fs/stat.h>
 #include <kernel.h>
 #include <kernel/init.h>
 #include <lib/math.h>
+#include <lib/printf.h>
 #include <mm/dma.h>
 #include <mm/heap.h>
 #include <string.h>
 
 static int got_interrupt = 0;
+
+static char ahci_last_letter = 'a';
 
 /*
  * Copies a AHCI string into a char buffer
@@ -242,6 +247,20 @@ static int ahci_check_type(volatile struct hba_port* port)
     return port->signature;
 }
 
+static void ahci_create_fs_node(struct ahci_device* device)
+{
+    char device_name[256];
+    snprintf(device_name, 256, "/dev/sd%c", ahci_last_letter);
+    AHCI_LOG(DEBUG, "Device name is: %s\n", device_name);
+    struct inode* node =
+        mknod(device_name, S_IFBLK, MKDEV(1, ahci_last_letter - 'a'));
+    if (!node) {
+        AHCI_LOG(WARNING, "Failed to create device node for port %d\n",
+                 device->port_no);
+        return;
+    }
+}
+
 static void ahci_detect_ports(struct hba_memory* abar)
 {
     AHCI_LOG(INFO, "0x%X ports available\n", (abar->capability & 0xF) + 1);
@@ -288,6 +307,7 @@ static void ahci_detect_ports(struct hba_memory* abar)
                          ahci_get_lba28_capacity(device->identify));
                 AHCI_LOG(INFO, "LBA48 max addressable: %llX\n",
                          ahci_get_lba48_capacity(device->identify));
+                ahci_create_fs_node(device);
             }
         }
         pi >>= 1;
@@ -355,4 +375,4 @@ static int init_ahci(void)
     pci_driver_register(&ahci_driver);
     return 0;
 }
-DEVICE_INITCALL(init_ahci);
+TEST_INITCALL(init_ahci);
