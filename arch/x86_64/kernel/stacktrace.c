@@ -43,6 +43,7 @@ void arch_stacktrace(void)
             break;
         rbp = (uint64_t*)rbp[0];
         struct ksymbol_resolve* resolve = ksymbol_resolve(rip);
-        printk(INFO, "<%llX+%llX> %s\n", rip, resolve->offset, resolve->name);
+        printk(INFO, "<%llX+%llX> %s\n", resolve->address, resolve->offset,
+               resolve->name);
     }
 }
