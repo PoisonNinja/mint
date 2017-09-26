@@ -58,13 +58,6 @@ static struct mint_bootinfo bootinfo;
 extern uint64_t __bss_start;
 extern uint64_t __bss_end;
 
-/*
- * We only need a maximum of four, because there can only be a maximum of 2
- * overlapping zones. The ones inside can simply be deleted.
- */
-static struct mint_memory_region memory_regions[4];
-static int free_memory_region = 0;
-
 extern uint64_t __kernel_end;
 
 static void multiboot_parse_symbols(
@@ -72,8 +65,9 @@ static void multiboot_parse_symbols(
 {
     printk(INFO, "%u ELF table entries to load, size %u, address %p\n",
            table->num, table->size, table->addr);
-    for (int i = 0; i < table->num; i++) {
-        struct elf64_shdr *shdr = table->addr + (table->size * i);
+    for (uint32_t i = 0; i < table->num; i++) {
+        struct elf64_shdr *shdr =
+            (struct elf64_shdr *)(table->addr + (table->size * i));
         if (shdr->sh_type == SHT_SYMTAB) {
             struct elf64_sym *symtab = (struct elf64_sym *)shdr->sh_addr;
             if (!symtab)
@@ -196,6 +190,47 @@ static void x86_64_fix_multiboot(struct multiboot_info *mboot)
     }
 }
 
+static struct multiboot_mmap_entry *multiboot_get_largest_available_block(
+    struct multiboot_info *mboot)
+{
+    size_t largest = 0;
+    struct multiboot_mmap_entry *entry = NULL;
+    uint32_t mmap = mboot->mmap_addr;
+    while (mmap < mboot->mmap_addr + mboot->mmap_length) {
+        multiboot_memory_map_t *tmp = (multiboot_memory_map_t *)(uint64_t)mmap;
+        if (tmp->type == MULTIBOOT_MEMORY_AVAILABLE) {
+            if (tmp->len > largest) {
+                largest = tmp->len;
+                entry = tmp;
+            }
+        }
+        mmap += (tmp->size + sizeof(tmp->size));
+    }
+    return entry;
+}
+
+static void x86_64_protect_symtab(
+    struct multiboot_mmap_entry *entry,
+    struct multiboot_elf_section_header_table *table)
+{
+    size_t symtab_size = 0;
+    size_t string_table_size = 0;
+    for (uint32_t i = 0; i < table->num; i++) {
+        struct elf64_shdr *shdr =
+            (struct elf64_shdr *)(table->addr + (table->size * i));
+        if (shdr->sh_type == SHT_SYMTAB) {
+            symtab_size = shdr->sh_size;
+            struct elf64_shdr *string_table_header =
+                (struct elf64_shdr *)((uint64_t)table->addr +
+                                      shdr->sh_link * table->size);
+            string_table_size = string_table_header->sh_size;
+        }
+    }
+    size_t total = ROUND_UP(symtab_size + string_table_size, 0x1000);
+    entry->addr += total;
+    entry->len -= total;
+}
+
 void x86_64_init(uint32_t magic, struct multiboot_info *mboot)
 {
     interrupt_disable();
@@ -210,11 +245,15 @@ void x86_64_init(uint32_t magic, struct multiboot_info *mboot)
     gdt_init();
     idt_init();
     x86_64_fix_multiboot(mboot);
+    struct multiboot_mmap_entry *kmalloc_free =
+        multiboot_get_largest_available_block(mboot);
+    x86_64_protect_symtab(kmalloc_free, &mboot->u.elf_sec);
     /*
-     * Tell early_malloc where it can allocate memory from and the extent
-     * that it can allocate to
+     * Tell early_malloc where it can allocate memory from and the
+     * extent that it can allocate to
      */
-    early_malloc_set_properties((uint64_t)&__kernel_end + VMA_BASE, 0x100000);
+    early_malloc_set_properties((uint64_t)kmalloc_free->addr + VMA_BASE,
+                                kmalloc_free->len);
     if (multiboot_has_symbols(mboot)) {
         printk(INFO, "ELF symbols provided by multiboot, :)\n");
         multiboot_parse_symbols(&mboot->u.elf_sec);
