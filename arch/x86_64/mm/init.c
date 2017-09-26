@@ -92,6 +92,21 @@ static void x86_64_finalize_paging(struct memory_context *context)
     write_cr3(context->physical_base);
 }
 
+static void x86_64_update_map(struct mint_bootinfo *bootinfo)
+{
+    addr_t heap_end = ROUND_UP((addr_t)kmalloc(0), 0x1000) - VMA_BASE;
+    for (struct mint_memory_region *region = bootinfo->memregions; region;
+         region = region->next) {
+        if (region->addr < heap_end && region->addr + region->size > heap_end &&
+            region->type == MEMORY_TYPE_AVAILABLE) {
+            printk(INFO, "Updating region to %p\n", heap_end);
+            size_t overlap = heap_end - region->addr;
+            region->addr = heap_end;
+            region->size -= overlap;
+        }
+    }
+}
+
 extern int arch_virtual_fault(struct interrupt_ctx *, void *);
 static struct exception_handler page_fault_handler = {
     .handler = &arch_virtual_fault,
@@ -110,6 +125,7 @@ void arch_mm_init(struct mint_bootinfo *bootinfo,
     x86_64_install_handler();
     x86_64_patch_pml4(context);
     physical_init(bootinfo->highest_mem, DMA_MAX);
+    x86_64_update_map(bootinfo);
     printk(INFO, "%d memory regions:\n", bootinfo->num_memregions);
     for (struct mint_memory_region *region = bootinfo->memregions; region;
          region = region->next) {
