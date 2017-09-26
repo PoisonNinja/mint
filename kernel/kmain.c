@@ -46,13 +46,6 @@ extern void setup_arch(void);
 
 void do_initcalls(void)
 {
-    do_initcall(EARLY_INIT);
-    do_initcall(CORE_INIT);
-    do_initcall(ARCH_INIT);
-    do_initcall(SUBSYS_INIT);
-    do_initcall(FS_INIT);
-    do_initcall(DEVICE_INIT);
-    do_initcall(LATE_INIT);
 }
 
 void kmain(struct mint_bootinfo* bootinfo)
@@ -65,8 +58,14 @@ void kmain(struct mint_bootinfo* bootinfo)
     filesystem_init();
     pci_init();
     interrupt_enable();
-    do_initcalls();
+    do_initcall(EARLY_INIT);
+    do_initcall(CORE_INIT);
+    do_initcall(ARCH_INIT);
+    do_initcall(SUBSYS_INIT);
+    do_initcall(FS_INIT);
     rootfs_init();
+    do_initcall(DEVICE_INIT);
+    do_initcall(LATE_INIT);
     do_initcall(TEST_INIT);
     for (;;)
         cpu_halt();
