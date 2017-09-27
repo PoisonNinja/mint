@@ -31,9 +31,25 @@
 
 #include <fs/fs.h>
 #include <fs/inode.h>
+#include <kernel.h>
+#include <lib/hashmap.h>
 #include <lib/list.h>
 #include <mm/heap.h>
 #include <string.h>
+
+static struct hashmap* inode_cache = NULL;
+
+struct inode* inode_check_cache(struct superblock* sb, ino_t ino)
+{
+    uint64_t key[2] = {(uint64_t)sb, ino};
+    struct inode* ret = hashmap_get(inode_cache, key, 16);
+}
+
+void inode_insert_cache(struct superblock* sb, struct inode* inode)
+{
+    uint64_t key[2] = {(uint64_t)sb, inode->i_ino};
+    hashmap_set(inode_cache, key, 16, inode);
+}
 
 struct inode* inode_allocate(struct superblock* sb)
 {
@@ -53,7 +69,10 @@ struct inode* inode_resolve_dentry(struct dentry* dentry)
 {
     if (!dentry)
         return NULL;
-    struct inode* inode = inode_allocate(dentry->d_sb);
+    struct inode* inode = NULL;
+    if ((inode = inode_check_cache(dentry->d_sb, dentry->d_ino)))
+        return inode;
+    inode = inode_allocate(dentry->d_sb);
     if (!inode)
         return NULL;
     inode->i_ino = dentry->d_ino;
@@ -61,4 +80,9 @@ struct inode* inode_resolve_dentry(struct dentry* dentry)
     if (inode->i_sb->s_ops->read_inode)
         inode->i_sb->s_ops->read_inode(inode);
     return inode;
+}
+
+void inode_init(void)
+{
+    inode_cache = hashmap_create(0x4000);
 }

@@ -33,5 +33,8 @@
 
 #include <fs/fs.h>
 
+extern struct inode* inode_check_cache(struct superblock* sb, ino_t ino);
+extern void inode_insert_cache(struct superblock* sb, struct inode* inode);
+
 extern struct inode* inode_allocate(struct superblock* sb);
 extern struct inode* inode_resolve_dentry(struct dentry* dentry);

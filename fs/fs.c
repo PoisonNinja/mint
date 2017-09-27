@@ -66,8 +66,11 @@ struct filesystem* filesystem_get(const char* name)
     return NULL;
 }
 
+extern void inode_init(void);
+
 void filesystem_init(void)
 {
+    inode_init();
 }
 
 extern struct inode* fs_root;

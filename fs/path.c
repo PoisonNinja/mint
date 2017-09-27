@@ -143,7 +143,9 @@ static struct inode* __path_resolve_create(struct inode* start,
     strncpy(new->d_name, filename, DENTRY_NAME_MAX);
     if (dentry)
         *dentry = new;
-    return dir->i_ops->create(dir, new, flags, mode);
+    struct inode* ret = dir->i_ops->create(dir, new, flags, mode);
+    inode_insert_cache(ret->i_sb, ret);
+    return ret;
 }
 
 struct inode* path_resolve(const char* path, int flags, mode_t mode,
