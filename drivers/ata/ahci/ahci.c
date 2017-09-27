@@ -47,6 +47,7 @@
  */
 
 #include <arch/mm/mmap.h>
+#include <block/block.h>
 #include <cpu/interrupt.h>
 #include <drivers/ata/ahci/ahci.h>
 #include <drivers/pci/pci.h>
@@ -186,10 +187,13 @@ static int ahci_await_completion(struct ahci_device* device)
     return 0;
 }
 
-static ssize_t ahci_read(struct ahci_device* device, uint8_t* buffer,
+static ssize_t ahci_read(struct block_device* bdevice, uint8_t* buffer,
                          size_t size, off_t offset)
 {
+    printk(ERROR, "AHCI READ!\n");
+    struct ahci_device* device = (struct ahci_device*)bdevice->b_data;
     struct dma_region* region = dma_alloc(size);
+    size_t read = 0;
     while (size) {
         uint64_t block_index = offset / AHCI_BLOCK_SIZE;
         // TODO: Select cmd based on LBA size
@@ -198,8 +202,9 @@ static ssize_t ahci_read(struct ahci_device* device, uint8_t* buffer,
         ahci_await_completion(device);
         memcpy(buffer, (const void*)region->virtual_base, size);
         size -= size;
+        read += size;
     }
-    return size;
+    return read;
 }
 
 static void ahci_initialize_port(struct ahci_device* device)
@@ -247,6 +252,10 @@ static int ahci_check_type(volatile struct hba_port* port)
     return port->signature;
 }
 
+static struct block_operations ahci_block_operations = {
+    .read = ahci_read, .write = NULL,
+};
+
 static void ahci_create_fs_node(struct ahci_device* device)
 {
     char device_name[256];
@@ -257,6 +266,18 @@ static void ahci_create_fs_node(struct ahci_device* device)
     if (!node) {
         AHCI_LOG(WARNING, "Failed to create device node for port %d\n",
                  device->port_no);
+        return;
+    }
+    struct block_device* ahci_block_device =
+        kmalloc(sizeof(struct block_device));
+    if (!ahci_block_device) {
+        AHCI_LOG(ERROR, "Failed to allocate block device structure\n");
+        return;
+    }
+    ahci_block_device->b_data = device;
+    ahci_block_device->b_ops = &ahci_block_operations;
+    if (block_mount_inode(node, ahci_block_device)) {
+        AHCI_LOG(ERROR, "Failed to mount device onto inode\n");
         return;
     }
 }
@@ -363,16 +384,11 @@ static int ahci_probe(struct pci_device* device)
 }
 
 static struct pci_device_filter ahci_device_filter = {
-    .vendor_id = 0,
-    .device_id = 0,
-    .class = 1,
-    .subclass = 6,
+    .vendor_id = 0, .device_id = 0, .class = 1, .subclass = 6,
 };
 
 static struct pci_driver ahci_driver = {
-    .name = "ahci",
-    .filter = &ahci_device_filter,
-    .probe = ahci_probe,
+    .name = "ahci", .filter = &ahci_device_filter, .probe = ahci_probe,
 };
 
 static int init_ahci(void)

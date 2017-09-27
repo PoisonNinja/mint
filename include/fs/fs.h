@@ -31,6 +31,8 @@
 
 #pragma once
 
+#include <block/block.h>
+#include <fs/device.h>
 #include <lib/list.h>
 #include <types.h>
 
@@ -50,6 +52,7 @@ struct inode;
 struct dentry;
 struct file;
 struct superblock;
+struct fs_device;
 struct mountpoint;
 
 struct mountpoint {
@@ -77,6 +80,7 @@ struct inode {
     struct file_operations *i_fops;
     struct superblock *i_sb;
     struct list_element i_mp;
+    struct fs_device *i_fs_dev;
 };
 
 struct dentry {

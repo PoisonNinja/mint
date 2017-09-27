@@ -53,6 +53,10 @@ static int test_file(void)
            file_pread(file, buffer, string_len) == string_len);
     ASSERT("Data read matches written",
            !memcmp(buffer, (uint8_t *)"Hello world!", string_len));
+    uint8_t ahci_buffer[2048];
+    file = file_open("/dev/sda", 0, 0);
+    ASSERT("/dev/sda exists", file);
+    ASSERT("Reading from /dev/sda works", file_pread(file, ahci_buffer, 2048));
     FINISH_TEST();
     return 0;
 }

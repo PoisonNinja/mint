@@ -32,6 +32,7 @@
 #include <errno.h>
 #include <fs/file.h>
 #include <fs/path.h>
+#include <kernel.h>
 #include <mm/heap.h>
 #include <string.h>
 
@@ -53,7 +54,10 @@ ssize_t file_pread(struct file* file, uint8_t* buffer, size_t size)
 {
     if (!file || !buffer)
         return -EIO;
-    if (file->f_ops->read)
+    if (file->f_inode->i_fs_dev)
+        return file->f_inode->i_fs_dev->block->b_ops->read(
+            file->f_inode->i_fs_dev->block->b_data, buffer, size, file->f_off);
+    else if (file->f_ops->read)
         return file->f_ops->read(file, buffer, size, file->f_off);
     else
         return -EIO;
