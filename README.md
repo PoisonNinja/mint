@@ -1,3 +1,5 @@
+# This project is deprecated in favor of [Quark](https://github.com/PoisonNinja/Quark)
+
 # Mint
 Mint is the kernel for the [Pepper](https://github.com/PoisonNinja/Pepper.git) operating system built for learning purposes, with an emphasis for readability and simplicity.
 
