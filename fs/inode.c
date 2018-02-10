@@ -43,6 +43,7 @@ struct inode* inode_check_cache(struct superblock* sb, ino_t ino)
 {
     uint64_t key[2] = {(uint64_t)sb, ino};
     struct inode* ret = hashmap_get(inode_cache, key, 16);
+    return ret;
 }
 
 void inode_insert_cache(struct superblock* sb, struct inode* inode)
