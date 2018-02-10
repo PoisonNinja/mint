@@ -84,7 +84,8 @@ size_t hashmap_set(struct hashmap* hashmap, const void* key,
 {
     size_t index = hashmap_hash(key, key_size, hashmap->size);
     struct bucket* bucket = kzalloc(sizeof(struct bucket));
-    bucket->key = key;
+    bucket->key = kzalloc(key_size);
+    memcpy(bucket->key, key, key_size);
     bucket->value = value;
     list_add(&hashmap->buckets[index], &bucket->list);
     return index;
