@@ -10,6 +10,13 @@ if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
     message(FATAL_ERROR "In-source builds are not allowed.")
 endif("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
 
+# Targeting baremetal so we need a generic system.
+#
+# Setting something like Linux or a real system name causes CMake to inject
+# additional flags that break builds
+set(CMAKE_SYSTEM_NAME       Generic)
+set(CMAKE_SYSTEM_VERSION    1)
+
 set(ARCH "x86_64" CACHE STRING "Architecture to build for")
 message(STATUS "Architecture: " ${ARCH})
 
@@ -25,31 +32,6 @@ if(NOT EXISTS ${ARCH_INCLUDE_PATH})
 endif()
 message(STATUS "Architecture include folder: " ${ARCH_INCLUDE_PATH})
 
-if(NOT DEFINED ${CMAKE_TOOLCHAIN_FILE})
-    set(CMAKE_TOOLCHAIN_FILE ${ARCH_PATH}/toolchain.cmake)
-endif()
-if(NOT EXISTS ${CMAKE_TOOLCHAIN_FILE})
-    message(FATAL_ERROR "Toolchain file does not exist: " ${CMAKE_TOOLCHAIN_FILE})
-endif()
-message(STATUS "Toolchain file: " ${CMAKE_TOOLCHAIN_FILE})
-
-if(NOT DEFINED TOOLCHAIN_PREFIX)
-    if(EXISTS ${CMAKE_SOURCE_DIR}/../toolchain/local/)
-        set(TOOLCHAIN_PREFIX ${CMAKE_SOURCE_DIR}/../toolchain/local)
-    else()
-        message(FATAL_ERROR "TOOLCHAIN_PREFIX is not defined. Unable to locate toolchain")
-    endif()
-else(DEFINED TOOLCHAIN_PREFIX)
-    if(NOT EXISTS ${TOOLCHAIN_PREFIX})
-        message(FATAL_ERROR "TOOLCHAIN_PREFIX refers to an invalid path. Unable to locate toolchain")
-    endif()
-endif()
-message(STATUS "Toolchain prefix: " ${TOOLCHAIN_PREFIX})
-
-enable_language(ASM_NASM)
-
-project(Mint C)
-
 if(NOT DEFINED ${PLATFORM_FILE})
     set(PLATFORM_FILE ${ARCH_PATH}/platform.cmake)
 endif()
@@ -57,22 +39,48 @@ if(NOT EXISTS ${PLATFORM_FILE})
     message(FATAL_ERROR "Platform file does not exist: " ${PLATFORM_FILE})
 endif()
 message(STATUS "Platform file: " ${PLATFORM_FILE})
-include(${PLATFORM_FILE})
-
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -ffreestanding -fno-builtin -Iinclude -std=gnu11 -fcolor-diagnostics -O3")
-message(STATUS "CFLAGS: " ${CMAKE_C_FLAGS})
-
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -nostdlib")
-message(STATUS "LDFLAGS: " ${CMAKE_EXE_LINKER_FLAGS})
-
-set(INCLUDE_DIRS "${INCLUDE_DIRS} ${CMAKE_SOURCE_DIR}/include/")
-include_directories(${INCLUDE_DIRS})
-message(STATUS "Include directories: " ${INCLUDE_DIRS})
 
 if(NOT DEFINED SYSROOT)
     set(SYSROOT "${CMAKE_SOURCE_DIR}/../hdd")
 endif()
 message(STATUS "Sysroot: " ${SYSROOT})
+
+find_program(CMAKE_C_COMPILER ${ARCH}-pepper-gcc)
+if(NOT CMAKE_C_COMPILER)
+    message(FATAL_ERROR "Compiler not found! Run the \
+                         toolchain script in Pepper to build a toolchain. If \
+                         you have already built it, make sure that you have run \
+                         envsetup.sh before configuring CMake.")
+endif()
+message(STATUS "C Compiler: " ${CMAKE_C_COMPILER})
+
+project(Mint C)
+
+include(${PLATFORM_FILE})
+
+enable_language(ASM_NASM)
+
+# HACK: Setting CMAKE_ASM_NASM_FLAGS before enabling ASM_NASM overwrites the
+#       flags we set in the platform file.
+#
+#       To work around this, platforms will set CMAKE_ASM_FLAGS and then we
+#       will set it into ASM_NASM for them. This has the advantage of making
+#       transitions to new assemblers slightly easier
+set(CMAKE_ASM_NASM_FLAGS ${CMAKE_ASM_FLAGS})
+
+set(CMAKE_C_STANDARD 11)
+
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -ffreestanding -fno-builtin -Iinclude -fdiagnostics-color=always -O3")
+message(STATUS "CFLAGS: " ${CMAKE_C_FLAGS})
+
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -nostdlib")
+message(STATUS "LDFLAGS: " ${CMAKE_EXE_LINKER_FLAGS})
+
+message(STATUS "ASMFLAGS: " ${CMAKE_ASM_NASM_FLAGS})
+
+set(INCLUDE_DIRS "${INCLUDE_DIRS} ${CMAKE_SOURCE_DIR}/include/")
+include_directories(${INCLUDE_DIRS})
+message(STATUS "Include directories: " ${INCLUDE_DIRS})
 
 add_executable(mint.kernel "")
 add_subdirectory(${ARCH_PATH})
