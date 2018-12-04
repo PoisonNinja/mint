@@ -94,9 +94,15 @@ add_subdirectory(mm)
 add_subdirectory(tests)
 add_subdirectory(tm)
 
-set(LN_ARGS ln -sf ${ARCH_INCLUDE_PATH} ${CMAKE_SOURCE_DIR}/include/arch)
+# Command to create symlink from architecture include to include/arch so
+# the kernel can include arch files under arch/* instead of having to know
+# what architecture is being built.
+#
+# We need to set it into a variable instead of directly passing it to execute_p$
+# because CMake parses strings weird
+set(CREATE_ARCH_SYMLINK ${CMAKE_COMMAND} -E create_symlink ${ARCH_INCLUDE_PATH} ${CMAKE_SOURCE_DIR}/include/arch)
 execute_process(
-    COMMAND ${LN_ARGS}
+    COMMAND ${CREATE_ARCH_SYMLINK}
 )
 
 add_custom_command(
